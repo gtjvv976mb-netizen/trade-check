@@ -1,0 +1,542 @@
+<title>Trade Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a card-shop counter. Input on the left, the verdict "slab" on the right, stacked on phones. */
+:root {
+  --bg: #eef1f5;          /* cool counter-top grey */
+  --panel: #ffffff;
+  --ink: #141a2b;         /* navy ink */
+  --muted: #5a6378;
+  --line: #d5dbe5;
+  --label: #c8202a;       /* slab-label red, the one accent */
+  --label-soft: #fbe9ea;
+  --ok: #1d7a4a;  --ok-soft: #e3f3ea;
+  --warn: #9a5b00; --warn-soft: #fdf1dc;
+  --bad: #b3141d;  --bad-soft: #fbe4e5;
+  --plastic: #f8fafc;
+  --shadow: 0 1px 2px rgb(20 26 43 / .06), 0 8px 24px rgb(20 26 43 / .07);
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #10141e; --panel: #181e2c; --ink: #e8ecf4; --muted: #9aa4b8; --line: #2b3346;
+  --label: #ff5a62; --label-soft: #3a1c22;
+  --ok: #5fd39a; --ok-soft: #15301f; --warn: #f2b45a; --warn-soft: #33270f; --bad: #ff6f75; --bad-soft: #3a1a1e;
+  --plastic: #1d2435; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #10141e; --panel: #181e2c; --ink: #e8ecf4; --muted: #9aa4b8; --line: #2b3346;
+  --label: #ff5a62; --label-soft: #3a1c22;
+  --ok: #5fd39a; --ok-soft: #15301f; --warn: #f2b45a; --warn-soft: #33270f; --bad: #ff6f75; --bad-soft: #3a1a1e;
+  --plastic: #1d2435; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
+.brand { display: grid; gap: 4px; }
+.wordmark { font-family: var(--f-display); font-stretch: 75%; font-weight: 900; font-size: clamp(34px, 6vw, 52px); letter-spacing: .01em; line-height: .95; text-transform: uppercase; margin: 0; }
+.wordmark span { color: var(--label); }
+.tagline { margin: 0; color: var(--muted); max-width: 56ch; text-wrap: pretty; }
+.mode { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; color: var(--muted); background: var(--panel); white-space: nowrap; }
+.mode b { color: var(--ink); font-weight: 700; }
+
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
+@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.step-title { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+label.field { display: grid; gap: 6px; font-weight: 700; font-size: 15px; }
+label.field small { font-weight: 400; color: var(--muted); font-size: 13px; }
+textarea, input[type="text"] {
+  font: inherit; font-size: 15px; color: var(--ink); background: var(--plastic); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+textarea { min-height: 150px; resize: vertical; }
+textarea:focus-visible, input:focus-visible, button:focus-visible, .drop:focus-within { outline: 2px solid var(--label); outline-offset: 2px; }
+.drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; background: var(--plastic); cursor: pointer; }
+.drop.over { border-color: var(--label); background: var(--label-soft); }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop-hint { color: var(--muted); font-size: 14px; }
+.drop-hint b { color: var(--ink); }
+.thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
+.thumb { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.thumb button { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgb(0 0 0 / .65); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button.primary, button.ghost {
+  font-family: var(--f-display); font-stretch: 90%; font-weight: 800; font-size: 15px; letter-spacing: .05em; text-transform: uppercase;
+  border-radius: 10px; padding: 12px 20px; cursor: pointer; border: 1.5px solid var(--label);
+}
+button.primary { background: var(--label); color: #fff; }
+button.primary:hover { filter: brightness(1.06); }
+button.primary:disabled { opacity: .55; cursor: progress; }
+button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+button.ghost:hover { border-color: var(--ink); }
+.note { font-size: 13px; color: var(--muted); margin: 0; }
+.status { font-size: 14px; color: var(--muted); min-height: 1.5em; margin: 0; }
+.status.err { color: var(--bad); }
+
+/* The slab: a graded-card case with its label strip */
+.slab { background: var(--plastic); border: 1px solid var(--line); border-radius: 18px; padding: 10px; box-shadow: var(--shadow); min-width: 0; }
+.slab-label { background: var(--panel); border: 2.5px solid var(--label); border-radius: 10px; padding: 12px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; }
+.slab-brand { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--label); }
+.slab-cert { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.slab-headline { grid-column: 1; font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: clamp(19px, 2.6vw, 24px); line-height: 1.15; text-wrap: balance; margin: 4px 0 0; }
+.slab-score { grid-column: 2; grid-row: 1 / span 3; text-align: center; display: grid; justify-items: center; gap: 2px; }
+.slab-score .k { font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 11px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+.slab-score .v { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 54px; line-height: .9; font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font-family: var(--f-display); font-stretch: 80%; font-weight: 900; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
+.v-safe { color: var(--ok); } .v-caution { color: var(--warn); } .v-scam { color: var(--bad); }
+.pill.v-safe { background: var(--ok-soft); } .pill.v-caution { background: var(--warn-soft); } .pill.v-scam { background: var(--bad-soft); }
+.slab-body { padding: 16px 8px 8px; display: grid; gap: 18px; min-width: 0; }
+.example-tag { font-family: var(--f-mono); font-size: 12px; background: var(--label-soft); color: var(--label); border-radius: 6px; padding: 6px 10px; justify-self: start; }
+.summary { margin: 0; max-width: 62ch; }
+.section h3 { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-weight: 700; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+td .sub { display: block; color: var(--muted); font-size: 12.5px; }
+.price-line { margin: 8px 0 0; font-size: 14px; }
+ul.flags, ul.checks, ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+ul.flags li, ul.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: baseline; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+ul.flags li .why, ul.checks li .why { grid-column: 2; color: var(--muted); font-size: 14px; }
+.sev { font-family: var(--f-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; }
+.sev-high, .r-fail { background: var(--bad-soft); color: var(--bad); }
+.sev-medium, .r-unclear { background: var(--warn-soft); color: var(--warn); }
+.sev-low, .r-pass { background: var(--ok-soft); color: var(--ok); }
+ul.plain li { padding-left: 18px; position: relative; font-size: 15px; }
+ul.plain li::before { content: ""; position: absolute; left: 3px; top: .62em; width: 7px; height: 7px; border-radius: 2px; background: var(--muted); }
+ul.plain.good li::before { background: var(--ok); }
+ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; }
+.disclaimer { font-size: 12.5px; color: var(--muted); margin: 0; }
+.loading { padding: 40px 12px; display: grid; justify-items: center; gap: 10px; text-align: center; color: var(--muted); }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--label); animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+footer { color: var(--muted); font-size: 13px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1 class="wordmark">Trade <span>Check</span></h1>
+      <p class="tagline">Paste a card listing, a seller chat or photos. Get a scam-risk score and a price check before you send money or swap cards.</p>
+    </div>
+    <div class="mode" id="mode">Loading…</div>
+  </header>
+
+  <div class="grid">
+    <form class="panel" id="form" novalidate>
+      <p class="step-title">What are you checking?</p>
+      <label class="field" for="listing">Listing text or chat
+        <small>Copy the post, the seller's messages or the trade offer.</small>
+        <textarea id="listing" placeholder="e.g. Selling Charizard ex 199/165 SIR, mint, $180. Message me on WhatsApp, bank transfer only…"></textarea>
+      </label>
+      <label class="field" for="price">Asking price <small>Optional, with currency.</small>
+        <input type="text" id="price" placeholder="$180" autocomplete="off">
+      </label>
+      <div class="field" style="display:grid;gap:6px">
+        <span style="font-weight:700;font-size:15px">Photos <small style="font-weight:400;color:var(--muted);font-size:13px">Up to 4: card front and back, the listing, or chat screenshots.</small></span>
+        <label class="drop" id="drop" for="photos">
+          <input type="file" id="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+          <span class="drop-hint"><b>Choose photos</b> or drop them here</span>
+          <div class="thumbs" id="thumbs"></div>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="primary" type="submit" id="check">Check this deal</button>
+        <button class="ghost" type="button" id="clear">Clear</button>
+      </div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+      <p class="note" id="mode-note"></p>
+    </form>
+
+    <section id="result" aria-live="polite"></section>
+  </div>
+
+  <footer>Trade Check is a risk check, not an authentication. A card can only be proven real in hand or by a grading company. Not affiliated with Nintendo, The Pokémon Company or any grader.</footer>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const IN_CLAUDE = typeof window.claude !== "undefined";
+  const MAX_PHOTOS = 4;
+  let photos = [];          // File objects
+  let sample = null;        // artifact mode
+  let downloads = null;
+  let current = null;       // last rendered result
+
+  // ---------- prompt used when the page runs inside Claude (no web access) ----------
+  const ARTIFACT_PROMPT = `You are Trade Check, a careful assistant that helps Pokemon TCG collectors judge whether a listing, a seller conversation, or a proposed trade is safe and fairly priced.
+
+Do this:
+1. Identify every card you can (name, set, card number, grade/slab if shown).
+2. You cannot browse, so estimate market prices from what you know, as a range. Set price_source to "Claude estimate" and keep ranges honest and wide when unsure.
+3. Look for scam patterns: moving the deal off-platform (WhatsApp, Telegram, DMs), payment without buyer protection (bank transfer, PayNow, Zelle, Friends & Family, crypto, gift cards), urgency, prices far below market, stock or untimestamped photos, refusing extra photos or video, new or empty profiles, preorders for sold-out products.
+4. Look for counterfeit signs visible in the photos: wrong font or HP font, missing accent on "Pokémon", off card-back colors or borders, blurry or misaligned print, wrong set symbol, wrong holo pattern, typos, an odd slab label. Only judge what the photos show; use "unclear" otherwise.
+5. Verdict: "safe" (no meaningful red flags), "caution" (some red flags or too little info) or "scam" (strong scam or counterfeit signals). Risk score 0 (no risk) to 100 (almost certainly a scam).
+
+You can't authenticate a physical card from photos. Never say a card is definitely real.
+
+Reply with ONLY one JSON object in this shape:
+{"verdict":"safe|caution|scam","risk":0,"headline":"one short sentence, max 12 words","summary":"2-3 plain sentences","cards":[{"name":"","set":"","number":"","grade":"","asking_price":"","market_low":null,"market_high":null,"currency":"USD","price_source":"Claude estimate"}],"price_check":"one sentence or empty","red_flags":[{"severity":"high|medium|low","flag":"short label","why":"one sentence"}],"good_signs":["short phrase"],"fake_checks":[{"check":"short label","result":"pass|fail|unclear","note":"one sentence"}],"next_steps":["short imperative sentence"]}`;
+
+  // ---------- example shown on first load ----------
+  const EXAMPLE = {
+    example: true,
+    verdict: "scam", risk: 88,
+    headline: "Cheap Charizard, WhatsApp only, bank transfer: classic scam setup.",
+    summary: "The price is far under what this card sells for, and the seller wants to leave the marketplace and be paid by bank transfer, so you'd have no way to get your money back. The photo looks like a stock image with no username or date.",
+    cards: [{ name: "Charizard ex", set: "Scarlet & Violet 151", number: "199/165", grade: "Raw", asking_price: "$180", market_low: null, market_high: null, currency: "USD", price_source: "example" }],
+    price_check: "Example only: a live check would look up recent sold prices and compare them with the $180 asking price.",
+    red_flags: [
+      { severity: "high", flag: "Off-platform payment", why: "Bank transfer has no buyer protection if the card never arrives." },
+      { severity: "high", flag: "Moves chat to WhatsApp", why: "Leaving the marketplace removes its scam reporting and refunds." },
+      { severity: "medium", flag: "Price well under market", why: "A deal this good on a chase card is the most common bait." },
+      { severity: "medium", flag: "No proof photo", why: "The photo has no username or date written next to the card." }
+    ],
+    good_signs: ["Card number matches the set"],
+    fake_checks: [
+      { check: "Font and accent", result: "unclear", note: "The photo is too small to read the text." },
+      { check: "Card back", result: "unclear", note: "No photo of the back was shared." }
+    ],
+    next_steps: ["Ask for a photo with your name and today's date next to the card.", "Pay only through the marketplace or PayPal Goods & Services.", "Walk away if they refuse."]
+  };
+
+  // ---------- helpers ----------
+  function el(tag, attrs = {}, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "class") n.className = v; else if (k === "text") n.textContent = v; else n.setAttribute(k, v);
+    }
+    for (const k of kids) if (k != null) n.append(k);
+    return n;
+  }
+  const VERDICT_WORD = { safe: "Looks safe", caution: "Be careful", scam: "Likely scam" };
+  const normVerdict = (v) => (["safe", "caution", "scam"].includes(v) ? v : "caution");
+  const clampRisk = (r) => Math.max(0, Math.min(100, Math.round(Number(r) || 0)));
+  const money = (n, cur) => {
+    if (n == null || n === "" || isNaN(Number(n))) return null;
+    try { return new Intl.NumberFormat(undefined, { style: "currency", currency: cur || "USD", maximumFractionDigits: 0 }).format(Number(n)); }
+    catch { return `${cur || ""} ${Math.round(Number(n))}`.trim(); }
+  };
+  function certId() {
+    const d = new Date();
+    const pad = (x) => String(x).padStart(2, "0");
+    return `TC-${String(d.getFullYear()).slice(2)}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  }
+  function setStatus(msg, isErr = false) { $("status").textContent = msg; $("status").classList.toggle("err", isErr); }
+
+  // ---------- photos ----------
+  function addFiles(list) {
+    for (const f of list) {
+      if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type)) continue;
+      if (photos.length >= MAX_PHOTOS) { setStatus(`Only ${MAX_PHOTOS} photos fit in one check.`); break; }
+      photos.push(f);
+    }
+    drawThumbs();
+  }
+  function drawThumbs() {
+    const box = $("thumbs"); box.replaceChildren();
+    photos.forEach((f, i) => {
+      const url = URL.createObjectURL(f);
+      const img = el("img", { src: url, alt: f.name || `Photo ${i + 1}` });
+      img.onload = () => URL.revokeObjectURL(url);
+      const rm = el("button", { type: "button", "aria-label": `Remove photo ${i + 1}`, text: "×" });
+      rm.onclick = (e) => { e.preventDefault(); photos.splice(i, 1); drawThumbs(); };
+      box.append(el("div", { class: "thumb" }, img, rm));
+    });
+  }
+  $("photos").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+  document.addEventListener("paste", (e) => {
+    const files = [...(e.clipboardData?.files || [])];
+    if (files.length) addFiles(files);
+  });
+
+  // Shrink a photo to a JPEG data URL for the server (keeps uploads small).
+  async function toDataUrl(file, maxSide = 1568) {
+    const bmp = await createImageBitmap(file);
+    const scale = Math.min(1, maxSide / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", 0.86);
+  }
+
+  // ---------- running a check ----------
+  async function runCheck(text, price) {
+    if (IN_CLAUDE) {
+      if (!sample) throw { friendly: "Checks aren't available in this view. Open the page in Claude while signed in." };
+      const parts = [];
+      if (text) parts.push(`Listing or chat:\n"""\n${text.slice(0, 8000)}\n"""`);
+      if (price) parts.push(`Asking price: ${price.slice(0, 100)}`);
+      if (photos.length) parts.push(`${photos.length} photo(s) attached.`);
+      const opts = { cache: false };
+      if (photos.length) opts.images = photos.slice(0, MAX_PHOTOS);
+      const r = await sample.json(`${ARTIFACT_PROMPT}\n\n---\n\n${parts.join("\n\n")}\n\nCheck this deal.`, opts);
+      r.mode = "estimate";
+      return r;
+    }
+    const images = await Promise.all(photos.map((f) => toDataUrl(f)));
+    const res = await fetch("/api/check", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text, askingPrice: price, images })
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw { friendly: body.error || "The check failed. Try again." };
+    return body;
+  }
+
+  const SAMPLE_ERRORS = {
+    not_granted: "Trade Check needs your OK to ask Claude. Reload and allow it to run checks.",
+    sampling_disabled: "Claude isn't available on this account.",
+    rate_limited: "You've run a lot of checks. Wait a bit, then try again.",
+    images_unavailable: "Photos can't be sent from this view. Try with text only.",
+    image_rejected: "One of the photos couldn't be read. Try a JPEG or PNG under 20 MB.",
+    refused: "This one couldn't be checked. Try different text or photos.",
+    invalid_json: "Claude's answer came back garbled. Press Check again.",
+    session_expired: "Sign in to Claude again, then retry."
+  };
+
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const text = $("listing").value.trim();
+    const price = $("price").value.trim();
+    if (!text && !photos.length) { setStatus("Paste a listing or chat, or add a photo first.", true); $("listing").focus(); return; }
+    $("check").disabled = true;
+    setStatus("");
+    const started = Date.now();
+    const tick = el("span", { text: "0s" });
+    $("result").replaceChildren(el("div", { class: "slab" }, el("div", { class: "loading" },
+      el("div", { class: "spinner", "aria-hidden": "true" }),
+      el("strong", { text: "Checking the deal…" }),
+      el("span", { text: IN_CLAUDE ? "Reading the listing and photos." : "Reading the listing and photos, then looking up recent sold prices." }),
+      tick)));
+    const timer = setInterval(() => { tick.textContent = `${Math.round((Date.now() - started) / 1000)}s`; }, 1000);
+    try {
+      const r = await runCheck(text, price);
+      render(r);
+    } catch (err) {
+      const msg = err?.friendly || SAMPLE_ERRORS[err?.code] || "The check failed. Try again.";
+      setStatus(msg, true);
+      if (current) render(current, true); else $("result").replaceChildren();
+    } finally {
+      clearInterval(timer);
+      $("check").disabled = false;
+    }
+  });
+
+  $("clear").addEventListener("click", () => {
+    $("listing").value = ""; $("price").value = ""; photos = []; drawThumbs(); setStatus("");
+  });
+
+  // ---------- rendering ----------
+  function render(r, keepId = false) {
+    const v = normVerdict(r.verdict);
+    const risk = clampRisk(r.risk);
+    if (!keepId || !r.cert) r.cert = r.example ? "TC-EXAMPLE" : certId();
+    current = r;
+
+    const label = el("div", { class: "slab-label" },
+      el("div", {}, el("div", { class: "slab-brand", text: "Trade Check" }), el("div", { class: "slab-cert", text: r.cert })),
+      el("div", { class: "slab-score" },
+        el("span", { class: "k", text: "Risk" }),
+        el("span", { class: `v v-${v}`, text: String(risk) }),
+        el("span", { class: `pill v-${v}`, text: VERDICT_WORD[v] })),
+      el("p", { class: "slab-headline", text: r.headline || VERDICT_WORD[v] }));
+
+    const body = el("div", { class: "slab-body" });
+    if (r.example) body.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
+    if (r.summary) body.append(el("p", { class: "summary", text: r.summary }));
+
+    const cards = Array.isArray(r.cards) ? r.cards.filter((c) => c && c.name) : [];
+    if (cards.length) {
+      const tb = el("tbody");
+      for (const c of cards) {
+        const lo = money(c.market_low, c.currency), hi = money(c.market_high, c.currency);
+        const range = lo && hi ? `${lo}–${hi}` : lo || hi || "—";
+        tb.append(el("tr", {},
+          el("td", {}, c.name, el("span", { class: "sub", text: [c.set, c.number, c.grade].filter(Boolean).join(" · ") })),
+          el("td", { class: "num", text: c.asking_price || "—" }),
+          el("td", { class: "num" }, range, c.price_source ? el("span", { class: "sub", text: c.price_source }) : null)));
+      }
+      const sec = el("div", { class: "section" }, el("h3", { text: "Cards and prices" }),
+        el("div", { class: "table-wrap" }, el("table", {},
+          el("thead", {}, el("tr", {}, el("th", { text: "Card" }), el("th", { text: "Asking" }), el("th", { text: r.mode === "live" ? "Recent sold" : "Market (est.)" }))), tb)));
+      if (r.price_check) sec.append(el("p", { class: "price-line", text: r.price_check }));
+      body.append(sec);
+    }
+
+    const flags = Array.isArray(r.red_flags) ? r.red_flags : [];
+    if (flags.length) {
+      const order = { high: 0, medium: 1, low: 2 };
+      const ul = el("ul", { class: "flags" });
+      [...flags].sort((a, b) => (order[a.severity] ?? 1) - (order[b.severity] ?? 1)).forEach((f) => {
+        const sev = ["high", "medium", "low"].includes(f.severity) ? f.severity : "medium";
+        ul.append(el("li", {}, el("span", { class: `sev sev-${sev}`, text: sev }), el("strong", { text: f.flag || "" }), el("span", { class: "why", text: f.why || "" })));
+      });
+      body.append(el("div", { class: "section" }, el("h3", { text: `Red flags (${flags.length})` }), ul));
+    }
+
+    const cols = el("div", { class: "cols" });
+    const checks = Array.isArray(r.fake_checks) ? r.fake_checks : [];
+    if (checks.length) {
+      const ul = el("ul", { class: "checks" });
+      checks.forEach((c) => {
+        const res = ["pass", "fail", "unclear"].includes(c.result) ? c.result : "unclear";
+        ul.append(el("li", {}, el("span", { class: `sev r-${res}`, text: res }), el("strong", { text: c.check || "" }), el("span", { class: "why", text: c.note || "" })));
+      });
+      cols.append(el("div", { class: "section" }, el("h3", { text: "Fake-card checks" }), ul));
+    }
+    const side = el("div", { style: "display:grid;gap:18px;align-content:start" });
+    const good = Array.isArray(r.good_signs) ? r.good_signs.filter(Boolean) : [];
+    if (good.length) side.append(el("div", { class: "section" }, el("h3", { text: "Good signs" }), el("ul", { class: "plain good" }, ...good.map((g) => el("li", { text: g })))));
+    const next = Array.isArray(r.next_steps) ? r.next_steps.filter(Boolean) : [];
+    if (next.length) side.append(el("div", { class: "section" }, el("h3", { text: "What to do next" }), el("ol", { class: "next" }, ...next.map((s) => el("li", { text: s })))));
+    if (side.childElementCount) cols.append(side);
+    if (cols.childElementCount) body.append(cols);
+
+    const saveBtn = el("button", { class: "ghost", type: "button", text: "Save verdict image" });
+    const copyBtn = el("button", { class: "ghost", type: "button", text: "Copy summary" });
+    saveBtn.onclick = () => saveImage(r, saveBtn);
+    copyBtn.onclick = () => copySummary(r, copyBtn);
+    if (IN_CLAUDE && !downloads) saveBtn.hidden = true;
+    body.append(el("div", { class: "share" }, saveBtn, copyBtn,
+      el("p", { class: "disclaimer", text: r.mode === "live" ? "Prices from a live web search at check time." : r.example ? "" : "Prices are Claude's estimates, not live data." })));
+
+    $("result").replaceChildren(el("div", { class: "slab" }, label, body));
+  }
+
+  function summaryText(r) {
+    const v = normVerdict(r.verdict);
+    const lines = [`Trade Check ${r.cert}: ${VERDICT_WORD[v]} (risk ${clampRisk(r.risk)}/100)`, r.headline || ""];
+    (r.red_flags || []).slice(0, 4).forEach((f) => lines.push(`- ${f.flag}: ${f.why}`));
+    if (r.price_check) lines.push(r.price_check);
+    lines.push("Risk check only, not an authentication.");
+    return lines.filter(Boolean).join("\n");
+  }
+  async function copySummary(r, btn) {
+    const t = summaryText(r);
+    try { await navigator.clipboard.writeText(t); btn.textContent = "Copied"; }
+    catch {
+      const ta = el("textarea", { readonly: "", "aria-label": "Summary to copy" }); ta.value = t; ta.style.minHeight = "120px";
+      btn.after(ta); ta.select(); btn.textContent = "Select and copy";
+    }
+    setTimeout(() => { btn.textContent = "Copy summary"; }, 2000);
+  }
+
+  // ---------- shareable image (fixed light palette so it looks the same everywhere) ----------
+  function wrapLines(ctx, text, maxW) {
+    const words = String(text).split(/\s+/); const lines = []; let line = "";
+    for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+    if (line) lines.push(line); return lines;
+  }
+  function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+  async function drawImage(r) {
+    await document.fonts.ready.catch(() => {});
+    // First pass measures how tall the content runs; second pass draws at that height.
+    const probe = document.createElement("canvas"); probe.width = 1080; probe.height = 2400;
+    const end = paintVerdict(probe, r, 2400);
+    const H = Math.max(1080, Math.ceil(end + 150));
+    const c = document.createElement("canvas"); c.width = 1080; c.height = H;
+    paintVerdict(c, r, H);
+    return new Promise((res) => c.toBlob(res, "image/png"));
+  }
+  function paintVerdict(c, r, H) {
+    const W = 1080, P = 64;
+    const C = { bg: "#eef1f5", plastic: "#f8fafc", panel: "#ffffff", ink: "#141a2b", muted: "#5a6378", line: "#d5dbe5", label: "#c8202a",
+      safe: "#1d7a4a", caution: "#9a5b00", scam: "#b3141d", safeSoft: "#e3f3ea", cautionSoft: "#fdf1dc", scamSoft: "#fbe4e5" };
+    const v = normVerdict(r.verdict); const risk = clampRisk(r.risk);
+    const x = c.getContext("2d");
+    x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
+    // case
+    roundRect(x, P - 20, P - 20, W - 2 * P + 40, H - 2 * P + 40, 36); x.fillStyle = C.plastic; x.fill(); x.strokeStyle = C.line; x.lineWidth = 3; x.stroke();
+    // label
+    const LX = P + 10, LY = P + 10, LW = W - 2 * P - 20, LH = 300;
+    roundRect(x, LX, LY, LW, LH, 18); x.fillStyle = C.panel; x.fill(); x.strokeStyle = C.label; x.lineWidth = 7; x.stroke();
+    x.fillStyle = C.label; x.font = '900 34px "Archivo", "Arial Narrow", sans-serif'; x.letterSpacing = "6px"; x.fillText("TRADE CHECK", LX + 36, LY + 62);
+    x.letterSpacing = "0px"; x.fillStyle = C.muted; x.font = '500 24px "JetBrains Mono", monospace'; x.fillText(r.cert || "", LX + 36, LY + 100);
+    // score block
+    const SX = LX + LW - 230;
+    x.textAlign = "center"; x.fillStyle = C.muted; x.font = '800 22px "Archivo", sans-serif'; x.letterSpacing = "5px"; x.fillText("RISK", SX + 100, LY + 60);
+    x.letterSpacing = "0px"; x.fillStyle = C[v]; x.font = '900 150px "Archivo", "Arial Narrow", sans-serif'; x.fillText(String(risk), SX + 100, LY + 198);
+    const word = VERDICT_WORD[v].toUpperCase(); x.font = '900 28px "Archivo", sans-serif'; const pw = x.measureText(word).width + 44;
+    roundRect(x, SX + 100 - pw / 2, LY + 220, pw, 48, 24); x.fillStyle = C[v + "Soft"]; x.fill(); x.fillStyle = C[v]; x.fillText(word, SX + 100, LY + 254);
+    x.textAlign = "left";
+    // headline in label
+    x.fillStyle = C.ink; x.font = '800 42px "Archivo", "Arial Narrow", sans-serif';
+    wrapLines(x, r.headline || VERDICT_WORD[v], LW - 320).slice(0, 3).forEach((ln, i) => x.fillText(ln, LX + 36, LY + 165 + i * 48));
+    // body: red flags
+    let y = LY + LH + 70;
+    x.fillStyle = C.muted; x.font = '800 24px "Archivo", sans-serif'; x.letterSpacing = "4px"; x.fillText("RED FLAGS", LX + 10, y); x.letterSpacing = "0px";
+    y += 30;
+    const flags = (r.red_flags || []).slice(0, 4);
+    if (!flags.length) { y += 40; x.fillStyle = C.ink; x.font = '400 34px "Atkinson Hyperlegible", sans-serif'; x.fillText("None found in what was shared.", LX + 10, y); }
+    for (const f of flags) {
+      const sev = ["high", "medium", "low"].includes(f.severity) ? f.severity : "medium";
+      const col = sev === "high" ? C.scam : sev === "medium" ? C.caution : C.safe;
+      y += 52; x.fillStyle = col; x.beginPath(); x.arc(LX + 22, y - 12, 10, 0, Math.PI * 2); x.fill();
+      x.fillStyle = C.ink; x.font = '700 34px "Atkinson Hyperlegible", sans-serif'; x.fillText(f.flag || "", LX + 50, y);
+      x.fillStyle = C.muted; x.font = '400 27px "Atkinson Hyperlegible", sans-serif';
+      wrapLines(x, f.why || "", LW - 60).slice(0, 2).forEach((ln) => { y += 36; x.fillText(ln, LX + 50, y); });
+      y += 8;
+    }
+    // price line
+    if (r.price_check) {
+      y += 60; x.fillStyle = C.muted; x.font = '800 24px "Archivo", sans-serif'; x.letterSpacing = "4px"; x.fillText("PRICE", LX + 10, y); x.letterSpacing = "0px";
+      x.fillStyle = C.ink; x.font = '400 30px "Atkinson Hyperlegible", sans-serif';
+      wrapLines(x, r.price_check, LW - 20).slice(0, 3).forEach((ln) => { y += 42; x.fillText(ln, LX + 10, y); });
+    }
+    // footer
+    x.fillStyle = C.muted; x.font = '400 22px "Atkinson Hyperlegible", sans-serif';
+    x.fillText("Checked with Claude. A risk check, not an authentication.", LX + 10, H - P - 20);
+    return y;
+  }
+  async function saveImage(r, btn) {
+    btn.disabled = true;
+    try {
+      const blob = await drawImage(r);
+      const filename = `trade-check-${(r.cert || "result").toLowerCase()}.png`;
+      if (IN_CLAUDE) {
+        await downloads.save({ filename, data: blob });
+      } else {
+        const a = el("a", { href: URL.createObjectURL(blob), download: filename }); document.body.append(a); a.click(); a.remove();
+      }
+    } catch (err) {
+      if (err?.code !== "cancelled" && err?.code !== "declined") setStatus("The image couldn't be saved. Use Copy summary instead.", true);
+    } finally { btn.disabled = false; }
+  }
+
+  // ---------- boot ----------
+  render(EXAMPLE);
+  if (IN_CLAUDE) {
+    $("mode").innerHTML = "<b>Claude</b> · price estimates";
+    $("mode-note").textContent = "Runs on your own Claude account. Prices are estimates; the full version looks up live sold prices.";
+    claude.use("sample").then((s) => { sample = s; if (!s) { $("check").disabled = true; setStatus("Checks need Claude. Open this page in Claude while signed in.", true); } });
+    claude.use("downloads").then((d) => { downloads = d; if (current) render(current, true); });
+  } else {
+    $("mode").innerHTML = "<b>Live</b> · sold-price lookup";
+    $("mode-note").textContent = "Each check reads your photos and searches recent sold prices. Checks are limited per hour.";
+  }
+})();
+</script>

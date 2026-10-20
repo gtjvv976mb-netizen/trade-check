@@ -1,0 +1,17 @@
+{
+  "name": "trade-check",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Paste a Pokemon card listing, chat or photos and get a scam-risk and price verdict from Claude.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.132.1"
+  }
+}

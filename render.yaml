@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: trade-check
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: CHECKS_PER_HOUR
+        value: "10"
