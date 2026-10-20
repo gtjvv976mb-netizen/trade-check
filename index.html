@@ -2,185 +2,363 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,600..900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
-/* Layout: a card-shop counter. Input on the left, the verdict "slab" on the right, stacked on phones. */
+/* Layout: a night-time playmat. Hero = a graded slab you can tilt; below, the checker counter where your own card goes into the slab. Dark by choice. */
 :root {
-  --bg: #eef1f5;          /* cool counter-top grey */
-  --panel: #ffffff;
-  --ink: #141a2b;         /* navy ink */
-  --muted: #5a6378;
-  --line: #d5dbe5;
-  --label: #c8202a;       /* slab-label red, the one accent */
-  --label-soft: #fbe9ea;
-  --ok: #1d7a4a;  --ok-soft: #e3f3ea;
-  --warn: #9a5b00; --warn-soft: #fdf1dc;
-  --bad: #b3141d;  --bad-soft: #fbe4e5;
-  --plastic: #f8fafc;
-  --shadow: 0 1px 2px rgb(20 26 43 / .06), 0 8px 24px rgb(20 26 43 / .07);
+  --bg: #090c15;          /* playmat at night */
+  --bg-2: #10162a;
+  --glass: rgb(255 255 255 / .045);
+  --glass-2: rgb(255 255 255 / .075);
+  --ink: #eef1f8;
+  --muted: #9aa4bb;
+  --line: rgb(255 255 255 / .1);
+  --label: #ff4a55;       /* slab-label red */
+  --label-ink: #2a0b10;
+  --ok: #4fdc9a;  --ok-soft: rgb(79 220 154 / .14);
+  --warn: #ffc15e; --warn-soft: rgb(255 193 94 / .14);
+  --bad: #ff6b74;  --bad-soft: rgb(255 107 116 / .15);
+  --holo: linear-gradient(115deg, #ff7ab6 0%, #ffd36e 18%, #7dffb2 36%, #6fd8ff 54%, #a98bff 72%, #ff7ab6 90%);
   --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
-}
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #10141e; --panel: #181e2c; --ink: #e8ecf4; --muted: #9aa4b8; --line: #2b3346;
-  --label: #ff5a62; --label-soft: #3a1c22;
-  --ok: #5fd39a; --ok-soft: #15301f; --warn: #f2b45a; --warn-soft: #33270f; --bad: #ff6f75; --bad-soft: #3a1a1e;
-  --plastic: #1d2435; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
-  color-scheme: dark;
-} }
-:root[data-theme="dark"] {
-  --bg: #10141e; --panel: #181e2c; --ink: #e8ecf4; --muted: #9aa4b8; --line: #2b3346;
-  --label: #ff5a62; --label-soft: #3a1c22;
-  --ok: #5fd39a; --ok-soft: #15301f; --warn: #f2b45a; --warn-soft: #33270f; --bad: #ff6f75; --bad-soft: #3a1a1e;
-  --plastic: #1d2435; --shadow: 0 1px 2px rgb(0 0 0 / .3), 0 8px 24px rgb(0 0 0 / .25);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html { background: var(--bg); }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
-  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 28px 48px;
+  margin: 0; color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.55;
+  background:
+    radial-gradient(900px 520px at 85% -10%, rgb(111 216 255 / .13), transparent 60%),
+    radial-gradient(700px 520px at -10% 30%, rgb(255 74 85 / .10), transparent 60%),
+    radial-gradient(800px 600px at 60% 110%, rgb(169 139 255 / .10), transparent 60%),
+    var(--bg);
+  min-height: 100%;
+  overflow-x: hidden;
 }
-.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 24px; }
-header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px 24px; }
-.brand { display: grid; gap: 4px; }
-.wordmark { font-family: var(--f-display); font-stretch: 75%; font-weight: 900; font-size: clamp(34px, 6vw, 52px); letter-spacing: .01em; line-height: .95; text-transform: uppercase; margin: 0; }
-.wordmark span { color: var(--label); }
-.tagline { margin: 0; color: var(--muted); max-width: 56ch; text-wrap: pretty; }
-.mode { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; color: var(--muted); background: var(--panel); white-space: nowrap; }
-.mode b { color: var(--ink); font-weight: 700; }
-
-.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; align-items: start; }
-@media (max-width: 860px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-
-.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 16px; min-width: 0; }
-.step-title { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
-label.field { display: grid; gap: 6px; font-weight: 700; font-size: 15px; }
-label.field small { font-weight: 400; color: var(--muted); font-size: 13px; }
-textarea, input[type="text"] {
-  font: inherit; font-size: 15px; color: var(--ink); background: var(--plastic); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+body::after { /* faint playmat grid */
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgb(255 255 255 / .025) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / .025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
 }
+.band { position: relative; z-index: 1; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.wrap { max-width: 1160px; margin: 0 auto; }
+a { color: inherit; }
+:focus-visible { outline: 2px solid #6fd8ff; outline-offset: 3px; }
+
+/* ---------- nav ---------- */
+.nav { padding-block: 22px 0; }
+.nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.logo { font-family: var(--f-display); font-stretch: 72%; font-weight: 900; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+.logo-mark { width: 26px; height: 34px; border-radius: 5px; border: 2px solid var(--label); background: linear-gradient(180deg, var(--label) 0 28%, transparent 28%), var(--glass-2); box-shadow: 0 0 18px rgb(255 74 85 / .35); }
+.mode { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--muted); background: var(--glass); white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+.mode::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
+.mode b { color: var(--ink); }
+
+/* ---------- hero ---------- */
+.hero { padding-block: clamp(28px, 6vw, 72px) clamp(24px, 5vw, 56px); }
+.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
+@media (max-width: 880px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } }
+.eyebrow { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
+h1.display { font-family: var(--f-display); font-stretch: 68%; font-weight: 900; text-transform: uppercase; line-height: .9; letter-spacing: -.005em; font-size: clamp(54px, 9.5vw, 116px); margin: 0; text-wrap: balance; }
+.holo-text { background: var(--holo); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s linear infinite; }
+@keyframes shimmer { to { background-position: 200% 0; } }
+.lede { font-size: clamp(17px, 1.7vw, 19px); color: #c9d0e0; max-width: 46ch; margin: 22px 0 28px; text-wrap: pretty; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.btn {
+  font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 15px; letter-spacing: .06em; text-transform: uppercase;
+  border-radius: 12px; padding: 14px 22px; cursor: pointer; border: 1.5px solid transparent; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
+  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+}
+.btn-primary { background: var(--label); color: #fff; box-shadow: 0 10px 30px -8px rgb(255 74 85 / .65); }
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 36px -8px rgb(255 74 85 / .8); }
+.btn-primary:disabled { opacity: .55; cursor: progress; transform: none; }
+.btn-ghost { background: var(--glass); color: var(--ink); border-color: var(--line); }
+.btn-ghost:hover { border-color: rgb(255 255 255 / .35); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 34px; max-width: 560px; }
+@media (max-width: 480px) { .stats { grid-template-columns: minmax(0, 1fr); } }
+.stat { border-top: 1px solid var(--line); padding-top: 12px; }
+.stat b { display: block; font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13.5px; color: var(--muted); line-height: 1.35; display: block; margin-top: 6px; }
+.source { font-size: 12.5px; color: var(--muted); margin-top: 12px; }
+.source a { color: #b9c3d8; }
+
+/* ---------- 3D slab ---------- */
+.stage { position: relative; display: grid; place-items: center; min-height: 520px; perspective: 1100px; padding-bottom: 24px; }
+@media (max-width: 880px) { .stage { min-height: 460px; } }
+.ghost-card { position: absolute; width: min(220px, 46vw); aspect-ratio: 63 / 88; border-radius: 14px; opacity: .55; filter: blur(.4px) saturate(1.1); box-shadow: 0 30px 60px -20px rgb(0 0 0 / .8); border: 6px solid #1c2338; }
+.ghost-card.a { transform: translate(-46%, 6%) rotate(-13deg) translateZ(-120px); background: radial-gradient(circle at 30% 30%, #6fd8ff, transparent 55%), radial-gradient(circle at 70% 75%, #3c4bd8, transparent 60%), linear-gradient(160deg, #13204a, #0c1226); }
+.ghost-card.b { transform: translate(46%, 8%) rotate(12deg) translateZ(-120px); background: radial-gradient(circle at 60% 30%, #7dffb2, transparent 55%), radial-gradient(circle at 30% 80%, #1f8a5b, transparent 60%), linear-gradient(160deg, #0f2f22, #08140f); }
+
+.tilt { --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%; --hp: 50%; --glow: 0; position: relative; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .5s cubic-bezier(.2,.8,.2,1); will-change: transform; touch-action: pan-y; }
+.tilt.live { transition: transform .08s linear; }
+.tilt.float { animation: float 7s ease-in-out infinite; }
+@keyframes float { 0%,100% { transform: rotateX(6deg) rotateY(-10deg) translateY(0); } 50% { transform: rotateX(-4deg) rotateY(10deg) translateY(-10px); } }
+
+.slab {
+  position: relative; width: min(340px, 78vw); padding: 14px 14px 18px; border-radius: 22px; transform-style: preserve-3d;
+  background: linear-gradient(160deg, rgb(255 255 255 / .16), rgb(255 255 255 / .04) 40%, rgb(255 255 255 / .09));
+  border: 1px solid rgb(255 255 255 / .22);
+  box-shadow: 0 40px 80px -24px rgb(0 0 0 / .85), inset 0 1px 0 rgb(255 255 255 / .35), inset 0 0 0 6px rgb(255 255 255 / .03);
+  backdrop-filter: blur(6px);
+}
+.slab.small { width: min(300px, 74vw); }
+.slab::after { /* plastic glare on the case */
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transform: translateZ(40px);
+  background: radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / .28), transparent 42%);
+  mix-blend-mode: soft-light; opacity: calc(.4 + var(--glow) * .6);
+}
+.label {
+  transform: translateZ(26px); background: #f6f7fb; color: #141a2b; border: 3px solid var(--label); border-radius: 10px;
+  padding: 9px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; margin-bottom: 12px;
+  box-shadow: 0 6px 16px -6px rgb(0 0 0 / .5);
+}
+.label .brand { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 13px; letter-spacing: .13em; color: #c8202a; text-transform: uppercase; }
+.label .cert { font-family: var(--f-mono); font-size: 10.5px; color: #5a6378; font-variant-numeric: tabular-nums; }
+.label .verdict { font-family: var(--f-display); font-stretch: 78%; font-weight: 900; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
+.label .score { grid-column: 2; grid-row: 1 / span 3; text-align: center; line-height: 1; }
+.label .score small { display: block; font-family: var(--f-display); font-weight: 800; font-size: 9.5px; letter-spacing: .16em; color: #5a6378; }
+.label .score b { font-family: var(--f-display); font-stretch: 68%; font-weight: 900; font-size: 44px; font-variant-numeric: tabular-nums; }
+.t-safe { color: #138a52; } .t-caution { color: #b06a00; } .t-scam { color: #c8202a; }
+
+.card {
+  position: relative; aspect-ratio: 63 / 88; border-radius: 14px; overflow: hidden; transform: translateZ(14px);
+  background: #1a2034; box-shadow: 0 14px 28px -10px rgb(0 0 0 / .7);
+}
+.card .art { position: absolute; inset: 0; background-size: cover; background-position: center; }
+.card .art.fallback {
+  background:
+    radial-gradient(circle at 50% 58%, rgb(255 200 90 / .95), rgb(255 110 40 / .6) 18%, transparent 42%),
+    radial-gradient(circle at 30% 25%, rgb(111 216 255 / .55), transparent 40%),
+    radial-gradient(circle at 75% 80%, rgb(255 74 85 / .7), transparent 45%),
+    conic-gradient(from 200deg at 50% 60%, #2b1240, #5a1a2c, #8a3a12, #2b1240);
+}
+.card .art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.frame { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; border: 9px solid #e9c46a; box-shadow: inset 0 0 0 2px rgb(0 0 0 / .25); }
+.frame.plain { border-color: transparent; box-shadow: none; }
+.nameplate { position: absolute; left: 9px; right: 9px; top: 9px; padding: 6px 10px; display: flex; justify-content: space-between; align-items: baseline; background: linear-gradient(180deg, rgb(255 244 214 / .95), rgb(240 220 170 / .92)); color: #2a1c08; font-family: var(--f-display); font-stretch: 80%; font-weight: 900; font-size: 16px; }
+.nameplate small { font-size: 12px; font-weight: 800; }
+.nameplate small em { font-style: normal; font-size: 18px; color: #b3141d; }
+.footplate { position: absolute; left: 9px; right: 9px; bottom: 9px; padding: 8px 10px; background: rgb(255 244 214 / .93); color: #3b2a10; font-size: 11px; line-height: 1.35; }
+.footplate b { font-family: var(--f-display); font-stretch: 85%; font-size: 13px; }
+.footplate .num { display: block; text-align: right; margin-top: 2px; font-family: var(--f-mono); font-size: 9.5px; color: #7a6540; }
+/* holo foil + glare layers, driven by pointer */
+.foil, .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
+.foil {
+  background:
+    repeating-linear-gradient(115deg, transparent 0 6%, rgb(255 255 255 / .06) 6.5% 7%, transparent 7.5% 13%),
+    var(--holo);
+  background-size: 100% 100%, 300% 300%;
+  background-position: 0 0, var(--hp) var(--hp);
+  mix-blend-mode: color-dodge; opacity: calc(.18 + var(--glow) * .42);
+  filter: saturate(1.4) contrast(1.1);
+}
+.glare { background: radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / .55), rgb(255 255 255 / .08) 30%, transparent 55%); mix-blend-mode: overlay; opacity: calc(.35 + var(--glow) * .65); }
+.shadow { position: absolute; left: 12%; right: 12%; bottom: -36px; height: 30px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / .6), transparent); filter: blur(6px); transform: translateZ(-60px); }
+.scanline { position: absolute; left: 0; right: 0; height: 22%; top: -25%; pointer-events: none; background: linear-gradient(180deg, transparent, rgb(111 216 255 / .0) 10%, rgb(111 216 255 / .55) 50%, transparent); mix-blend-mode: screen; display: none; }
+.scanning .scanline { display: block; animation: scan 1.6s ease-in-out infinite; }
+@keyframes scan { 0% { top: -25%; } 100% { top: 105%; } }
+.tilt-hint { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+
+/* ---------- how it works ---------- */
+.steps { padding-block: 8px 40px; }
+.steps ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; counter-reset: s; }
+@media (max-width: 760px) { .steps ol { grid-template-columns: minmax(0, 1fr); } }
+.steps li { counter-increment: s; background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 18px 18px 18px 64px; position: relative; }
+.steps li::before { content: counter(s); position: absolute; left: 18px; top: 16px; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; font-family: var(--f-display); font-weight: 900; font-size: 17px; background: var(--holo); color: #10131f; }
+.steps h3 { margin: 0 0 4px; font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 18px; }
+.steps p { margin: 0; color: var(--muted); font-size: 15px; }
+
+/* ---------- checker ---------- */
+.checker { padding-block: 24px 56px; scroll-margin-top: 16px; }
+.section-title { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; text-transform: uppercase; font-size: clamp(34px, 5vw, 54px); line-height: .95; margin: 0 0 6px; text-wrap: balance; }
+.section-sub { color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 22px; align-items: start; }
+@media (max-width: 920px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: linear-gradient(180deg, var(--glass-2), var(--glass)); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: grid; gap: 16px; min-width: 0; backdrop-filter: blur(10px); }
+label.field, .field { display: grid; gap: 6px; font-weight: 700; font-size: 15px; }
+.field small { font-weight: 400; color: var(--muted); font-size: 13px; }
+textarea, input[type="text"] { font: inherit; font-size: 15px; color: var(--ink); background: rgb(0 0 0 / .28); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; width: 100%; transition: border-color .2s; }
+textarea::placeholder, input::placeholder { color: #6e7891; }
+textarea:focus, input:focus { border-color: rgb(111 216 255 / .6); outline: none; }
 textarea { min-height: 150px; resize: vertical; }
-textarea:focus-visible, input:focus-visible, button:focus-visible, .drop:focus-within { outline: 2px solid var(--label); outline-offset: 2px; }
-.drop { border: 1.5px dashed var(--line); border-radius: 10px; padding: 14px; display: grid; gap: 10px; background: var(--plastic); cursor: pointer; }
-.drop.over { border-color: var(--label); background: var(--label-soft); }
+.drop { border: 1.5px dashed rgb(255 255 255 / .18); border-radius: 12px; padding: 14px; display: grid; gap: 10px; background: rgb(0 0 0 / .2); cursor: pointer; position: relative; transition: border-color .2s, background .2s; }
+.drop.over { border-color: #6fd8ff; background: rgb(111 216 255 / .08); }
+.drop:focus-within { outline: 2px solid #6fd8ff; outline-offset: 2px; }
 .drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .drop-hint { color: var(--muted); font-size: 14px; }
 .drop-hint b { color: var(--ink); }
 .thumbs { display: flex; flex-wrap: wrap; gap: 8px; }
-.thumb { position: relative; width: 64px; height: 64px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.thumbs:empty { display: none; }
+.thumb { position: relative; width: 60px; height: 80px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
 .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.thumb button { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgb(0 0 0 / .65); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; }
+.thumb button { position: absolute; top: 3px; right: 3px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgb(0 0 0 / .7); color: #fff; font-size: 13px; line-height: 1; cursor: pointer; }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-button.primary, button.ghost {
-  font-family: var(--f-display); font-stretch: 90%; font-weight: 800; font-size: 15px; letter-spacing: .05em; text-transform: uppercase;
-  border-radius: 10px; padding: 12px 20px; cursor: pointer; border: 1.5px solid var(--label);
-}
-button.primary { background: var(--label); color: #fff; }
-button.primary:hover { filter: brightness(1.06); }
-button.primary:disabled { opacity: .55; cursor: progress; }
-button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-button.ghost:hover { border-color: var(--ink); }
 .note { font-size: 13px; color: var(--muted); margin: 0; }
 .status { font-size: 14px; color: var(--muted); min-height: 1.5em; margin: 0; }
 .status.err { color: var(--bad); }
 
-/* The slab: a graded-card case with its label strip */
-.slab { background: var(--plastic); border: 1px solid var(--line); border-radius: 18px; padding: 10px; box-shadow: var(--shadow); min-width: 0; }
-.slab-label { background: var(--panel); border: 2.5px solid var(--label); border-radius: 10px; padding: 12px 16px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; align-items: center; }
-.slab-brand { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--label); }
-.slab-cert { font-family: var(--f-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.slab-headline { grid-column: 1; font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: clamp(19px, 2.6vw, 24px); line-height: 1.15; text-wrap: balance; margin: 4px 0 0; }
-.slab-score { grid-column: 2; grid-row: 1 / span 3; text-align: center; display: grid; justify-items: center; gap: 2px; }
-.slab-score .k { font-family: var(--f-display); font-stretch: 75%; font-weight: 800; font-size: 11px; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
-.slab-score .v { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 54px; line-height: .9; font-variant-numeric: tabular-nums; }
-.pill { display: inline-block; font-family: var(--f-display); font-stretch: 80%; font-weight: 900; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 3px 10px; border-radius: 999px; }
-.v-safe { color: var(--ok); } .v-caution { color: var(--warn); } .v-scam { color: var(--bad); }
-.pill.v-safe { background: var(--ok-soft); } .pill.v-caution { background: var(--warn-soft); } .pill.v-scam { background: var(--bad-soft); }
-.slab-body { padding: 16px 8px 8px; display: grid; gap: 18px; min-width: 0; }
-.example-tag { font-family: var(--f-mono); font-size: 12px; background: var(--label-soft); color: var(--label); border-radius: 6px; padding: 6px 10px; justify-self: start; }
-.summary { margin: 0; max-width: 62ch; }
-.section h3 { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
-.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+.result { display: grid; gap: 18px; min-width: 0; }
+.result-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; }
+@media (max-width: 640px) { .result-top { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
+.result-stage { perspective: 1000px; display: grid; place-items: center; padding: 8px 6px 34px; }
+.verdict-block { display: grid; gap: 10px; min-width: 0; }
+.example-tag { font-family: var(--f-mono); font-size: 12px; color: #6fd8ff; background: rgb(111 216 255 / .1); border: 1px solid rgb(111 216 255 / .25); border-radius: 8px; padding: 6px 10px; justify-self: start; }
+.meter { position: relative; height: 10px; border-radius: 99px; background: linear-gradient(90deg, var(--ok), var(--warn) 50%, var(--bad)); opacity: .9; }
+.meter i { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--bg); box-shadow: 0 0 0 2px #fff, 0 0 14px rgb(255 255 255 / .6); transform: translate(-50%, -50%); transition: left .9s cubic-bezier(.2,.8,.2,1); }
+.meter-scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.headline { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.12; margin: 0; text-wrap: balance; }
+.summary { margin: 0; color: #c9d0e0; max-width: 62ch; }
+.pill { display: inline-block; font-family: var(--f-display); font-stretch: 80%; font-weight: 900; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; padding: 4px 11px; border-radius: 999px; justify-self: start; }
+.p-safe { background: var(--ok-soft); color: var(--ok); } .p-caution { background: var(--warn-soft); color: var(--warn); } .p-scam { background: var(--bad-soft); color: var(--bad); }
+.section h3 { font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 14px; background: rgb(0 0 0 / .18); }
 table { border-collapse: collapse; width: 100%; font-size: 14px; }
-th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th, td { text-align: left; padding: 10px 13px; border-bottom: 1px solid var(--line); vertical-align: top; }
 tr:last-child td { border-bottom: 0; }
-th { font-weight: 700; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+th { font-weight: 700; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
 td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
 td .sub { display: block; color: var(--muted); font-size: 12.5px; }
-.price-line { margin: 8px 0 0; font-size: 14px; }
-ul.flags, ul.checks, ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-ul.flags li, ul.checks li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; align-items: baseline; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
-ul.flags li .why, ul.checks li .why { grid-column: 2; color: var(--muted); font-size: 14px; }
-.sev { font-family: var(--f-mono); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 2px 7px; border-radius: 6px; }
+.price-line { margin: 10px 0 0; font-size: 14px; color: #c9d0e0; }
+ul.flags { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+ul.flags li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; align-items: baseline; background: rgb(0 0 0 / .18); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; animation: rise .45s both; }
+ul.flags li .why { grid-column: 2; color: var(--muted); font-size: 14px; }
+@keyframes rise { from { transform: translateY(6px); opacity: .001; } }
+.sev { font-family: var(--f-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 3px 7px; border-radius: 6px; }
 .sev-high, .r-fail { background: var(--bad-soft); color: var(--bad); }
 .sev-medium, .r-unclear { background: var(--warn-soft); color: var(--warn); }
 .sev-low, .r-pass { background: var(--ok-soft); color: var(--ok); }
-ul.plain li { padding-left: 18px; position: relative; font-size: 15px; }
-ul.plain li::before { content: ""; position: absolute; left: 3px; top: .62em; width: 7px; height: 7px; border-radius: 2px; background: var(--muted); }
-ul.plain.good li::before { background: var(--ok); }
-ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15px; }
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
-.share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 14px; }
+ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+ul.plain li { padding-left: 18px; position: relative; font-size: 15px; }
+ul.plain li::before { content: ""; position: absolute; left: 3px; top: .6em; width: 7px; height: 7px; border-radius: 2px; background: var(--ok); }
+ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15px; }
+.share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 16px; }
 .disclaimer { font-size: 12.5px; color: var(--muted); margin: 0; }
-.loading { padding: 40px 12px; display: grid; justify-items: center; gap: 10px; text-align: center; color: var(--muted); }
-.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--label); animation: spin 0.9s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
-footer { color: var(--muted); font-size: 13px; }
+.loading { display: grid; gap: 6px; }
+.loading strong { font-family: var(--f-display); font-stretch: 80%; font-size: 24px; }
+.loading .steps-live { font-family: var(--f-mono); font-size: 13px; color: #6fd8ff; }
+
+footer { padding-block: 24px 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); position: relative; z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt.float, .holo-text, .scanning .scanline, ul.flags li { animation: none; }
+  .tilt, .meter i { transition: none; }
+}
 </style>
 
-<div class="wrap">
-  <header>
-    <div class="brand">
-      <h1 class="wordmark">Trade <span>Check</span></h1>
-      <p class="tagline">Paste a card listing, a seller chat or photos. Get a scam-risk score and a price check before you send money or swap cards.</p>
-    </div>
-    <div class="mode" id="mode">Loading…</div>
-  </header>
-
-  <div class="grid">
-    <form class="panel" id="form" novalidate>
-      <p class="step-title">What are you checking?</p>
-      <label class="field" for="listing">Listing text or chat
-        <small>Copy the post, the seller's messages or the trade offer.</small>
-        <textarea id="listing" placeholder="e.g. Selling Charizard ex 199/165 SIR, mint, $180. Message me on WhatsApp, bank transfer only…"></textarea>
-      </label>
-      <label class="field" for="price">Asking price <small>Optional, with currency.</small>
-        <input type="text" id="price" placeholder="$180" autocomplete="off">
-      </label>
-      <div class="field" style="display:grid;gap:6px">
-        <span style="font-weight:700;font-size:15px">Photos <small style="font-weight:400;color:var(--muted);font-size:13px">Up to 4: card front and back, the listing, or chat screenshots.</small></span>
-        <label class="drop" id="drop" for="photos">
-          <input type="file" id="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
-          <span class="drop-hint"><b>Choose photos</b> or drop them here</span>
-          <div class="thumbs" id="thumbs"></div>
-        </label>
-      </div>
-      <div class="actions">
-        <button class="primary" type="submit" id="check">Check this deal</button>
-        <button class="ghost" type="button" id="clear">Clear</button>
-      </div>
-      <p class="status" id="status" role="status" aria-live="polite"></p>
-      <p class="note" id="mode-note"></p>
-    </form>
-
-    <section id="result" aria-live="polite"></section>
+<div class="band nav">
+  <div class="wrap">
+    <a class="logo" href="#check"><span class="logo-mark" aria-hidden="true"></span>Trade Check</a>
+    <span class="mode" id="mode">Loading</span>
   </div>
-
-  <footer>Trade Check is a risk check, not an authentication. A card can only be proven real in hand or by a grading company. Not affiliated with Nintendo, The Pokémon Company or any grader.</footer>
 </div>
+
+<section class="band hero">
+  <div class="wrap">
+    <div>
+      <p class="eyebrow">Scam and price check for card deals</p>
+      <h1 class="display">Know it's legit <span class="holo-text">before you pay.</span></h1>
+      <p class="lede">Paste a listing, a seller chat or photos of the card. Trade Check spots the scam playbook, checks what's visible for fakes, and compares the price with recent sales.</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="#check">Check a deal</a>
+        <a class="btn btn-ghost" href="#result">See an example</a>
+      </div>
+      <div class="stats">
+        <div class="stat"><b>+45%</b><span>more counterfeit and altered cards caught in 2025</span></div>
+        <div class="stat"><b>6 of 10</b><span>most-faked trading cards are Pokémon</span></div>
+        <div class="stat"><b>$200M+</b><span>in fake cards intercepted by PSA last year</span></div>
+      </div>
+      <p class="source">Source: <a href="https://finance.yahoo.com/markets/crypto/articles/fake-pok-mon-cards-flooding-120252009.html" target="_blank" rel="noopener">PSA's first fraud report, via USA Today, May 2026</a></p>
+    </div>
+
+    <div class="stage" id="hero-stage">
+      <div class="ghost-card a" aria-hidden="true"></div>
+      <div class="ghost-card b" aria-hidden="true"></div>
+      <div class="tilt float" id="hero-tilt" role="img" aria-label="A graded card slab rated Looks safe with a risk score of 12">
+        <div class="slab">
+          <div class="label">
+            <div><div class="brand">Trade Check</div><div class="cert">TC-261020-EMBR</div></div>
+            <div class="score"><small>RISK</small><b class="t-safe" id="hero-score">12</b></div>
+            <div class="verdict t-safe">Looks safe</div>
+          </div>
+          <div class="card">
+            <div class="art" id="hero-art"></div>
+            <div class="frame"></div>
+            <div class="nameplate">Emberkit <small>HP <em>120</em></small></div>
+            <div class="footplate"><b>Cinder Leap</b> 90<br>Flip a coin. If heads, this attack does 30 more.<span class="num">042/198 ★</span></div>
+            <div class="foil"></div>
+            <div class="glare"></div>
+          </div>
+        </div>
+        <div class="shadow"></div>
+      </div>
+      <span class="tilt-hint">Drag or hover to tilt</span>
+    </div>
+  </div>
+</section>
+
+<section class="band steps" aria-label="How it works">
+  <div class="wrap">
+    <ol>
+      <li><h3>Paste the deal</h3><p>The listing text, the seller's messages, or screenshots of either.</p></li>
+      <li><h3>Add card photos</h3><p>Front and back help the fake-card checks. Up to 4 photos.</p></li>
+      <li><h3>Get your slab</h3><p>A risk score, red flags, a price check, and an image you can post.</p></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band checker" id="check">
+  <div class="wrap">
+    <h2 class="section-title">Run a check</h2>
+    <p class="section-sub" id="mode-note"></p>
+    <div class="grid">
+      <form class="panel" id="form" novalidate>
+        <label class="field" for="listing">Listing text or chat
+          <small>Copy the post, the seller's messages or the trade offer.</small>
+          <textarea id="listing" placeholder="e.g. Selling Charizard ex 199/165 SIR, mint, $180. Message me on WhatsApp, bank transfer only…"></textarea>
+        </label>
+        <label class="field" for="price">Asking price <small>Optional, with currency.</small>
+          <input type="text" id="price" placeholder="$180" autocomplete="off">
+        </label>
+        <div class="field">
+          <span>Photos <small>Up to 4: card front and back, the listing, or chat screenshots.</small></span>
+          <label class="drop" id="drop" for="photos">
+            <input type="file" id="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+            <span class="drop-hint"><b>Choose photos</b>, drop them here, or paste</span>
+            <div class="thumbs" id="thumbs"></div>
+          </label>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" id="check-btn">Check this deal</button>
+          <button class="btn btn-ghost" type="button" id="clear">Clear</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </form>
+
+      <section class="panel result" id="result" aria-live="polite"></section>
+    </div>
+  </div>
+</section>
+
+<footer class="band">
+  <div class="wrap">Trade Check is a risk check, not an authentication. A card can only be proven real in hand or by a grading company. Card art shown is an original illustration. Not affiliated with Nintendo, The Pokémon Company or any grader.</div>
+</footer>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
   const IN_CLAUDE = typeof window.claude !== "undefined";
   const MAX_PHOTOS = 4;
+  // Original showcase art. Loads on the hosted site; inside Claude the page draws its fallback art instead.
+  const ART_URL = "https://d8j0ntlcm91z4.cloudfront.net/user_3Jj13tEoR43bKhKT64AD0fklelv/hf_20261020_140901_b7f829ac-b6a5-4344-be9c-5fb8af30b2ab.png";
+  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let photos = [];          // File objects
   let sample = null;        // artifact mode
   let downloads = null;
   let current = null;       // last rendered result
+  let artOk = false;
 
   // ---------- prompt used when the page runs inside Claude (no web access) ----------
   const ARTIFACT_PROMPT = `You are Trade Check, a careful assistant that helps Pokemon TCG collectors judge whether a listing, a seller conversation, or a proposed trade is safe and fairly priced.
@@ -237,11 +415,76 @@ Reply with ONLY one JSON object in this shape:
     catch { return `${cur || ""} ${Math.round(Number(n))}`.trim(); }
   };
   function certId() {
-    const d = new Date();
-    const pad = (x) => String(x).padStart(2, "0");
+    const d = new Date(), pad = (x) => String(x).padStart(2, "0");
     return `TC-${String(d.getFullYear()).slice(2)}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
   }
   function setStatus(msg, isErr = false) { $("status").textContent = msg; $("status").classList.toggle("err", isErr); }
+
+  // ---------- 3D tilt ----------
+  function makeTilt(node, { idleFloat = false } = {}) {
+    if (!node || REDUCED) return;
+    let raf = 0, leaveTimer = 0;
+    const set = (px, py) => {
+      const rx = (0.5 - py) * 26, ry = (px - 0.5) * 32;
+      node.style.setProperty("--rx", rx.toFixed(2) + "deg");
+      node.style.setProperty("--ry", ry.toFixed(2) + "deg");
+      node.style.setProperty("--mx", (px * 100).toFixed(1) + "%");
+      node.style.setProperty("--my", (py * 100).toFixed(1) + "%");
+      node.style.setProperty("--hp", (20 + px * 60).toFixed(1) + "%");
+      node.style.setProperty("--glow", (Math.hypot(px - .5, py - .5) * 1.6).toFixed(2));
+    };
+    const target = node.closest(".stage, .result-stage") || node;
+    target.addEventListener("pointermove", (e) => {
+      const r = node.getBoundingClientRect();
+      const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+      const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
+      clearTimeout(leaveTimer);
+      node.classList.remove("float"); node.classList.add("live");
+      cancelAnimationFrame(raf); raf = requestAnimationFrame(() => set(px, py));
+    });
+    target.addEventListener("pointerleave", () => {
+      node.classList.remove("live");
+      set(.5, .5); node.style.setProperty("--glow", "0");
+      if (idleFloat) leaveTimer = setTimeout(() => { node.style.removeProperty("--rx"); node.style.removeProperty("--ry"); node.classList.add("float"); }, 900);
+    });
+  }
+
+  function artNode(target, photoUrl) {
+    target.replaceChildren();
+    if (photoUrl) { target.classList.remove("fallback"); target.append(el("img", { src: photoUrl, alt: "Your card photo" })); return; }
+    if (artOk) { target.classList.remove("fallback"); target.style.backgroundImage = `url("${ART_URL}")`; }
+    else target.classList.add("fallback");
+  }
+  function loadArt() {
+    const img = new Image();
+    img.onload = () => { artOk = true; artNode($("hero-art")); if (current && !current.photoUrl) render(current, true); };
+    img.onerror = () => { artOk = false; };
+    img.src = ART_URL;
+  }
+
+  function countUp(node, to) {
+    if (REDUCED) { node.textContent = String(to); return; }
+    const from = 0, t0 = performance.now(), dur = 900;
+    const step = (t) => { const k = Math.min(1, (t - t0) / dur); node.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
+
+  // ---------- slab builder ----------
+  function slab({ verdict, risk, cert, photoUrl, small = true, scanning = false }) {
+    const v = normVerdict(verdict);
+    const art = el("div", { class: "art fallback" });
+    const card = el("div", { class: "card" }, art, el("div", { class: photoUrl ? "frame plain" : "frame" }));
+    if (!photoUrl) card.append(el("div", { class: "nameplate" }, "Emberkit ", el("small", {}, "HP ", el("em", { text: "120" }))));
+    card.append(el("div", { class: "foil" }), el("div", { class: "glare" }), el("div", { class: "scanline" }));
+    artNode(art, photoUrl);
+    const scoreB = el("b", { class: `t-${v}`, text: scanning ? "··" : String(clampRisk(risk)) });
+    const label = el("div", { class: "label" },
+      el("div", {}, el("div", { class: "brand", text: "Trade Check" }), el("div", { class: "cert", text: cert || "" })),
+      el("div", { class: "score" }, el("small", { text: "RISK" }), scoreB),
+      el("div", { class: `verdict t-${v}`, text: scanning ? "Checking…" : VERDICT_WORD[v] }));
+    const tilt = el("div", { class: "tilt" + (scanning ? " scanning" : "") }, el("div", { class: "slab" + (small ? " small" : "") }, label, card), el("div", { class: "shadow" }));
+    return { tilt, scoreB };
+  }
 
   // ---------- photos ----------
   function addFiles(list) {
@@ -323,18 +566,27 @@ Reply with ONLY one JSON object in this shape:
     const text = $("listing").value.trim();
     const price = $("price").value.trim();
     if (!text && !photos.length) { setStatus("Paste a listing or chat, or add a photo first.", true); $("listing").focus(); return; }
-    $("check").disabled = true;
+    $("check-btn").disabled = true;
     setStatus("");
+    const photoUrl = photos[0] ? URL.createObjectURL(photos[0]) : null;
     const started = Date.now();
-    const tick = el("span", { text: "0s" });
-    $("result").replaceChildren(el("div", { class: "slab" }, el("div", { class: "loading" },
-      el("div", { class: "spinner", "aria-hidden": "true" }),
-      el("strong", { text: "Checking the deal…" }),
-      el("span", { text: IN_CLAUDE ? "Reading the listing and photos." : "Reading the listing and photos, then looking up recent sold prices." }),
-      tick)));
-    const timer = setInterval(() => { tick.textContent = `${Math.round((Date.now() - started) / 1000)}s`; }, 1000);
+    const { tilt } = slab({ verdict: "caution", risk: 0, cert: "SCANNING", photoUrl, scanning: true });
+    const tick = el("span", { class: "steps-live", text: "0s" });
+    const phases = IN_CLAUDE
+      ? ["Reading the listing", "Checking the photos", "Weighing red flags"]
+      : ["Reading the listing", "Checking the photos", "Searching recent sold prices", "Weighing red flags"];
+    $("result").replaceChildren(el("div", { class: "result-top" },
+      el("div", { class: "result-stage" }, tilt),
+      el("div", { class: "loading" }, el("strong", { text: "Grading the deal…" }), el("span", { class: "summary", text: "This usually takes under a minute." }), tick)));
+    makeTilt(tilt);
+    if (innerWidth < 920) $("result").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+    const timer = setInterval(() => {
+      const s = Math.round((Date.now() - started) / 1000);
+      tick.textContent = `${phases[Math.min(phases.length - 1, Math.floor(s / 9))]} · ${s}s`;
+    }, 1000);
     try {
       const r = await runCheck(text, price);
+      r.photoUrl = photoUrl;
       render(r);
     } catch (err) {
       const msg = err?.friendly || SAMPLE_ERRORS[err?.code] || "The check failed. Try again.";
@@ -342,7 +594,7 @@ Reply with ONLY one JSON object in this shape:
       if (current) render(current, true); else $("result").replaceChildren();
     } finally {
       clearInterval(timer);
-      $("check").disabled = false;
+      $("check-btn").disabled = false;
     }
   });
 
@@ -357,17 +609,18 @@ Reply with ONLY one JSON object in this shape:
     if (!keepId || !r.cert) r.cert = r.example ? "TC-EXAMPLE" : certId();
     current = r;
 
-    const label = el("div", { class: "slab-label" },
-      el("div", {}, el("div", { class: "slab-brand", text: "Trade Check" }), el("div", { class: "slab-cert", text: r.cert })),
-      el("div", { class: "slab-score" },
-        el("span", { class: "k", text: "Risk" }),
-        el("span", { class: `v v-${v}`, text: String(risk) }),
-        el("span", { class: `pill v-${v}`, text: VERDICT_WORD[v] })),
-      el("p", { class: "slab-headline", text: r.headline || VERDICT_WORD[v] }));
+    const { tilt, scoreB } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl });
+    const meterDot = el("i", { style: "left:0%" });
+    const verdictBlock = el("div", { class: "verdict-block" });
+    if (r.example) verdictBlock.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
+    verdictBlock.append(
+      el("span", { class: `pill p-${v}`, text: `${VERDICT_WORD[v]} · risk ${risk}` }),
+      el("p", { class: "headline", text: r.headline || VERDICT_WORD[v] }),
+      el("div", { class: "meter", role: "img", "aria-label": `Risk ${risk} out of 100` }, meterDot),
+      el("div", { class: "meter-scale", "aria-hidden": "true" }, el("span", { text: "0 safe" }), el("span", { text: "50" }), el("span", { text: "100 scam" })));
+    if (r.summary) verdictBlock.append(el("p", { class: "summary", text: r.summary }));
 
-    const body = el("div", { class: "slab-body" });
-    if (r.example) body.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
-    if (r.summary) body.append(el("p", { class: "summary", text: r.summary }));
+    const out = [el("div", { class: "result-top" }, el("div", { class: "result-stage" }, tilt), verdictBlock)];
 
     const cards = Array.isArray(r.cards) ? r.cards.filter((c) => c && c.name) : [];
     if (cards.length) {
@@ -384,24 +637,24 @@ Reply with ONLY one JSON object in this shape:
         el("div", { class: "table-wrap" }, el("table", {},
           el("thead", {}, el("tr", {}, el("th", { text: "Card" }), el("th", { text: "Asking" }), el("th", { text: r.mode === "live" ? "Recent sold" : "Market (est.)" }))), tb)));
       if (r.price_check) sec.append(el("p", { class: "price-line", text: r.price_check }));
-      body.append(sec);
+      out.push(sec);
     }
 
     const flags = Array.isArray(r.red_flags) ? r.red_flags : [];
     if (flags.length) {
       const order = { high: 0, medium: 1, low: 2 };
       const ul = el("ul", { class: "flags" });
-      [...flags].sort((a, b) => (order[a.severity] ?? 1) - (order[b.severity] ?? 1)).forEach((f) => {
+      [...flags].sort((a, b) => (order[a.severity] ?? 1) - (order[b.severity] ?? 1)).forEach((f, i) => {
         const sev = ["high", "medium", "low"].includes(f.severity) ? f.severity : "medium";
-        ul.append(el("li", {}, el("span", { class: `sev sev-${sev}`, text: sev }), el("strong", { text: f.flag || "" }), el("span", { class: "why", text: f.why || "" })));
+        ul.append(el("li", { style: `animation-delay:${i * 70}ms` }, el("span", { class: `sev sev-${sev}`, text: sev }), el("strong", { text: f.flag || "" }), el("span", { class: "why", text: f.why || "" })));
       });
-      body.append(el("div", { class: "section" }, el("h3", { text: `Red flags (${flags.length})` }), ul));
+      out.push(el("div", { class: "section" }, el("h3", { text: `Red flags (${flags.length})` }), ul));
     }
 
     const cols = el("div", { class: "cols" });
     const checks = Array.isArray(r.fake_checks) ? r.fake_checks : [];
     if (checks.length) {
-      const ul = el("ul", { class: "checks" });
+      const ul = el("ul", { class: "flags" });
       checks.forEach((c) => {
         const res = ["pass", "fail", "unclear"].includes(c.result) ? c.result : "unclear";
         ul.append(el("li", {}, el("span", { class: `sev r-${res}`, text: res }), el("strong", { text: c.check || "" }), el("span", { class: "why", text: c.note || "" })));
@@ -410,21 +663,24 @@ Reply with ONLY one JSON object in this shape:
     }
     const side = el("div", { style: "display:grid;gap:18px;align-content:start" });
     const good = Array.isArray(r.good_signs) ? r.good_signs.filter(Boolean) : [];
-    if (good.length) side.append(el("div", { class: "section" }, el("h3", { text: "Good signs" }), el("ul", { class: "plain good" }, ...good.map((g) => el("li", { text: g })))));
+    if (good.length) side.append(el("div", { class: "section" }, el("h3", { text: "Good signs" }), el("ul", { class: "plain" }, ...good.map((g) => el("li", { text: g })))));
     const next = Array.isArray(r.next_steps) ? r.next_steps.filter(Boolean) : [];
     if (next.length) side.append(el("div", { class: "section" }, el("h3", { text: "What to do next" }), el("ol", { class: "next" }, ...next.map((s) => el("li", { text: s })))));
     if (side.childElementCount) cols.append(side);
-    if (cols.childElementCount) body.append(cols);
+    if (cols.childElementCount) out.push(cols);
 
-    const saveBtn = el("button", { class: "ghost", type: "button", text: "Save verdict image" });
-    const copyBtn = el("button", { class: "ghost", type: "button", text: "Copy summary" });
+    const saveBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Save verdict image" });
+    const copyBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Copy summary" });
     saveBtn.onclick = () => saveImage(r, saveBtn);
     copyBtn.onclick = () => copySummary(r, copyBtn);
     if (IN_CLAUDE && !downloads) saveBtn.hidden = true;
-    body.append(el("div", { class: "share" }, saveBtn, copyBtn,
+    out.push(el("div", { class: "share" }, saveBtn, copyBtn,
       el("p", { class: "disclaimer", text: r.mode === "live" ? "Prices from a live web search at check time." : r.example ? "" : "Prices are Claude's estimates, not live data." })));
 
-    $("result").replaceChildren(el("div", { class: "slab" }, label, body));
+    $("result").replaceChildren(...out);
+    makeTilt(tilt);
+    if (!keepId) countUp(scoreB, risk);
+    requestAnimationFrame(() => requestAnimationFrame(() => { meterDot.style.left = risk + "%"; }));
   }
 
   function summaryText(r) {
@@ -445,7 +701,7 @@ Reply with ONLY one JSON object in this shape:
     setTimeout(() => { btn.textContent = "Copy summary"; }, 2000);
   }
 
-  // ---------- shareable image (fixed light palette so it looks the same everywhere) ----------
+  // ---------- shareable image (fixed night palette so it looks the same everywhere) ----------
   function wrapLines(ctx, text, maxW) {
     const words = String(text).split(/\s+/); const lines = []; let line = "";
     for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
@@ -464,29 +720,27 @@ Reply with ONLY one JSON object in this shape:
   }
   function paintVerdict(c, r, H) {
     const W = 1080, P = 64;
-    const C = { bg: "#eef1f5", plastic: "#f8fafc", panel: "#ffffff", ink: "#141a2b", muted: "#5a6378", line: "#d5dbe5", label: "#c8202a",
-      safe: "#1d7a4a", caution: "#9a5b00", scam: "#b3141d", safeSoft: "#e3f3ea", cautionSoft: "#fdf1dc", scamSoft: "#fbe4e5" };
+    const C = { bg: "#090c15", plastic: "#141b2e", panel: "#f6f7fb", ink: "#eef1f8", dark: "#141a2b", muted: "#9aa4bb", mutedDark: "#5a6378", line: "#2a3350", label: "#ff4a55",
+      safe: "#138a52", caution: "#b06a00", scam: "#c8202a", safeSoft: "#e3f3ea", cautionSoft: "#fdf1dc", scamSoft: "#fbe4e5",
+      high: "#ff6b74", medium: "#ffc15e", low: "#4fdc9a" };
     const v = normVerdict(r.verdict); const risk = clampRisk(r.risk);
     const x = c.getContext("2d");
     x.fillStyle = C.bg; x.fillRect(0, 0, W, H);
-    // case
+    const g = x.createRadialGradient(W * .85, 0, 0, W * .85, 0, 700); g.addColorStop(0, "rgba(111,216,255,.22)"); g.addColorStop(1, "rgba(111,216,255,0)");
+    x.fillStyle = g; x.fillRect(0, 0, W, H);
     roundRect(x, P - 20, P - 20, W - 2 * P + 40, H - 2 * P + 40, 36); x.fillStyle = C.plastic; x.fill(); x.strokeStyle = C.line; x.lineWidth = 3; x.stroke();
-    // label
     const LX = P + 10, LY = P + 10, LW = W - 2 * P - 20, LH = 300;
     roundRect(x, LX, LY, LW, LH, 18); x.fillStyle = C.panel; x.fill(); x.strokeStyle = C.label; x.lineWidth = 7; x.stroke();
-    x.fillStyle = C.label; x.font = '900 34px "Archivo", "Arial Narrow", sans-serif'; x.letterSpacing = "6px"; x.fillText("TRADE CHECK", LX + 36, LY + 62);
-    x.letterSpacing = "0px"; x.fillStyle = C.muted; x.font = '500 24px "JetBrains Mono", monospace'; x.fillText(r.cert || "", LX + 36, LY + 100);
-    // score block
+    x.fillStyle = "#c8202a"; x.font = '900 34px "Archivo", "Arial Narrow", sans-serif'; x.letterSpacing = "6px"; x.fillText("TRADE CHECK", LX + 36, LY + 62);
+    x.letterSpacing = "0px"; x.fillStyle = C.mutedDark; x.font = '500 24px "JetBrains Mono", monospace'; x.fillText(r.cert || "", LX + 36, LY + 100);
     const SX = LX + LW - 230;
-    x.textAlign = "center"; x.fillStyle = C.muted; x.font = '800 22px "Archivo", sans-serif'; x.letterSpacing = "5px"; x.fillText("RISK", SX + 100, LY + 60);
+    x.textAlign = "center"; x.fillStyle = C.mutedDark; x.font = '800 22px "Archivo", sans-serif'; x.letterSpacing = "5px"; x.fillText("RISK", SX + 100, LY + 60);
     x.letterSpacing = "0px"; x.fillStyle = C[v]; x.font = '900 150px "Archivo", "Arial Narrow", sans-serif'; x.fillText(String(risk), SX + 100, LY + 198);
     const word = VERDICT_WORD[v].toUpperCase(); x.font = '900 28px "Archivo", sans-serif'; const pw = x.measureText(word).width + 44;
     roundRect(x, SX + 100 - pw / 2, LY + 220, pw, 48, 24); x.fillStyle = C[v + "Soft"]; x.fill(); x.fillStyle = C[v]; x.fillText(word, SX + 100, LY + 254);
     x.textAlign = "left";
-    // headline in label
-    x.fillStyle = C.ink; x.font = '800 42px "Archivo", "Arial Narrow", sans-serif';
+    x.fillStyle = C.dark; x.font = '800 42px "Archivo", "Arial Narrow", sans-serif';
     wrapLines(x, r.headline || VERDICT_WORD[v], LW - 320).slice(0, 3).forEach((ln, i) => x.fillText(ln, LX + 36, LY + 165 + i * 48));
-    // body: red flags
     let y = LY + LH + 70;
     x.fillStyle = C.muted; x.font = '800 24px "Archivo", sans-serif'; x.letterSpacing = "4px"; x.fillText("RED FLAGS", LX + 10, y); x.letterSpacing = "0px";
     y += 30;
@@ -494,20 +748,17 @@ Reply with ONLY one JSON object in this shape:
     if (!flags.length) { y += 40; x.fillStyle = C.ink; x.font = '400 34px "Atkinson Hyperlegible", sans-serif'; x.fillText("None found in what was shared.", LX + 10, y); }
     for (const f of flags) {
       const sev = ["high", "medium", "low"].includes(f.severity) ? f.severity : "medium";
-      const col = sev === "high" ? C.scam : sev === "medium" ? C.caution : C.safe;
-      y += 52; x.fillStyle = col; x.beginPath(); x.arc(LX + 22, y - 12, 10, 0, Math.PI * 2); x.fill();
+      y += 52; x.fillStyle = C[sev]; x.beginPath(); x.arc(LX + 22, y - 12, 10, 0, Math.PI * 2); x.fill();
       x.fillStyle = C.ink; x.font = '700 34px "Atkinson Hyperlegible", sans-serif'; x.fillText(f.flag || "", LX + 50, y);
       x.fillStyle = C.muted; x.font = '400 27px "Atkinson Hyperlegible", sans-serif';
       wrapLines(x, f.why || "", LW - 60).slice(0, 2).forEach((ln) => { y += 36; x.fillText(ln, LX + 50, y); });
       y += 8;
     }
-    // price line
     if (r.price_check) {
       y += 60; x.fillStyle = C.muted; x.font = '800 24px "Archivo", sans-serif'; x.letterSpacing = "4px"; x.fillText("PRICE", LX + 10, y); x.letterSpacing = "0px";
       x.fillStyle = C.ink; x.font = '400 30px "Atkinson Hyperlegible", sans-serif';
       wrapLines(x, r.price_check, LW - 20).slice(0, 3).forEach((ln) => { y += 42; x.fillText(ln, LX + 10, y); });
     }
-    // footer
     x.fillStyle = C.muted; x.font = '400 22px "Atkinson Hyperlegible", sans-serif';
     x.fillText("Checked with Claude. A risk check, not an authentication.", LX + 10, H - P - 20);
     return y;
@@ -528,15 +779,18 @@ Reply with ONLY one JSON object in this shape:
   }
 
   // ---------- boot ----------
+  artNode($("hero-art"));
+  makeTilt($("hero-tilt"), { idleFloat: true });
   render(EXAMPLE);
   if (IN_CLAUDE) {
     $("mode").innerHTML = "<b>Claude</b> · price estimates";
-    $("mode-note").textContent = "Runs on your own Claude account. Prices are estimates; the full version looks up live sold prices.";
-    claude.use("sample").then((s) => { sample = s; if (!s) { $("check").disabled = true; setStatus("Checks need Claude. Open this page in Claude while signed in.", true); } });
+    $("mode-note").textContent = "Runs on your own Claude account. Prices are Claude's estimates; the hosted version looks up live sold prices.";
+    claude.use("sample").then((s) => { sample = s; if (!s) { $("check-btn").disabled = true; setStatus("Checks need Claude. Open this page in Claude while signed in.", true); } });
     claude.use("downloads").then((d) => { downloads = d; if (current) render(current, true); });
   } else {
     $("mode").innerHTML = "<b>Live</b> · sold-price lookup";
-    $("mode-note").textContent = "Each check reads your photos and searches recent sold prices. Checks are limited per hour.";
+    $("mode-note").textContent = "Each check reads your photos and searches recent sold prices. Checks are limited per hour so the site stays free.";
+    loadArt();
   }
 })();
 </script>
