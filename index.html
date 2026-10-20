@@ -19,11 +19,28 @@
   --warn: #ffc15e; --warn-soft: rgb(255 193 94 / .14);
   --bad: #ff6b74;  --bad-soft: rgb(255 107 116 / .15);
   --holo: linear-gradient(115deg, #ff7ab6 0%, #ffd36e 18%, #7dffb2 36%, #6fd8ff 54%, #a98bff 72%, #ff7ab6 90%);
-  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  /* the foil layer has no filter any more: the extra chroma is baked into the stops */
+  --holo-foil: linear-gradient(115deg, #ff62aa 0%, #ffcc45 18%, #55ffa0 36%, #45d0ff 54%, #9b72ff 72%, #ff62aa 90%);
+  --f-display: "Archivo", "TC Narrow", "TC Grotesk", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  /* motion tokens */
+  --e-out: cubic-bezier(.16,1,.3,1); --e-snap: cubic-bezier(.2,.8,.2,1); --e-precise: cubic-bezier(.65,0,.35,1);
+  --e-slam: cubic-bezier(.55,0,1,.45); --e-roll: cubic-bezier(.34,1.56,.64,1); --e-deal: cubic-bezier(.2,.9,.25,1.1);
+  --spring-snap: var(--e-out); --spring-bouncy: var(--e-roll); --spring-punchy: var(--e-roll);
+  --hud: #6fd8ff; --fault: #9aa4bb;
   color-scheme: dark;
 }
+@supports (animation-timing-function: linear(0, 1)) {
+  :root {
+    --spring-snap:  linear(0,.099,.291,.502,.701,.846,.947,1.009,1.04,1.05,1.048,1.039,1.028,1.018,1.01,1.004,1,.998,.998,.997,.998,.998,.999,.999,1);
+    --spring-bouncy:linear(0,.108,.33,.581,.804,.971,1.076,1.125,1.132,1.113,1.081,1.048,1.02,1,.987,.983,.983,.986,.99,.995,.998,1.001,1.002,1.002,1.002,1.002,1.001,1.001,1);
+    --spring-punchy:linear(0,.142,.439,.737,.992,1.139,1.2,1.189,1.14,1.075,1.02,.981,.962,.96,.967,.98,.992,1.001,1.007,1.008,1.007,1.005,1.002,1,.999,.998,.998,.999,.999,1,1);
+  }
+}
+/* width-matched fallbacks for the condensed display face: before Archivo arrives the headline wraps the same, so the swap moves nothing */
+@font-face { font-family: "TC Narrow"; src: local("Arial Narrow Bold"), local("ArialNarrow-Bold"), local("Arial Narrow"), local("ArialNarrow"); font-weight: 100 900; size-adjust: 92%; }
+@font-face { font-family: "TC Grotesk"; src: local("Arial Bold"), local("Arial-BoldMT"), local("Helvetica Neue Bold"), local("HelveticaNeue-Bold"), local("Helvetica Bold"), local("Helvetica-Bold"), local("Liberation Sans Bold"), local("LiberationSans-Bold"), local("Roboto Bold"), local("Roboto-Bold"), local("Inter Bold"), local("Inter-Bold"), local("FreeSans Bold"), local("FreeSansBold"); font-weight: 100 900; size-adjust: 72%; }
 * { box-sizing: border-box; }
 html { background: var(--bg); }
 body {
@@ -35,6 +52,7 @@ body {
     var(--bg);
   min-height: 100%;
   overflow-x: hidden;
+  overflow-anchor: none;   /* the result panel changes height under the reader; keep the scroll where the code puts it */
 }
 body::after { /* faint playmat grid */
   content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -46,70 +64,101 @@ body::after { /* faint playmat grid */
 .wrap { max-width: 1160px; margin: 0 auto; }
 a { color: inherit; }
 :focus-visible { outline: 2px solid #6fd8ff; outline-offset: 3px; }
+[tabindex="-1"]:focus { outline: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; padding: 0; }
+.deco { pointer-events: none; transition: opacity .2s; }
+html.m-boot .deco { opacity: 0; }
 
 /* ---------- nav ---------- */
 .nav { padding-block: 22px 0; }
 .nav .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
 .logo { font-family: var(--f-display); font-stretch: 72%; font-weight: 900; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; text-decoration: none; display: flex; align-items: center; gap: 10px; }
-.logo-mark { width: 26px; height: 34px; border-radius: 5px; border: 2px solid var(--label); background: linear-gradient(180deg, var(--label) 0 28%, transparent 28%), var(--glass-2); box-shadow: 0 0 18px rgb(255 74 85 / .35); }
-.mode { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--muted); background: var(--glass); white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+.logo-mark { position: relative; overflow: hidden; width: 26px; height: 34px; border-radius: 5px; border: 2px solid var(--label); background: var(--glass-2); box-shadow: 0 0 18px rgb(255 74 85 / .35); }
+.logo-mark i { position: absolute; left: 0; right: 0; top: 0; height: 28%; background: var(--label); transform-origin: 50% 0; }
+.mode { position: relative; font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; color: var(--muted); background: var(--glass); white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
 .mode::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
 .mode b { color: var(--ink); }
+.mode::after { content: ""; position: absolute; left: 12px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; border: 1.5px solid var(--ok); opacity: 0; pointer-events: none; }
+.mode.beat::after { animation: beat 1.2s var(--e-out) 3; }
+@keyframes beat { from { opacity: .6; transform: scale(1); } to { opacity: 0; transform: scale(2.4); } }
 
 /* ---------- hero ---------- */
 .hero { padding-block: clamp(28px, 6vw, 72px) clamp(24px, 5vw, 56px); }
+.hero, .checker, .exhibit { overflow-x: clip; }
 .hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(24px, 5vw, 64px); align-items: center; }
 @media (max-width: 880px) { .hero .wrap { grid-template-columns: minmax(0, 1fr); } }
 .eyebrow { font-family: var(--f-mono); font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px; }
-h1.display { font-family: var(--f-display); font-stretch: 68%; font-weight: 900; text-transform: uppercase; line-height: .9; letter-spacing: -.005em; font-size: clamp(54px, 9.5vw, 116px); margin: 0; text-wrap: balance; }
-.holo-text { background: var(--holo); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 6s linear infinite; }
-@keyframes shimmer { to { background-position: 200% 0; } }
+h1.display { position: relative; font-family: var(--f-display); font-stretch: 68%; font-weight: 900; text-transform: uppercase; line-height: .9; letter-spacing: -.005em; font-size: clamp(54px, 9.5vw, 116px); margin: 0; text-wrap: balance; }
+/* word masks: each word rises inside its own clip; the holo gradient sits on each word so clip-text survives the transform */
+.w { display: inline-block; overflow: hidden; overflow: clip; padding: .08em .04em; margin: -.08em -.04em; }
+.w > i { display: inline-block; font-style: normal; }
+h1.display .ln { display: block; }   /* two phrases: the line count no longer depends on which font has loaded */
+.holo > i { background: var(--holo); background-size: 300% 100%; background-position: calc(var(--h) * 33%) 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1.display::after { /* laser hairline for the intro pass */
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; transform: translateY(-50%);
+  background: linear-gradient(180deg, transparent calc(50% - 14px), rgb(111 216 255 / .18) calc(50% - 2px), #6fd8ff calc(50% - 1px) calc(50% + 1px), rgb(111 216 255 / .18) calc(50% + 2px), transparent calc(50% + 14px));
+}
+h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .lede { font-size: clamp(17px, 1.7vw, 19px); color: #c9d0e0; max-width: 46ch; margin: 22px 0 28px; text-wrap: pretty; }
 .cta-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 .btn {
   font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 15px; letter-spacing: .06em; text-transform: uppercase;
-  border-radius: 12px; padding: 14px 22px; cursor: pointer; border: 1.5px solid transparent; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;
-  transition: transform .15s ease, box-shadow .2s ease, background .2s ease;
+  border-radius: 12px; padding: 14px 22px; cursor: pointer; border: 1.5px solid transparent; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  /* press, hover and magnet compose on separate individual transform properties */
+  transition: scale .22s var(--e-roll), translate .15s ease, background-color .2s ease, border-color .2s ease;
 }
+.btn:active { scale: .96; transition-duration: 70ms; }
 .btn-primary { background: var(--label); color: #fff; box-shadow: 0 10px 30px -8px rgb(255 74 85 / .65); }
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 14px 36px -8px rgb(255 74 85 / .8); }
-.btn-primary:disabled { opacity: .55; cursor: progress; transform: none; }
+.btn-primary:hover { translate: 0 -1px; }
+.btn-primary:disabled { opacity: .55; cursor: progress; translate: none; scale: none; }
 .btn-ghost { background: var(--glass); color: var(--ink); border-color: var(--line); }
 .btn-ghost:hover { border-color: rgb(255 255 255 / .35); }
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 34px; max-width: 560px; }
 @media (max-width: 480px) { .stats { grid-template-columns: minmax(0, 1fr); } }
 .stat { border-top: 1px solid var(--line); padding-top: 12px; }
 .stat b { display: block; font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
-.stat span { font-size: 13.5px; color: var(--muted); line-height: 1.35; display: block; margin-top: 6px; }
+.reel { display: inline-block; height: 1em; overflow: hidden; vertical-align: top; line-height: 1; }
+.reel > span { display: block; transform: translateY(calc(var(--n) * -10%)); }
+.stat > span { font-size: 13.5px; color: var(--muted); line-height: 1.35; display: block; margin-top: 6px; }
 .source { font-size: 12.5px; color: var(--muted); margin-top: 12px; }
 .source a { color: #b9c3d8; }
 
 /* ---------- 3D slab ---------- */
 .stage { position: relative; display: grid; place-items: center; min-height: 520px; perspective: 1100px; padding-bottom: 24px; }
 @media (max-width: 880px) { .stage { min-height: 460px; } }
-.ghost-card { position: absolute; width: min(220px, 46vw); aspect-ratio: 63 / 88; border-radius: 14px; opacity: .55; filter: blur(.4px) saturate(1.1); box-shadow: 0 30px 60px -20px rgb(0 0 0 / .8); border: 6px solid #1c2338; }
+.ghost-slot { position: absolute; width: min(220px, 46vw); transform-style: preserve-3d; pointer-events: none; }
+.ghost-card { position: relative; width: 100%; aspect-ratio: 63 / 88; border-radius: 14px; opacity: .55; border: 6px solid #1c2338; transform-style: preserve-3d; }
+.ghost-card::after { content: ""; position: absolute; left: 6%; right: 6%; bottom: -18px; height: 30px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / .55), transparent); transform: translateZ(-2px); }
 .ghost-card.a { transform: translate(-46%, 6%) rotate(-13deg) translateZ(-120px); background: radial-gradient(circle at 30% 30%, #6fd8ff, transparent 55%), radial-gradient(circle at 70% 75%, #3c4bd8, transparent 60%), linear-gradient(160deg, #13204a, #0c1226); }
 .ghost-card.b { transform: translate(46%, 8%) rotate(12deg) translateZ(-120px); background: radial-gradient(circle at 60% 30%, #7dffb2, transparent 55%), radial-gradient(circle at 30% 80%, #1f8a5b, transparent 60%), linear-gradient(160deg, #0f2f22, #08140f); }
 
-.tilt { --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%; --hp: 50%; --glow: 0; position: relative; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .5s cubic-bezier(.2,.8,.2,1); will-change: transform; touch-action: pan-y; }
-.tilt.live { transition: transform .08s linear; }
-.tilt.float { animation: float 7s ease-in-out infinite; }
+/* wrapper nesting, one owner per element: .deal (intro rise) > .bob (idle float) > .tilt (pointer tilt) */
+.deal, .bob { position: relative; transform-style: preserve-3d; }
+.bob.float { animation: float 7s ease-in-out infinite; }
+.bob.float.hold, .stage.off .bob.float { animation-play-state: paused; }
 @keyframes float { 0%,100% { transform: rotateX(6deg) rotateY(-10deg) translateY(0); } 50% { transform: rotateX(-4deg) rotateY(10deg) translateY(-10px); } }
+.tilt { --rx: 0deg; --ry: 0deg; --mx: 50%; --my: 50%; --hp: 50%; --glow: 0; position: relative; transform-style: preserve-3d; transform: rotateX(var(--rx)) rotateY(var(--ry)); transition: transform .5s cubic-bezier(.2,.8,.2,1); touch-action: pan-y; }
+.tilt.live { transition: transform .08s linear; }
+/* GSAP owns these once it has loaded (one owner per property) */
+.gsap-on .tilt { transition: none; }
+.gsap-on .bob { animation: none; }
 
 .slab {
   position: relative; width: min(340px, 78vw); padding: 14px 14px 18px; border-radius: 22px; transform-style: preserve-3d;
   background: linear-gradient(160deg, rgb(255 255 255 / .16), rgb(255 255 255 / .04) 40%, rgb(255 255 255 / .09));
   border: 1px solid rgb(255 255 255 / .22);
-  box-shadow: 0 40px 80px -24px rgb(0 0 0 / .85), inset 0 1px 0 rgb(255 255 255 / .35), inset 0 0 0 6px rgb(255 255 255 / .03);
-  backdrop-filter: blur(6px);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), inset 0 0 0 6px rgb(255 255 255 / .03);
 }
+/* no live backdrop blur (it re-blurred the page under every moving or scrolling frame); isolation keeps the foil and glare blend groups */
+.panel, .slab { backdrop-filter: none; isolation: isolate; }
 .slab.small { width: min(300px, 74vw); }
-.slab::after { /* plastic glare on the case */
+.slab::after { /* plastic glare on the case: static, so pointer frames don't restyle the subtree */
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; transform: translateZ(40px);
-  background: radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / .28), transparent 42%);
-  mix-blend-mode: soft-light; opacity: calc(.4 + var(--glow) * .6);
+  background: radial-gradient(circle at 30% 18%, rgb(255 255 255 / .28), transparent 42%);
+  mix-blend-mode: soft-light; opacity: .45;
 }
 .label {
+  position: relative; z-index: 2;
   transform: translateZ(26px); background: #f6f7fb; color: #141a2b; border: 3px solid var(--label); border-radius: 10px;
   padding: 9px 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; margin-bottom: 12px;
   box-shadow: 0 6px 16px -6px rgb(0 0 0 / .5);
@@ -119,8 +168,23 @@ h1.display { font-family: var(--f-display); font-stretch: 68%; font-weight: 900;
 .label .verdict { font-family: var(--f-display); font-stretch: 78%; font-weight: 900; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
 .label .score { grid-column: 2; grid-row: 1 / span 3; text-align: center; line-height: 1; }
 .label .score small { display: block; font-family: var(--f-display); font-weight: 800; font-size: 9.5px; letter-spacing: .16em; color: #5a6378; }
-.label .score b { font-family: var(--f-display); font-stretch: 68%; font-weight: 900; font-size: 44px; font-variant-numeric: tabular-nums; }
+.label .score b { display: inline-block; min-width: 2ch; font-family: var(--f-display); font-stretch: 68%; font-weight: 900; font-size: 44px; font-variant-numeric: tabular-nums; }
 .t-safe { color: #138a52; } .t-caution { color: #b06a00; } .t-scam { color: #c8202a; }
+.label::after { content: ""; position: absolute; inset: -3px; border: 3px solid var(--label); border-radius: 12px; opacity: 0; pointer-events: none; }
+/* safe seal: a calm mark, never a stamp (and it never says authentic) */
+.label .seal { position: absolute; right: 64px; bottom: -20px; width: 46px; height: 46px; rotate: -8deg; overflow: visible; z-index: 3; }
+.seal .rosette { fill: #10261d; stroke: #4fdc9a; stroke-width: 2; stroke-linejoin: round; }
+.seal .seal-ring { fill: none; stroke: rgb(79 220 154 / .55); stroke-width: 1.2; }
+.seal .seal-check { fill: none; stroke: #4fdc9a; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.seal .rosette, .seal .seal-ring, .seal .seal-check { stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.seal-g { transform-box: fill-box; transform-origin: 50% 50%; }
+/* instrument reticle (decoration; hidden at rest) */
+.reticle { position: absolute; inset: 0; pointer-events: none; z-index: 8; }
+.reticle .rc { position: absolute; left: 0; top: 0; width: 14px; height: 14px; border: 2px solid var(--v, var(--hud)); opacity: 0; }
+.reticle .rc:nth-child(1) { border-right: 0; border-bottom: 0; }
+.reticle .rc:nth-child(2) { border-left: 0; border-bottom: 0; }
+.reticle .rc:nth-child(3) { border-right: 0; border-top: 0; }
+.reticle .rc:nth-child(4) { border-left: 0; border-top: 0; }
 
 .card {
   position: relative; aspect-ratio: 63 / 88; border-radius: 14px; overflow: hidden; transform: translateZ(14px);
@@ -143,23 +207,19 @@ h1.display { font-family: var(--f-display); font-stretch: 68%; font-weight: 900;
 .footplate { position: absolute; left: 9px; right: 9px; bottom: 9px; padding: 8px 10px; background: rgb(255 244 214 / .93); color: #3b2a10; font-size: 11px; line-height: 1.35; }
 .footplate b { font-family: var(--f-display); font-stretch: 85%; font-size: 13px; }
 .footplate .num { display: block; text-align: right; margin-top: 2px; font-family: var(--f-mono); font-size: 9.5px; color: #7a6540; }
-/* holo foil + glare layers, driven by pointer */
-.foil, .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; }
-.foil {
-  background:
-    repeating-linear-gradient(115deg, transparent 0 6%, rgb(255 255 255 / .06) 6.5% 7%, transparent 7.5% 13%),
-    var(--holo);
-  background-size: 100% 100%, 300% 300%;
-  background-position: 0 0, var(--hp) var(--hp);
-  mix-blend-mode: color-dodge; opacity: calc(.18 + var(--glow) * .42);
-  filter: saturate(1.4) contrast(1.1);
-}
-.glare { background: radial-gradient(circle at var(--mx) var(--my), rgb(255 255 255 / .55), rgb(255 255 255 / .08) 30%, transparent 55%); mix-blend-mode: overlay; opacity: calc(.35 + var(--glow) * .65); }
-.shadow { position: absolute; left: 12%; right: 12%; bottom: -36px; height: 30px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / .6), transparent); filter: blur(6px); transform: translateZ(-60px); }
-.scanline { position: absolute; left: 0; right: 0; height: 22%; top: -25%; pointer-events: none; background: linear-gradient(180deg, transparent, rgb(111 216 255 / .0) 10%, rgb(111 216 255 / .55) 50%, transparent); mix-blend-mode: screen; display: none; }
-.scanning .scanline { display: block; animation: scan 1.6s ease-in-out infinite; }
-@keyframes scan { 0% { top: -25%; } 100% { top: 105%; } }
+/* foil engine: the band and the spot move (compositor); nothing repaints per pointer frame */
+.foil, .glare { position: absolute; inset: 0; border-radius: inherit; pointer-events: none; overflow: hidden; }
+.foil { mix-blend-mode: color-dodge; opacity: calc(.18 + var(--glow, 0) * .42); }
+.foil-band { position: absolute; inset: 0 -100%; background: repeating-linear-gradient(115deg, transparent 0 2%, rgb(255 255 255 / .06) 2.2% 2.4%, transparent 2.6% 4.4%), var(--holo-foil); transform: translate3d(calc((50% - var(--hp, 50%)) * .7), 0, 0); }
+.glare { mix-blend-mode: overlay; opacity: calc(.35 + var(--glow, 0) * .65); }
+.glare-spot { position: absolute; left: -50%; top: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgb(255 255 255 / .55), rgb(255 255 255 / .08) 15%, transparent 28%); transform: translate3d(calc((var(--mx, 50%) - 50%) * .5), calc((var(--my, 50%) - 50%) * .5), 0); }
+/* soft shadow: a pre-blurred gradient (no filter, no big box-shadow on the moving slab) */
+.shadow { position: absolute; left: 4%; right: 4%; bottom: -40px; height: 46px; border-radius: 50%; background: radial-gradient(closest-side, rgb(0 0 0 / .6), transparent); transform: translateZ(-60px); pointer-events: none; }
+.scanline { position: absolute; left: 0; right: 0; top: 0; height: 22%; transform: translateY(-110%); pointer-events: none; background: linear-gradient(180deg, transparent, rgb(var(--scan-rgb, 111 216 255) / 0) 10%, rgb(var(--scan-rgb, 111 216 255) / .55) 50%, transparent); mix-blend-mode: screen; display: none; }
+.scanning .scanline { display: block; animation: scan 1.8s ease-in-out infinite alternate; }
+@keyframes scan { to { transform: translateY(455%); } }
 .tilt-hint { position: absolute; bottom: -14px; left: 50%; transform: translateX(-50%); font-family: var(--f-mono); font-size: 11.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.m-calm .tilt-hint { visibility: hidden; }
 
 /* ---------- how it works ---------- */
 .steps { padding-block: 8px 40px; }
@@ -176,12 +236,14 @@ h1.display { font-family: var(--f-display); font-stretch: 68%; font-weight: 900;
 .section-sub { color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
 .grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 22px; align-items: start; }
 @media (max-width: 920px) { .grid { grid-template-columns: minmax(0, 1fr); } }
-.panel { background: linear-gradient(180deg, var(--glass-2), var(--glass)); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: grid; gap: 16px; min-width: 0; backdrop-filter: blur(10px); }
+.panel { background: linear-gradient(180deg, var(--glass-2), var(--glass)); border: 1px solid var(--line); border-radius: 20px; padding: 22px; display: grid; gap: 16px; min-width: 0; }
+@media (min-width: 921px) and (min-height: 760px) { form.panel#form { position: sticky; top: 16px; } }
 label.field, .field { display: grid; gap: 6px; font-weight: 700; font-size: 15px; }
 .field small { font-weight: 400; color: var(--muted); font-size: 13px; }
 textarea, input[type="text"] { font: inherit; font-size: 15px; color: var(--ink); background: rgb(0 0 0 / .28); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; width: 100%; transition: border-color .2s; }
 textarea::placeholder, input::placeholder { color: #6e7891; }
 textarea:focus, input:focus { border-color: rgb(111 216 255 / .6); outline: none; }
+textarea:focus-visible, input:focus-visible { outline: 2px solid #6fd8ff; outline-offset: 2px; }
 textarea { min-height: 150px; resize: vertical; }
 .drop { border: 1.5px dashed rgb(255 255 255 / .18); border-radius: 12px; padding: 14px; display: grid; gap: 10px; background: rgb(0 0 0 / .2); cursor: pointer; position: relative; transition: border-color .2s, background .2s; }
 .drop.over { border-color: #6fd8ff; background: rgb(111 216 255 / .08); }
@@ -199,14 +261,15 @@ textarea { min-height: 150px; resize: vertical; }
 .status { font-size: 14px; color: var(--muted); min-height: 1.5em; margin: 0; }
 .status.err { color: var(--bad); }
 
-.result { display: grid; gap: 18px; min-width: 0; }
+.result { display: grid; gap: 18px; min-width: 0; align-content: start; }
 .result-top { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 24px; align-items: center; }
 @media (max-width: 640px) { .result-top { grid-template-columns: minmax(0, 1fr); justify-items: center; } }
 .result-stage { perspective: 1000px; display: grid; place-items: center; padding: 8px 6px 34px; }
 .verdict-block { display: grid; gap: 10px; min-width: 0; }
 .example-tag { font-family: var(--f-mono); font-size: 12px; color: #6fd8ff; background: rgb(111 216 255 / .1); border: 1px solid rgb(111 216 255 / .25); border-radius: 8px; padding: 6px 10px; justify-self: start; }
-.meter { position: relative; height: 10px; border-radius: 99px; background: linear-gradient(90deg, var(--ok), var(--warn) 50%, var(--bad)); opacity: .9; }
-.meter i { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--bg); box-shadow: 0 0 0 2px #fff, 0 0 14px rgb(255 255 255 / .6); transform: translate(-50%, -50%); transition: left .9s cubic-bezier(.2,.8,.2,1); }
+.meter { position: relative; height: 10px; border-radius: 99px; background: linear-gradient(90deg, var(--ok), var(--warn) 50%, var(--bad)); opacity: .9; container-type: inline-size; }
+/* the dot moves by transform; --p is the risk (0-100) */
+.meter i { position: absolute; top: 50%; left: 0; width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 3px solid var(--bg); box-shadow: 0 0 0 2px #fff, 0 0 14px rgb(255 255 255 / .6); transform: translate(calc(var(--p, 0) * 1cqi - 50%), -50%); transition: transform .9s var(--e-out); }
 .meter-scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
 .headline { font-family: var(--f-display); font-stretch: 80%; font-weight: 800; font-size: clamp(22px, 2.6vw, 30px); line-height: 1.12; margin: 0; text-wrap: balance; }
 .summary { margin: 0; color: #c9d0e0; max-width: 62ch; }
@@ -222,9 +285,14 @@ td.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; white-s
 td .sub { display: block; color: var(--muted); font-size: 12.5px; }
 .price-line { margin: 10px 0 0; font-size: 14px; color: #c9d0e0; }
 ul.flags { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-ul.flags li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; align-items: baseline; background: rgb(0 0 0 / .18); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; animation: rise .45s both; }
+ul.flags li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 3px 12px; align-items: baseline; background: rgb(0 0 0 / .18); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
+/* CSS-lite reveal: rows rise only while #result has .rv, with backwards fill (no layer kept alive after) */
+#result.rv ul.flags li { animation: rise .45s backwards; }
 ul.flags li .why { grid-column: 2; color: var(--muted); font-size: 14px; }
 @keyframes rise { from { transform: translateY(6px); opacity: .001; } }
+#result.rv-quiet .result-top { animation: fade .2s backwards; }
+#result.rv-calm .result-top { animation: fade .12s backwards; }
+@keyframes fade { from { opacity: .001; } }
 .sev { font-family: var(--f-mono); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 3px 7px; border-radius: 6px; }
 .sev-high, .r-fail { background: var(--bad-soft); color: var(--bad); }
 .sev-medium, .r-unclear { background: var(--warn-soft); color: var(--warn); }
@@ -232,92 +300,393 @@ ul.flags li .why { grid-column: 2; color: var(--muted); font-size: 14px; }
 .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
 ul.plain { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 ul.plain li { padding-left: 18px; position: relative; font-size: 15px; }
-ul.plain li::before { content: ""; position: absolute; left: 3px; top: .6em; width: 7px; height: 7px; border-radius: 2px; background: var(--ok); }
 ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15px; }
 .share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 16px; }
+.btn-sheen { display: none; }
 .disclaimer { font-size: 12.5px; color: var(--muted); margin: 0; }
-.loading { display: grid; gap: 6px; }
+.loading { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: center; }
+.loading > :not(.ring) { grid-column: 2; }
 .loading strong { font-family: var(--f-display); font-stretch: 80%; font-size: 24px; }
 .loading .steps-live { font-family: var(--f-mono); font-size: 13px; color: #6fd8ff; }
+.loading .subline, .loading .steps-live { min-height: 3.1em; }   /* the text changes while scanning; two lines reserved, so nothing shifts */
+.loading .steps-live { line-height: 1.55; min-height: 2.6em; }
+
+/* ---------- check flow: honest progress (1 - e^(-t/18), written once a second), instrument HUD ---------- */
+[data-v=safe] { --v: #4fdc9a; --va: rgb(79 220 154 / .45); --scan-rgb: 79 220 154; }
+[data-v=caution] { --v: #ffc15e; --va: rgb(255 193 94 / .42); --scan-rgb: 255 193 94; }
+[data-v=scam] { --v: #ff4a55; --va: rgb(255 74 85 / .45); --scan-rgb: 255 74 85; }
+[data-v=fault] { --v: #9aa4bb; --va: rgb(154 164 187 / .3); --scan-rgb: 154 164 187; }
+#check-btn { position: relative; overflow: hidden; }
+.btn-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--hud); transform-origin: 0 50%; transform: scaleX(var(--prog, 0)); transition: transform 1s linear, opacity .3s; opacity: 0; pointer-events: none; }
+#check-btn.busy .btn-progress { opacity: 1; }
+.loading .ring { grid-row: 1 / span 3; grid-column: 1; width: 40px; height: 40px; rotate: -90deg; }
+.ring circle { fill: none; stroke-width: 3; }
+.ring .rt { stroke: rgb(255 255 255 / .12); }
+.ring .rp { stroke: var(--v, var(--hud)); stroke-dasharray: 1 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1s linear; }
+.p-fast .btn-progress, .p-fast .ring .rp { transition-duration: .2s; transition-timing-function: ease-out; }
+.p-back .btn-progress, .p-back .ring .rp { transition-duration: .3s; transition-timing-function: ease-in; }
+.m-calm .btn-progress, .m-calm .ring .rp { transition: none; }
+.t-scan { color: #0a7ea8; }
+.scanning .card::after { content: ""; position: absolute; inset: 0; z-index: 4; pointer-events: none; background: repeating-linear-gradient(0deg, rgb(0 0 0 / .15) 0 2px, transparent 2px 4px); opacity: .35; }
+.tilt.gs .scanline { animation: none; }
+[data-v=fault] .scanline { animation-play-state: paused; }
+.reticle { transform: translateZ(30px); }
+.readout { position: absolute; left: 0; top: 0; font: 700 10.5px/1 var(--f-mono); letter-spacing: .06em; color: #0b1020; background: var(--v, var(--hud)); padding: 3px 5px; border-radius: 3px; white-space: nowrap; opacity: 0; }
+@media (max-width: 359px) { .readout { display: none; } }
+.fx-layer { position: fixed; inset: 0; z-index: 50; pointer-events: none; overflow: hidden; }
+.fx-layer > * { position: absolute; transform-origin: 0 0; border-radius: 14px; }
+.fx-layer img { object-fit: cover; }
+.fx-tile { background: #1c2338; border: 6px solid #2a3350; }
+.fx-paper { background: linear-gradient(#b9b3a6, #b9b3a6) 14% 22% / 62% 5px no-repeat, linear-gradient(#cfc9bc, #cfc9bc) 14% 34% / 72% 5px no-repeat, linear-gradient(#cfc9bc, #cfc9bc) 14% 46% / 48% 5px no-repeat, #f3efe6; }
+/* ---------- verdict marks: final pose at rest (calm, no-CDN, after a skip); motion only decorates ---------- */
+.result-stage { position: relative; }
+.result-stage > .bob { z-index: 1; }
+.fx-aura { position: absolute; inset: -12% -28%; border-radius: 50%; background: radial-gradient(closest-side, var(--va, transparent), transparent); opacity: .22; pointer-events: none; }
+.fx-rings { position: absolute; inset: 0; display: grid; place-items: center; transform: scaleY(.55); pointer-events: none; z-index: 2; }
+.fx-rings i { grid-area: 1 / 1; width: 220px; height: 220px; border-radius: 50%; border: 2px solid var(--v); opacity: 0; }
+.fx-burst { position: absolute; pointer-events: none; z-index: 3; }
+.stamp-pos { position: absolute; left: 50%; top: 64%; translate: -50% -50%; rotate: -8deg; z-index: 5; pointer-events: none; }
+.stamp { position: relative; display: block; padding: 6px 12px; border: 4px solid var(--v); border-radius: 10px; color: var(--v); background: rgb(10 12 20 / .62); font-family: var(--f-display); font-stretch: 68%; font-weight: 900; font-size: clamp(20px, 2.2vw, 30px); line-height: 1; text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+[data-v=scam] .stamp { outline: 2px solid var(--v); outline-offset: 3px; }
+.ink { position: absolute; inset: -40%; border-radius: 50%; background: radial-gradient(closest-side, var(--va), transparent); opacity: 0; }
+.label .flash { position: absolute; inset: -3px; border-radius: 12px; background: var(--v); opacity: 0; pointer-events: none; z-index: 4; }
+/* hazard tape sits on the label/card seam, tilted so it never covers the risk number */
+.tape-pos { position: absolute; left: -10%; right: -10%; top: calc(100% + 1px); rotate: -3deg; z-index: 6; pointer-events: none; }
+.tape { position: relative; height: 22px; overflow: hidden; transform-origin: 0 50%; background: #141a2b; border-block: 2px solid #ffc15e; display: grid; place-items: center; }
+.tape-crawl { position: absolute; inset: 0 -60px 0 0; background: repeating-linear-gradient(-45deg, #ffc15e 0 18px, #141a2b 18px 36px); opacity: .55; }
+.tape span { position: relative; font: 700 10px/1 var(--f-mono); letter-spacing: .08em; color: #141a2b; background: #ffc15e; padding: 2px 6px; white-space: nowrap; }
+.cracks { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 7; pointer-events: none; }
+.cracks polyline { fill: none; stroke: #fff; stroke-width: 1.3; opacity: .6; stroke-linejoin: round; vector-effect: non-scaling-stroke; stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.loupe { position: absolute; left: 0; top: 0; width: 72px; height: 72px; border-radius: 50%; border: 2px solid #ffc15e; opacity: 0; z-index: 6; pointer-events: none;
+  background: linear-gradient(#ffc15e, #ffc15e) 50% 50% / 1px 56% no-repeat, linear-gradient(#ffc15e, #ffc15e) 50% 50% / 56% 1px no-repeat, rgb(255 193 94 / .1); }
+.glint { position: absolute; width: 14px; height: 14px; margin: -7px; background: #fff; clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); transform: scale(0); z-index: 6; pointer-events: none; }
+.foil-dead { position: absolute; inset: 0; background: rgb(120 126 140 / .35); mix-blend-mode: color; pointer-events: none; z-index: 3; }
+.card.dead .foil { opacity: 0; }
+.label .verdict, .pill { position: relative; }
+.glitch::before, .glitch::after { content: attr(data-text); position: absolute; inset: 0; padding: inherit; pointer-events: none; }
+.glitch::before { color: #3ff2ff; translate: -3px 0; animation: gl1 .12s steps(1) both; }
+.glitch::after { color: #ff3fd8; translate: 3px 0; animation: gl2 .12s steps(1) both; }
+@keyframes gl1 { 0% { clip-path: inset(10% 0 55% 0); } 38% { clip-path: inset(60% 0 8% 0); } 75% { clip-path: inset(30% 0 42% 0); } }
+@keyframes gl2 { 0% { clip-path: inset(62% 0 6% 0); } 38% { clip-path: inset(6% 0 68% 0); } 75% { clip-path: inset(44% 0 26% 0); } }
+.headline .hw { display: inline-block; }
+.section h3 { position: relative; padding-bottom: 7px; }
+.section h3 .rule { position: absolute; left: 0; bottom: 0; width: 40px; height: 2px; border-radius: 2px; background: var(--v, var(--hud)); transform-origin: 0 50%; }
+ul.plain .gb { position: absolute; left: 3px; top: .6em; width: 7px; height: 7px; border-radius: 2px; background: var(--ok); transform: rotate(45deg); }
+[data-save] { position: relative; overflow: hidden; }
+.tick { width: 14px; height: 14px; }
+.tick path { fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 1 1; animation: draw .2s var(--e-out) backwards; }
+@keyframes draw { from { stroke-dashoffset: 1; } }
+.m-calm .tick path { animation: none; }
+.btn-sheen { display: block; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 30%, rgb(255 255 255 / .22) 50%, transparent 70%); transform: translateX(-120%); }
+[data-save]:disabled::after { content: ""; position: absolute; left: -24px; right: 0; bottom: 0; height: 2px; background: repeating-linear-gradient(90deg, var(--hud) 0 6px, transparent 6px 12px); animation: crawl .5s linear infinite; }
+@keyframes crawl { to { transform: translateX(24px); } }
+.fx-layer > .fx-print { width: 54px; height: 110px; overflow: hidden; border-radius: 0; }
+.fx-slip { position: absolute; left: 0; bottom: 0; width: 54px; height: 76px; border-radius: 6px; background: linear-gradient(160deg, #2a3350, #141b2e); border: 1px solid rgb(255 255 255 / .35); }
+.fx-slip::before { content: ""; position: absolute; left: 4px; right: 4px; top: 4px; height: 14px; border-radius: 3px; background: #f6f7fb; border: 2px solid var(--v); }
+.fx-slip::after { content: ""; position: absolute; left: 6px; right: 6px; top: 24px; bottom: 6px; border-radius: 3px; background: var(--holo); opacity: .75; }
+.meter i { transform: translate(calc(var(--p, 0) * 1cqi - 50% + var(--bx, 0px)), -50%); }
+.gsap-on #result:not(.rv) .meter i { transition: none; }
+/* CSS-lite reveal (no GSAP, or GSAP arrived late): #result.rv + .rv-{verdict} for 2 s, every keyframe with backwards fill */
+#result.rv .fx-aura { animation: aura .9s var(--e-out) backwards; }
+@keyframes aura { 0% { opacity: 0; transform: scale(.7); } 25% { opacity: .8; transform: scale(1.05); } }
+#result.rv .fx-rings i { animation: ring .6s var(--e-out) .24s backwards; }
+#result.rv .fx-rings i:nth-child(2) { animation-delay: .33s; } #result.rv .fx-rings i:nth-child(3) { animation-delay: .42s; }
+@keyframes ring { from { transform: scale(.2); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+#result.rv-safe .seal-g { animation: seal .2s var(--e-out) .3s backwards; }
+@keyframes seal { from { transform: scale(.6); opacity: .001; } }
+#result.rv-caution .stamp { animation: st-c .32s var(--e-deal) .14s backwards; }
+@keyframes st-c { from { transform: translateX(-40px) scale(1.25); opacity: .001; } }
+#result.rv-caution .tape { animation: tape .28s var(--e-out) .5s backwards; }
+@keyframes tape { from { transform: scaleX(0); } }
+#result.rv-scam .stamp { animation: st-s .24s var(--e-slam) backwards; }
+@keyframes st-s { from { transform: scale(2.2) rotate(-16deg); opacity: .001; } }
+#result.rv-scam .result-stage { animation: shk .3s linear .24s; }
+@keyframes shk { 0% { translate: 6px 0; } 20% { translate: -5px 2px; } 40% { translate: 4px -2px; } 60% { translate: -3px 1px; } 80% { translate: 1px 0; } 100% { translate: 0; } }
+#result.rv .verdict-block > * { animation: rise .4s var(--e-out) .2s backwards; }
+#result.rv .verdict-block > :nth-child(2) { animation-delay: .26s; } #result.rv .verdict-block > :nth-child(n+3) { animation-delay: .32s; }
+.kick { animation: kick .16s var(--e-out); }
+@keyframes kick { from { transform: translateY(4px); opacity: .001; } }
+.xfade { animation: fade .24s ease-out; }
+.m-calm .kick, .m-calm .xfade { animation: none; }
+
+/* ---------- compact nav (fixed, opaque; shown between the hero and the checker) ---------- */
+nav.compact { position: fixed; left: 0; right: 0; top: 0; z-index: 40; background: #0b0f1c; border-bottom: 1px solid var(--line); padding-block: 9px; transform: translateY(-100%); visibility: hidden; transition: transform .2s cubic-bezier(.55,.06,.68,.19), visibility 0s linear .2s; }
+nav.compact.show { transform: none; visibility: visible; transition: transform .24s var(--e-out), visibility 0s; }
+nav.compact .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+nav.compact .logo { font-size: 19px; }
+nav.compact .logo-mark { width: 19px; height: 25px; border-width: 2px; box-shadow: none; }
+.btn-sm { padding: 9px 16px; font-size: 13px; border-radius: 10px; box-shadow: none; }
+.m-calm nav.compact { transition: none; }
+
+/* ---------- steps: rarity badges, landing glow, protocol rail ---------- */
+.steps-deck { position: relative; }
+.steps ol { position: relative; }
+.steps li { overflow: hidden; z-index: 1; }
+.steps li::before { z-index: 1; }
+.steps li:nth-child(1)::before { background: linear-gradient(135deg, #dfe4ee, #8a93a8); }
+.steps li:nth-child(2)::before { background: linear-gradient(135deg, #6fd8ff, #a98bff); }
+.steps h3, .steps p { position: relative; z-index: 1; }
+.badge-glow { position: absolute; left: 0; top: -2px; width: 68px; height: 68px; border-radius: 50%; opacity: .35; pointer-events: none; background: radial-gradient(closest-side, rgb(223 228 238 / .5), transparent); }
+.steps li:nth-child(2) .badge-glow { background: radial-gradient(closest-side, rgb(111 216 255 / .6), transparent); }
+.steps li:nth-child(3) .badge-glow { background: radial-gradient(closest-side, rgb(255 122 182 / .55), rgb(169 139 255 / .25) 60%, transparent); }
+.step-sheen { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(100deg, transparent 35%, rgb(255 255 255 / .13) 50%, transparent 65%); transform: translateX(-120%); }
+.steps-rail { position: absolute; top: -15px; left: 34px; right: calc((100% - 28px) / 3 - 34px); height: 1px; }
+.steps-rail > i { position: absolute; inset: 0; background: linear-gradient(90deg, rgb(255 255 255 / .25), rgb(111 216 255 / .4), rgb(255 122 182 / .4)); transform-origin: 0 50%; }
+.steps-rail b { position: absolute; top: -3px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--bg); border: 1px solid rgb(255 255 255 / .45); }
+.steps-rail b::after { content: ""; position: absolute; left: 2px; top: 6px; width: 1px; height: 9px; background: rgb(255 255 255 / .18); }
+.steps-rail b:nth-child(1) { left: 0; } .steps-rail b:nth-child(2) { left: 50%; } .steps-rail b:nth-child(3) { left: 100%; }
+@media (max-width: 760px) { .steps-rail { display: none; } }
+.steps { padding-top: 26px; }
+
+/* ---------- Exhibit A: a made-up listing, read like evidence ---------- */
+.exhibit { padding-block: 34px 64px; }
+.exhibit .section-sub { margin-bottom: 30px; }
+.exhibit-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); gap: clamp(28px, 4.5vw, 64px); align-items: center; }
+@media (max-width: 860px) { .exhibit-grid { grid-template-columns: minmax(0, 1fr); } }
+.post { position: relative; overflow: hidden; justify-self: center; width: 100%; max-width: 540px; margin: 0; padding: 18px 20px 76px; border-radius: 16px; background: #f3efe6; color: #1d2233; rotate: -1.2deg; font-size: 16px; line-height: 1.6; box-shadow: 0 1px 0 rgb(255 255 255 / .6) inset, 0 28px 50px -28px rgb(0 0 0 / .9); }
+.post::before { content: "EXHIBIT A · MADE-UP LISTING"; position: absolute; top: 0; right: 18px; font: 700 9.5px/1 var(--f-mono); letter-spacing: .1em; color: #f3efe6; background: #1d2233; padding: 5px 8px 6px; border-radius: 0 0 6px 6px; }
+.post header { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; font-size: 14px; padding-top: 8px; }
+.post header b { font-weight: 700; }
+.avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #cfc7b7, #a69e8f); color: #3a3f52; font: 700 12px/1 var(--f-mono); }
+.post-photo { position: relative; aspect-ratio: 2 / 1; margin: 14px 0 0; border-radius: 10px; overflow: hidden; background: radial-gradient(120% 90% at 30% 20%, #59627c, #262b3b 70%); }
+.post-photo::after { content: ""; position: absolute; inset: 0; background: repeating-linear-gradient(-35deg, transparent 0 46px, rgb(255 255 255 / .08) 46px 48px); }
+.post-photo i { position: absolute; left: 50%; top: 50%; width: 27%; aspect-ratio: 63 / 88; translate: -50% -50%; rotate: 7deg; border-radius: 6px; border: 4px solid #e9c46a; background: radial-gradient(circle at 50% 58%, rgb(255 200 90 / .9), transparent 45%), linear-gradient(160deg, #6fd8ff, #a98bff 45%, #ff7ab6); box-shadow: 0 12px 20px -8px rgb(0 0 0 / .7); }
+.post p { margin: 12px 0 0; }
+.post mark { color: inherit; background: linear-gradient(rgb(255 74 85 / .3), rgb(255 74 85 / .3)) no-repeat 0 88% / 100% 40%; padding: 0 1px; }
+.pin { display: inline-block; font: 700 9.5px/1 var(--f-mono); letter-spacing: .04em; color: #fff; background: #c8202a; border-radius: 4px; padding: 3px 4px; }
+.post sup.pin { vertical-align: 5px; margin-left: 3px; }
+.mini-stamp { position: absolute; right: 20px; bottom: 18px; rotate: -7deg; padding: 5px 12px; border: 3px solid #c8202a; outline: 2px solid #c8202a; outline-offset: 2px; border-radius: 8px; color: #c8202a; background: rgb(243 239 230 / .9); font-family: var(--f-display); font-stretch: 68%; font-weight: 900; font-size: 22px; line-height: 1; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.exhibit-laser { position: absolute; left: 0; right: 0; top: -26px; height: 26px; opacity: 0; pointer-events: none; background: linear-gradient(180deg, transparent, rgb(111 216 255 / .22) 70%, #3fc3f5 92%, rgb(111 216 255 / .3)); }
+.notes { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.notes li { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 12px; align-items: baseline; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--glass); color: var(--muted); font-size: 14.5px; }
+.notes .pin { grid-row: span 2; font-size: 10.5px; padding: 5px 6px; border-radius: 6px; background: var(--label); align-self: start; margin-top: 2px; }
+.notes strong { color: var(--ink); font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 16px; }
+
+/* ---------- checker form extras ---------- */
+.fieldbox { position: relative; display: block; }
+.fieldbox textarea { display: block; }
+.fieldbox::after { content: ""; position: absolute; inset: -4px; border: 2px solid var(--bad); border-radius: 15px; opacity: 0; pointer-events: none; }
+.fieldbox.bad textarea { border-color: var(--bad); }
+.fieldbox.bad textarea:focus-visible { outline-color: var(--bad); }
+.fieldbox.bad::after { animation: pulse2 .16s ease-out 2; }
+@keyframes pulse2 { 50% { opacity: 1; } }
+.status { position: relative; }
+.status.err.kick::after { content: ""; position: absolute; left: 0; bottom: -5px; width: 30px; height: 2px; border-radius: 2px; background: var(--bad); transform-origin: 0 50%; animation: grow .2s var(--e-out) backwards; }
+@keyframes grow { from { transform: scaleX(0); } }
+.drop { transition: border-color .2s, background .2s, scale .16s var(--e-out); }
+.drop.over { scale: 1.01; }
+.drop-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.drop-hint .h-over, .drop.over .drop-hint .h-idle { display: none; }
+.drop.over .drop-hint .h-over { display: inline; color: #6fd8ff; }
+.count { font: 700 11px/1 var(--f-mono); letter-spacing: .06em; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; white-space: nowrap; transition: color .2s, border-color .2s; }
+.count.full { color: var(--warn); border-color: rgb(255 193 94 / .45); }
+.count.pulse { animation: cpulse .28s steps(2, jump-none) 2; }
+@keyframes cpulse { 50% { opacity: .25; } }
+.thumb { transform: rotate(var(--fan, 0deg)); }
+.thumb:nth-child(1) { --fan: -3deg; } .thumb:nth-child(2) { --fan: -1deg; } .thumb:nth-child(3) { --fan: 1deg; } .thumb:nth-child(4) { --fan: 3deg; }
+.thumb.t-in { animation: t-in .32s var(--e-roll) backwards; }
+@keyframes t-in { from { transform: translateY(-12px) scale(.6) rotate(calc(var(--fan, 0deg) + 5deg)); opacity: .001; } }
+.btn.mag { transition: scale .22s var(--e-roll), background-color .2s ease, border-color .2s ease; }
+.btn.mag:active { transition-duration: 70ms; }
+
+/* ---------- desktop lamp, hero callouts, UV loupe ---------- */
+.lamp { position: fixed; left: 0; top: 0; width: 520px; height: 520px; border-radius: 50%; pointer-events: none; z-index: 0; opacity: 0; background: radial-gradient(closest-side, rgb(111 216 255 / .075), transparent); }
+.callouts { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; display: none; pointer-events: none; transform: translateZ(30px); z-index: 8; }
+@media (min-width: 1340px) { .callouts { display: block; } }   /* below this the right labels would run off the viewport */
+.co-line { fill: none; stroke: rgb(111 216 255 / .62); stroke-width: 1; stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.co-dot { fill: #0b1020; stroke: #6fd8ff; stroke-width: 1.5; }
+.co-t { font: 700 10.5px var(--f-mono); letter-spacing: .06em; fill: #a9e6ff; paint-order: stroke; stroke: #090c15; stroke-width: 4px; stroke-linejoin: round; }
+.uv { position: absolute; left: 0; top: 0; width: 140px; height: 140px; border-radius: 50%; overflow: hidden; opacity: 0; pointer-events: none; z-index: 6; border: 1.5px solid rgb(185 166 255 / .9); box-shadow: 0 0 0 1px rgb(20 10 50 / .5), inset 0 0 26px rgb(185 166 255 / .5); }
+.uv-pat { position: absolute; left: 0; top: 0; width: 380px; height: 540px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='12'%3E%3Ctext x='1' y='9' font-family='monospace' font-size='6.5' font-weight='700' fill='%23c4b3ff' letter-spacing='.4'%3ETRADE CHECK %C2%B7 TC-261020-EMBR %C2%B7%3C/text%3E%3C/svg%3E") 0 0 / 150px 24px, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='12'%3E%3Ctext x='1' y='9' font-family='monospace' font-size='6.5' font-weight='700' fill='%23c4b3ff' letter-spacing='.4'%3ETRADE CHECK %C2%B7 TC-261020-EMBR %C2%B7%3C/text%3E%3C/svg%3E") 75px 12px / 150px 24px,
+    radial-gradient(circle at 50% 45%, rgb(120 70 255 / .3), transparent 60%), rgb(22 10 58 / .62); }
+.uv-tag { position: absolute; left: 50%; bottom: 12px; translate: -50% 0; font: 700 9px/1 var(--f-mono); letter-spacing: .12em; color: #e2d8ff; background: rgb(22 10 58 / .85); border: 1px solid rgb(185 166 255 / .5); padding: 3px 5px; border-radius: 3px; white-space: nowrap; }
+#result.rv-ex .result-stage { animation: none; }
 
 footer { padding-block: 24px 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); position: relative; z-index: 1; }
+footer .wrap { display: grid; gap: 12px; justify-items: start; }
+.motion-toggle { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.motion-toggle:hover { color: var(--ink); border-color: rgb(255 255 255 / .3); }
+.motion-toggle[aria-pressed="true"] { color: var(--ink); }
 
+/* ---------- intro: CSS only, keyed on the classes BOOT sets; backwards fill, so the rest pose is the real layout ---------- */
+@keyframes i-led { from { transform: scaleY(0); } }
+@keyframes i-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes i-word { from { transform: translateY(105%) rotate(5deg); } }
+@keyframes i-hair { 0% { opacity: 1; transform: translateY(-50%); } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(50%); } }
+@keyframes i-pill { from { transform: translateX(12px); opacity: .001; } }
+@keyframes i-up10 { from { transform: translateY(10px); opacity: .001; } }
+@keyframes i-up12 { from { transform: translateY(12px); } }
+@keyframes i-cta { from { transform: translateY(18px) rotate(-2deg) scale(.96); opacity: .001; } }
+@keyframes i-fade { from { opacity: .001; } }
+@keyframes i-reel { from { transform: translateY(0); } }
+@keyframes i-deal { from { transform: translateY(70px) rotateX(16deg) scale(.92); } }
+@keyframes i-ghost { from { transform: translate(0, 4%) rotate(0) translateZ(-120px); opacity: 0; } }
+@keyframes i-punch { from { transform: translateZ(26px) scale(1.1); } }
+@keyframes i-ring { from { opacity: .8; transform: scale(.9); } to { opacity: 0; transform: scale(1.25); } }
+@keyframes i-holo { from { background-position: calc(var(--h) * 33% + 100%) 0; } }
+@keyframes i-band { from { transform: translateX(-25%); } }
+@keyframes i-spot { from { transform: translate(-60%, -30%); } }
+html.m-intro .logo-mark i { animation: i-led .22s var(--e-out) backwards; }
+html.m-intro .eyebrow { animation: i-wipe .3s steps(36) backwards; }
+html.m-intro h1.display .w > i { animation: i-word .46s var(--e-out) backwards; animation-delay: calc(40ms + var(--i) * 40ms); }
+html.m-intro h1.display::after { animation: i-hair .56s var(--e-precise) backwards; }
+html.m-intro .holo > i { animation: i-holo .9s var(--e-precise) .7s backwards; }
+html.m-intro .mode { animation: i-pill .24s var(--e-out) .12s backwards; }
+html.m-intro .lede { animation: i-up10 .32s var(--e-out) .16s backwards; }
+html.m-intro .cta-row .btn { animation: i-cta .32s var(--spring-snap) .22s backwards; }
+html.m-intro .cta-row .btn + .btn { animation-delay: .28s; }
+html.m-intro .stats, html.m-intro .source { animation: i-fade .32s var(--e-out) .28s backwards; }
+html.m-intro .reel > span { animation: i-reel .9s var(--e-roll) backwards; animation-delay: calc(.3s + var(--r, 0) * 60ms); }
+@media (min-width: 881px) {   /* the slab is in the first viewport */
+  html.m-intro .deal { animation: i-deal .7s var(--spring-bouncy) .08s backwards, i-fade .16s linear .08s backwards; }
+  html.m-intro .ghost-card { animation: i-ghost .6s var(--e-roll) .26s backwards; }
+  html.m-intro .ghost-card.b { animation-delay: .34s; }
+  html.m-intro #hero-stage .label { animation: i-punch .4s var(--spring-punchy) .78s backwards; }
+  html.m-intro #hero-stage .label::after { animation: i-ring .4s var(--e-out) .78s; }
+  html.m-intro #hero-stage .foil-band { animation: i-band .6s var(--e-precise) 1s backwards; }
+  html.m-intro #hero-stage .glare-spot { animation: i-spot .6s var(--e-precise) 1s backwards; }
+  html.m-intro-short .deal { animation: i-deal .5s var(--spring-bouncy) backwards; }
+  html.m-intro-short .ghost-card { animation: i-ghost .5s var(--e-roll) .1s backwards; }
+}
+@media (max-width: 880px) {   /* phones: the first viewport is text; the slab gets its own entry when it is scrolled to */
+  html.m-intro h1.display .w > i { animation-duration: .4s; animation-delay: calc(20ms + var(--i) * 30ms); }
+  html.m-intro .lede { animation-duration: .28s; }
+  html.m-intro .cta-row .btn { animation-delay: .24s; }
+  html.m-intro .cta-row .btn + .btn { animation-delay: .3s; }
+  html.m-intro .stats { animation: i-up12 .32s var(--e-out) .28s backwards; }
+  html.m-intro .reel > span { animation-duration: .62s; animation-delay: calc(.3s + var(--r, 0) * 50ms); }
+}
+html.m-intro-short h1.display .w > i { animation: i-word .3s var(--e-out) backwards; animation-delay: calc(var(--i) * 20ms); }
+
+/* reduced motion: m-calm (OS setting or the footer toggle) is the switch for JS; this block also covers no-JS */
+.m-calm .fieldbox.bad::after, .m-calm .count.pulse, .m-calm .status.err.kick::after, .m-calm .bob.float, .m-calm .scanning .scanline, .m-calm ul.flags li, .m-calm .mode.beat::after, .m-calm [data-save]:disabled::after, .m-calm h1.display.sweep .holo > i { animation: none; }
+.m-calm .tilt, .m-calm .meter i, .m-calm .btn, .m-calm .drop { transition: none; }
 @media (prefers-reduced-motion: reduce) {
-  .tilt.float, .holo-text, .scanning .scanline, ul.flags li { animation: none; }
+  .bob.float, .scanning .scanline, ul.flags li, .mode.beat::after, h1.display.sweep .holo > i, .fieldbox.bad::after, .count.pulse, .thumb.t-in { animation: none; }
   .tilt, .meter i { transition: none; }
 }
 </style>
+<script>(()=>{const d=document.documentElement,mq=q=>matchMedia(q).matches;let calm=false,seen=false;
+try{calm=localStorage.getItem("tc-motion")==="calm";seen=sessionStorage.getItem("tc-intro")==="1";sessionStorage.setItem("tc-intro","1")}catch(e){}
+const rm=calm||mq("(prefers-reduced-motion: reduce)");if(rm)d.classList.add("m-calm");
+if(mq("(hover: hover) and (pointer: fine)"))d.classList.add("m-fine");
+const n=navigator;if((n.connection&&n.connection.saveData)||(n.deviceMemory||8)<=2||(n.hardwareConcurrency||8)<=2)d.classList.add("m-lite");
+if(!rm){d.classList.add(seen?"m-intro-short":"m-intro");if(!seen)d.classList.add("m-boot");
+const end=()=>d.classList.remove("m-intro","m-intro-short");setTimeout(end,1800);
+setTimeout(()=>d.classList.remove("m-boot"),1400);
+["pointerdown","keydown","wheel","touchstart"].forEach(t=>addEventListener(t,end,{once:true,passive:true}));}})();</script>
 
-<div class="band nav">
+<div class="band nav" id="top">
   <div class="wrap">
-    <a class="logo" href="#check"><span class="logo-mark" aria-hidden="true"></span>Trade Check</a>
+    <a class="logo" href="#check"><span class="logo-mark" aria-hidden="true"><i></i></span>Trade Check</a>
     <span class="mode" id="mode">Loading</span>
   </div>
 </div>
+<nav class="band compact" id="compact" aria-label="Quick links" inert>
+  <div class="wrap"><a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"><i></i></span>Trade Check</a><a class="btn btn-primary btn-sm" href="#check">Check a deal</a></div>
+</nav>
 
 <section class="band hero">
   <div class="wrap">
     <div>
       <p class="eyebrow">Scam and price check for card deals</p>
-      <h1 class="display">Know it's legit <span class="holo-text">before you pay.</span></h1>
+      <h1 class="display"><span class="sr-only">Know it's legit before you pay.</span><span aria-hidden="true"
+        ><span class="ln"><span class="w"><i style="--i:0">Know</i></span> <span class="w"><i style="--i:1">it's</i></span> <span class="w"><i style="--i:2">legit</i></span></span>
+        <span class="ln"><span class="w holo"><i style="--i:3;--h:0">before</i></span> <span class="w holo"><i style="--i:4;--h:1">you</i></span> <span class="w holo"><i style="--i:5;--h:2">pay.</i></span></span></span></h1>
       <p class="lede">Paste a listing, a seller chat or photos of the card. Trade Check spots the scam playbook, checks what's visible for fakes, and compares the price with recent sales.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="#check">Check a deal</a>
+        <a class="btn btn-primary" href="#check" data-magnet>Check a deal</a>
         <a class="btn btn-ghost" href="#result">See an example</a>
       </div>
       <div class="stats">
-        <div class="stat"><b>+45%</b><span>more counterfeit and altered cards caught in 2025</span></div>
-        <div class="stat"><b>6 of 10</b><span>most-faked trading cards are Pokémon</span></div>
-        <div class="stat"><b>$200M+</b><span>in fake cards intercepted by PSA last year</span></div>
+        <div class="stat"><b><span class="sr-only">+45%</span><span aria-hidden="true">+<span class="reel" style="--n:4;--r:0"><span>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span><span class="reel" style="--n:5;--r:1"><span>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span>%</span></b><span>more counterfeit and altered cards caught in 2025</span></div>
+        <div class="stat"><b><span class="sr-only">6 of 10</span><span aria-hidden="true"><span class="reel" style="--n:6;--r:2"><span>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span> of 10</span></b><span>most-faked trading cards are Pokémon</span></div>
+        <div class="stat"><b><span class="sr-only">$200M+</span><span aria-hidden="true">$<span class="reel" style="--n:2;--r:3"><span>0<br>1<br>2<br>3<br>4<br>5<br>6<br>7<br>8<br>9</span></span>00M+</span></b><span>in fake cards intercepted by PSA last year</span></div>
       </div>
       <p class="source">Source: <a href="https://finance.yahoo.com/markets/crypto/articles/fake-pok-mon-cards-flooding-120252009.html" target="_blank" rel="noopener">PSA's first fraud report, via USA Today, May 2026</a></p>
     </div>
 
     <div class="stage" id="hero-stage">
-      <div class="ghost-card a" aria-hidden="true"></div>
-      <div class="ghost-card b" aria-hidden="true"></div>
-      <div class="tilt float" id="hero-tilt" role="img" aria-label="A graded card slab rated Looks safe with a risk score of 12">
-        <div class="slab">
-          <div class="label">
-            <div><div class="brand">Trade Check</div><div class="cert">TC-261020-EMBR</div></div>
-            <div class="score"><small>RISK</small><b class="t-safe" id="hero-score">12</b></div>
-            <div class="verdict t-safe">Looks safe</div>
+      <div class="ghost-slot a"><div class="ghost-card a" aria-hidden="true"></div></div>
+      <div class="ghost-slot b"><div class="ghost-card b" aria-hidden="true"></div></div>
+      <div class="deal"><div class="bob">
+        <div class="tilt" id="hero-tilt" role="img" aria-label="A graded card slab rated Looks safe with a risk score of 12">
+          <div class="slab">
+            <div class="label">
+              <div><div class="brand">Trade Check</div><div class="cert">TC-261020-EMBR</div></div>
+              <div class="score"><small>RISK</small><b class="t-safe" id="hero-score">12</b></div>
+              <div class="verdict t-safe">Looks safe</div>
+              <svg class="seal deco" viewBox="0 0 56 56" aria-hidden="true"><g class="seal-g"><path class="rosette" pathLength="1" d="M28.00 2.00L33.85 6.17L41.00 5.48L43.98 12.02L50.52 15.00L49.83 22.15L54.00 28.00L49.83 33.85L50.52 41.00L43.98 43.98L41.00 50.52L33.85 49.83L28.00 54.00L22.15 49.83L15.00 50.52L12.02 43.98L5.48 41.00L6.17 33.85L2.00 28.00L6.17 22.15L5.48 15.00L12.02 12.02L15.00 5.48L22.15 6.17Z"/><circle class="seal-ring" cx="28" cy="28" r="17" pathLength="1"/><path class="seal-check" pathLength="1" d="M19.5 28.5l6 6L37 22.5"/></g></svg>
+            </div>
+            <div class="card">
+              <div class="art" id="hero-art" data-art="creature"></div>
+              <div class="frame"></div>
+              <div class="nameplate">Emberkit <small>HP <em>120</em></small></div>
+              <div class="footplate"><b>Cinder Leap</b> 90<br>Flip a coin. If heads, this attack does 30 more.<span class="num">042/198 ★</span></div>
+              <div class="foil"><i class="foil-band"></i></div>
+              <div class="glare"><i class="glare-spot"></i></div>
+              <div class="scanline"></div>
+              <div class="uv deco" aria-hidden="true"><i class="uv-pat"></i><span class="uv-tag">UV 365nm</span></div>
+            </div>
+            <div class="reticle deco" aria-hidden="true"><i class="rc"></i><i class="rc"></i><i class="rc"></i><i class="rc"></i></div>
+            <svg class="callouts deco" aria-hidden="true"></svg>
           </div>
-          <div class="card">
-            <div class="art" id="hero-art"></div>
-            <div class="frame"></div>
-            <div class="nameplate">Emberkit <small>HP <em>120</em></small></div>
-            <div class="footplate"><b>Cinder Leap</b> 90<br>Flip a coin. If heads, this attack does 30 more.<span class="num">042/198 ★</span></div>
-            <div class="foil"></div>
-            <div class="glare"></div>
-          </div>
+          <div class="shadow"></div>
         </div>
-        <div class="shadow"></div>
-      </div>
-      <span class="tilt-hint">Drag or hover to tilt</span>
+      </div></div>
+      <span class="tilt-hint" aria-hidden="true">Hover to tilt</span>
     </div>
   </div>
 </section>
 
 <section class="band steps" aria-label="How it works">
-  <div class="wrap">
+  <div class="wrap steps-deck">
+    <i class="steps-rail deco" aria-hidden="true"><i></i><b></b><b></b><b></b></i>
     <ol>
-      <li><h3>Paste the deal</h3><p>The listing text, the seller's messages, or screenshots of either.</p></li>
-      <li><h3>Add card photos</h3><p>Front and back help the fake-card checks. Up to 4 photos.</p></li>
-      <li><h3>Get your slab</h3><p>A risk score, red flags, a price check, and an image you can post.</p></li>
+      <li><i class="badge-glow deco" aria-hidden="true"></i><h3>Paste the deal</h3><p>The listing text, the seller's messages, or screenshots of either.</p></li>
+      <li><i class="badge-glow deco" aria-hidden="true"></i><h3>Add card photos</h3><p>Front and back help the fake-card checks. Up to 4 photos.</p></li>
+      <li><i class="badge-glow deco" aria-hidden="true"></i><i class="step-sheen deco" aria-hidden="true"></i><h3>Get your slab</h3><p>A risk score, red flags, a price check, and an image you can post.</p></li>
     </ol>
+  </div>
+</section>
+
+<section class="band exhibit" id="exhibit" aria-labelledby="exhibit-title">
+  <div class="wrap">
+    <p class="eyebrow">Exhibit A</p>
+    <h2 class="section-title" id="exhibit-title">Read a scam like we do</h2>
+    <p class="section-sub">A made-up listing with the five tells Trade Check looks for.</p>
+    <div class="exhibit-grid">
+      <article class="post" aria-label="Example listing, made up">
+        <header><span class="avatar" aria-hidden="true">SX</span><b>seller_8841</b> <span><mark data-pin="1">Joined 2 weeks ago</mark><sup class="pin" aria-hidden="true">E1</sup></span></header>
+        <p>Charizard ex 199/165, mint. <mark data-pin="2">$180, price is firm.</mark><sup class="pin" aria-hidden="true">E2</sup>
+           <mark data-pin="3">Bank transfer only</mark><sup class="pin" aria-hidden="true">E3</sup>,
+           <mark data-pin="4">message me on WhatsApp</mark><sup class="pin" aria-hidden="true">E4</sup>.
+           <mark data-pin="5">3 people already asking, first to pay gets it.</mark><sup class="pin" aria-hidden="true">E5</sup></p>
+        <div class="post-photo" aria-hidden="true"><i></i></div>
+        <span class="mini-stamp" aria-hidden="true">Likely scam · 88</span>
+        <i class="exhibit-laser deco" aria-hidden="true"></i>
+      </article>
+      <ol class="notes">
+        <li><span class="pin" aria-hidden="true">E1</span><strong>New account</strong> Fresh profiles with no sales are easy to throw away.</li>
+        <li><span class="pin" aria-hidden="true">E2</span><strong>Far under market</strong> A chase card at half its usual price is the bait.</li>
+        <li><span class="pin" aria-hidden="true">E3</span><strong>No buyer protection</strong> A bank transfer can't be reversed if the card never ships.</li>
+        <li><span class="pin" aria-hidden="true">E4</span><strong>Off-platform</strong> Moving to WhatsApp leaves the marketplace's refunds behind.</li>
+        <li><span class="pin" aria-hidden="true">E5</span><strong>Urgency</strong> Pressure to pay first stops you from checking.</li>
+      </ol>
+    </div>
   </div>
 </section>
 
 <section class="band checker" id="check">
   <div class="wrap">
-    <h2 class="section-title">Run a check</h2>
+    <h2 class="section-title split"><span class="w"><i>Run</i></span> <span class="w"><i>a</i></span> <span class="w"><i>check</i></span></h2>
     <p class="section-sub" id="mode-note"></p>
     <div class="grid">
       <form class="panel" id="form" novalidate>
         <label class="field" for="listing">Listing text or chat
           <small>Copy the post, the seller's messages or the trade offer.</small>
-          <textarea id="listing" placeholder="e.g. Selling Charizard ex 199/165 SIR, mint, $180. Message me on WhatsApp, bank transfer only…"></textarea>
+          <span class="fieldbox"><textarea id="listing" placeholder="e.g. Selling Charizard ex 199/165 SIR, mint, $180. Message me on WhatsApp, bank transfer only…"></textarea></span>
         </label>
         <label class="field" for="price">Asking price <small>Optional, with currency.</small>
           <input type="text" id="price" placeholder="$180" autocomplete="off">
@@ -326,39 +695,46 @@ footer { padding-block: 24px 40px; color: var(--muted); font-size: 13px; border-
           <span>Photos <small>Up to 4: card front and back, the listing, or chat screenshots.</small></span>
           <label class="drop" id="drop" for="photos">
             <input type="file" id="photos" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
-            <span class="drop-hint"><b>Choose photos</b>, drop them here, or paste</span>
+            <span class="drop-row"><span class="drop-hint"><span class="h-idle"><b>Choose photos</b>, drop them here, or paste</span><span class="h-over">Drop to add your photos</span></span><span class="count" aria-hidden="true">0/4</span></span>
             <div class="thumbs" id="thumbs"></div>
           </label>
         </div>
         <div class="actions">
-          <button class="btn btn-primary" type="submit" id="check-btn">Check this deal</button>
+          <button class="btn btn-primary" type="submit" id="check-btn" data-magnet>Check this deal<i class="btn-progress" aria-hidden="true"></i></button>
           <button class="btn btn-ghost" type="button" id="clear">Clear</button>
         </div>
-        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <p class="status" id="status"></p>
       </form>
 
-      <section class="panel result" id="result" aria-live="polite"></section>
+      <p id="announce" class="sr-only" role="status" aria-live="polite"></p>
+      <section class="panel result" id="result" aria-label="Check result"></section>
     </div>
   </div>
 </section>
 
 <footer class="band">
-  <div class="wrap">Trade Check is a risk check, not an authentication. A card can only be proven real in hand or by a grading company. Card art shown is an original illustration. Not affiliated with Nintendo, The Pokémon Company or any grader.</div>
+  <div class="wrap"><span>Trade Check is a risk check, not an authentication. A card can only be proven real in hand or by a grading company. Card art shown is an original illustration. Not affiliated with Nintendo, The Pokémon Company or any grader.</span>
+    <button class="motion-toggle" type="button" aria-pressed="false">Motion: full</button>
+  </div>
 </footer>
 
 <script>
 (() => {
   const $ = (id) => document.getElementById(id);
+  const root = document.documentElement;
   const IN_CLAUDE = typeof window.claude !== "undefined";
   const MAX_PHOTOS = 4;
   // Original showcase art. Loads on the hosted site; inside Claude the page draws its fallback art instead.
   const ART_URL = "https://d8j0ntlcm91z4.cloudfront.net/user_3Jj13tEoR43bKhKT64AD0fklelv/hf_20261020_140901_b7f829ac-b6a5-4344-be9c-5fb8af30b2ab.png";
-  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;   // boot value only; motion decisions call calm()
+  const calm = () => root.classList.contains("m-calm");
   let photos = [];          // File objects
   let sample = null;        // artifact mode
   let downloads = null;
   let current = null;       // last rendered result
   let artOk = false;
+  const stopFx = [];        // stop() of every running effect; beforeRender runs them all
+  const runStops = () => { while (stopFx.length) { try { stopFx.pop()(); } catch (e) {} } };
 
   // ---------- prompt used when the page runs inside Claude (no web access) ----------
   const ARTIFACT_PROMPT = `You are Trade Check, a careful assistant that helps Pokemon TCG collectors judge whether a listing, a seller conversation, or a proposed trade is safe and fairly priced.
@@ -418,12 +794,77 @@ Reply with ONLY one JSON object in this shape:
     const d = new Date(), pad = (x) => String(x).padStart(2, "0");
     return `TC-${String(d.getFullYear()).slice(2)}${pad(d.getMonth() + 1)}${pad(d.getDate())}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
   }
-  function setStatus(msg, isErr = false) { $("status").textContent = msg; $("status").classList.toggle("err", isErr); }
+  // #status is visual only; #announce is the one live region, so every message is read exactly once
+  function setStatus(msg, isErr = false) { $("status").textContent = msg; $("status").classList.toggle("err", isErr); if (msg) announce(msg); }
+  const announce = (msg) => { $("announce").textContent = msg; };
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const S = (tag, attrs = {}, ...kids) => { const n = document.createElementNS(SVGNS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); n.append(...kids); return n; };
+  // restart a one-shot CSS animation class (calm: the class does nothing)
+  const kick = (node, cls = "kick") => { if (!node) return; node.classList.remove(cls); void node.offsetWidth; node.classList.add(cls); };
+  const fxLayer = () => document.querySelector(".fx-layer") || document.body.appendChild(el("div", { class: "fx-layer", "aria-hidden": "true" }));
+  // reticle corner positions (14 px brackets) around box b, pushed out by `out`
+  const corners = (b, pad, out = 0) => { const s = 14; return [[b.x - pad - out, b.y - pad - out], [b.x + b.w + pad - s + out, b.y - pad - out], [b.x - pad - out, b.y + b.h + pad - s + out], [b.x + b.w + pad - s + out, b.y + b.h + pad - s + out]]; };
+  const SPREAD = [[-1, -1], [1, -1], [-1, 1], [1, 1]];
 
-  // ---------- 3D tilt ----------
+  // ---------- motion helpers (hand-written; every one returns a stop()) ----------
+  const CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
+  // Scramble for machine text only (cert suffix, readouts, phase names). Writes textContent, never innerHTML.
+  function decode(node, text, ms = 400) {
+    if (node._dec) node._dec();   // one scramble per node
+    let raf = 0, done = false;
+    const stop = () => { if (done) return; done = true; cancelAnimationFrame(raf); node.textContent = text; node._dec = null; const i = stopFx.indexOf(stop); if (i >= 0) stopFx.splice(i, 1); };
+    node._dec = stop; stopFx.push(stop);
+    if (calm() || !text) { stop(); return stop; }
+    const t0 = performance.now(), len = text.length; let fr = 0;
+    const step = (t) => {
+      const k = (t - t0) / ms;
+      if (k >= 1) return stop();
+      if (fr++ % 2 === 0) {
+        const n = Math.floor(Math.max(0, k) * len); let s = text.slice(0, n);
+        for (let i = n; i < len; i++) s += text[i] === " " ? " " : CHARSET[(Math.random() * CHARSET.length) | 0];
+        node.textContent = s;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return stop;
+  }
+  // Trauma-model shake (scam only). Writes the individual translate/rotate properties, so it composes with transforms.
+  function shake(node, trauma, max = innerWidth < 640 ? 6 : 10) {
+    let raf = 0;
+    const stop = () => { cancelAnimationFrame(raf); if (node) node.style.translate = node.style.rotate = ""; };
+    if (!node || calm()) return stop;
+    stopFx.push(stop);
+    let last = performance.now();
+    const f = (t) => {
+      trauma = Math.max(0, trauma - 2.2 * (t - last) / 1000); last = t;
+      const s = trauma * trauma, n = (a, b) => Math.sin(t * a) + Math.sin(t * b) * .5;
+      node.style.translate = `${(n(.091, .037) * max * s).toFixed(2)}px ${(n(.071, .053) * max * .7 * s).toFixed(2)}px`;
+      node.style.rotate = `${(n(.06, .023) * 1.2 * s).toFixed(3)}deg`;
+      if (trauma > 0) raf = requestAnimationFrame(f); else stop();
+    };
+    raf = requestAnimationFrame(f);
+    return stop;
+  }
+  // Offset box of el inside root (ignores 3D tilt, unlike getBoundingClientRect).
+  const boxIn = (node, rootEl) => { let x = 0, y = 0, n = node; while (n && n !== rootEl) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; } return { x, y, w: node.offsetWidth, h: node.offsetHeight }; };
+  // Visible-at-rest rule: a from-state is applied only when the element is in view now (same task) or the moment it enters.
+  function onEnter(node, build, master, at) {
+    const mk = () => (window.gsap ? window.gsap.timeline() : null);
+    const r = node.getBoundingClientRect();
+    if (r.top < innerHeight && r.bottom > 0) { if (master) master.add(build(mk()), at); else build(mk()); return; }
+    if (!("IntersectionObserver" in window)) return;   // leave it static
+    const io = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; io.disconnect(); build(mk()); }, { threshold: 0 });
+    io.observe(node); stopFx.push(() => io.disconnect());
+  }
+
+  // ---------- 3D tilt (CSS-lite path: writes vars on the .tilt node) ----------
   function makeTilt(node, { idleFloat = false } = {}) {
-    if (!node || REDUCED) return;
-    let raf = 0, leaveTimer = 0;
+    if (!node) return () => {};
+    if (node._tiltStop) node._tiltStop();
+    const bob = node.closest(".bob");
+    if (idleFloat && bob) bob.classList.add("float");
+    let raf = 0;
     const set = (px, py) => {
       const rx = (0.5 - py) * 26, ry = (px - 0.5) * 32;
       node.style.setProperty("--rx", rx.toFixed(2) + "deg");
@@ -434,76 +875,215 @@ Reply with ONLY one JSON object in this shape:
       node.style.setProperty("--glow", (Math.hypot(px - .5, py - .5) * 1.6).toFixed(2));
     };
     const target = node.closest(".stage, .result-stage") || node;
-    target.addEventListener("pointermove", (e) => {
+    const move = (e) => {
+      if (calm()) return;
       const r = node.getBoundingClientRect();
       const px = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
       const py = Math.min(1, Math.max(0, (e.clientY - r.top) / r.height));
-      clearTimeout(leaveTimer);
-      node.classList.remove("float"); node.classList.add("live");
+      node.classList.add("live");
+      if (idleFloat && bob) bob.classList.add("hold");   // pause the float in place: no snap on leave
       cancelAnimationFrame(raf); raf = requestAnimationFrame(() => set(px, py));
-    });
-    target.addEventListener("pointerleave", () => {
+    };
+    const leave = () => {
+      cancelAnimationFrame(raf);
       node.classList.remove("live");
       set(.5, .5); node.style.setProperty("--glow", "0");
-      if (idleFloat) leaveTimer = setTimeout(() => { node.style.removeProperty("--rx"); node.style.removeProperty("--ry"); node.classList.add("float"); }, 900);
-    });
+      if (bob) bob.classList.remove("hold");
+    };
+    target.addEventListener("pointermove", move);
+    target.addEventListener("pointerleave", leave);
+    const stop = () => {
+      target.removeEventListener("pointermove", move);
+      target.removeEventListener("pointerleave", leave);
+      cancelAnimationFrame(raf);
+      ["--rx", "--ry", "--mx", "--my", "--hp", "--glow"].forEach((p) => node.style.removeProperty(p));
+      node.classList.remove("live");
+      if (bob) bob.classList.remove("float", "hold");
+      node._tiltStop = null;
+    };
+    node._tiltStop = stop;
+    return stop;
   }
 
   function artNode(target, photoUrl) {
     target.replaceChildren();
-    if (photoUrl) { target.classList.remove("fallback"); target.append(el("img", { src: photoUrl, alt: "Your card photo" })); return; }
+    if (photoUrl) { target.classList.remove("fallback"); target.removeAttribute("data-art"); target.append(el("img", { src: photoUrl, alt: "Your card photo" })); return; }
+    target.setAttribute("data-art", "creature");
     if (artOk) { target.classList.remove("fallback"); target.style.backgroundImage = `url("${ART_URL}")`; }
     else target.classList.add("fallback");
   }
   function loadArt() {
     const img = new Image();
-    img.onload = () => { artOk = true; artNode($("hero-art")); if (current && !current.photoUrl) render(current, true); };
+    // swap the art in place on every creature slab; never re-render (that could wipe a running check)
+    img.onload = () => { artOk = true; document.querySelectorAll("[data-art=creature]").forEach((n) => artNode(n)); };
     img.onerror = () => { artOk = false; };
     img.src = ART_URL;
   }
 
   function countUp(node, to) {
-    if (REDUCED) { node.textContent = String(to); return; }
+    if (calm()) { node.textContent = String(to); return; }
     const from = 0, t0 = performance.now(), dur = 900;
-    const step = (t) => { const k = Math.min(1, (t - t0) / dur); node.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))); if (k < 1) requestAnimationFrame(step); };
-    requestAnimationFrame(step);
+    let raf = 0;
+    const step = (t) => { const k = Math.min(1, (t - t0) / dur); node.textContent = String(Math.round(from + (to - from) * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+    stopFx.push(() => { cancelAnimationFrame(raf); node.textContent = String(to); });
   }
 
   // ---------- slab builder ----------
-  function slab({ verdict, risk, cert, photoUrl, small = true, scanning = false }) {
-    const v = normVerdict(verdict);
+  const CRACKS = ["50,87 41,80 37,71 28,66 22,55", "50,87 61,82 66,74 75,70 83,61", "50,87 47,98 53,108 49,121"];
+  function slab({ verdict, risk, cert, photoUrl, small = true, scanning = false, high = 0, fakeFail = false }) {
+    const v = normVerdict(verdict), done = !scanning;
     const art = el("div", { class: "art fallback" });
-    const card = el("div", { class: "card" }, art, el("div", { class: photoUrl ? "frame plain" : "frame" }));
+    const card = el("div", { class: "card" + (done && fakeFail ? " dead" : "") }, art, el("div", { class: photoUrl ? "frame plain" : "frame" }));
     if (!photoUrl) card.append(el("div", { class: "nameplate" }, "Emberkit ", el("small", {}, "HP ", el("em", { text: "120" }))));
-    card.append(el("div", { class: "foil" }), el("div", { class: "glare" }), el("div", { class: "scanline" }));
+    card.append(el("div", { class: "foil" }, el("i", { class: "foil-band" })), el("div", { class: "glare" }, el("i", { class: "glare-spot" })));
+    if (done) {   // verdict marks, all at their final pose at rest (motion only decorates)
+      if (fakeFail) card.append(el("i", { class: "foil-dead" }));
+      if (v === "safe") [[7, 5], [86, 9], [9, 88], [84, 84]].forEach(([x, y]) => card.append(el("i", { class: "glint", style: `left:${x}%;top:${y}%` })));
+      else card.append(el("div", { class: "stamp-pos" }, el("i", { class: "ink" }), el("span", { class: "stamp", text: VERDICT_WORD[v] })));
+      if (v === "caution") card.append(el("i", { class: "loupe" }));
+      if (v === "scam") card.append(S("svg", { class: "cracks", viewBox: "0 0 100 140", preserveAspectRatio: "none", "aria-hidden": "true" }, ...CRACKS.slice(0, Math.max(1, Math.min(3, high))).map((p) => S("polyline", { points: p, pathLength: 1 }))));
+    }
+    card.append(el("div", { class: "scanline" }));
     artNode(art, photoUrl);
-    const scoreB = el("b", { class: `t-${v}`, text: scanning ? "··" : String(clampRisk(risk)) });
+    const scoreB = el("b", { class: scanning ? "t-scan" : `t-${v}`, text: scanning ? "··" : String(clampRisk(risk)) });
+    const certN = el("div", { class: "cert" }), m = done && /^(TC-\d{6}-)(\w+)$/.exec(cert || "");
+    if (m) certN.append(m[1], el("span", { class: "cert-sfx", text: m[2] })); else certN.textContent = cert || "";
+    const word = scanning ? "Checking…" : VERDICT_WORD[v];
     const label = el("div", { class: "label" },
-      el("div", {}, el("div", { class: "brand", text: "Trade Check" }), el("div", { class: "cert", text: cert || "" })),
+      el("div", {}, el("div", { class: "brand", text: "Trade Check" }), certN),
       el("div", { class: "score" }, el("small", { text: "RISK" }), scoreB),
-      el("div", { class: `verdict t-${v}`, text: scanning ? "Checking…" : VERDICT_WORD[v] }));
-    const tilt = el("div", { class: "tilt" + (scanning ? " scanning" : "") }, el("div", { class: "slab" + (small ? " small" : "") }, label, card), el("div", { class: "shadow" }));
-    return { tilt, scoreB };
+      el("div", { class: `verdict t-${scanning ? "scan" : v}`, "data-text": word, text: word }));
+    if (done && v !== "safe") label.append(el("i", { class: "flash" }));
+    if (done && v === "safe") { const s = document.querySelector("#hero-stage .seal").cloneNode(true); s.classList.remove("deco"); s.querySelectorAll("[style]").forEach((n) => n.removeAttribute("style")); label.append(s); }
+    if (done && v === "caution") label.append(el("div", { class: "tape-pos" }, el("div", { class: "tape" }, el("i", { class: "tape-crawl" }), el("span", { text: "CHECK BEFORE YOU PAY" }))));
+    const reticle = el("div", { class: "reticle", "aria-hidden": "true" }, ...[0, 1, 2, 3].map(() => el("i", { class: "rc" })));
+    if (scanning) reticle.append(el("span", { class: "readout" }));
+    const slabEl = el("div", { class: "slab" + (small ? " small" : "") }, label, card, reticle);
+    const tilt = el("div", { class: "tilt" + (scanning ? " scanning" : ""), role: "img",
+      "aria-label": scanning ? "Slab being checked" : `Trade Check slab: ${VERDICT_WORD[v]}, risk ${clampRisk(risk)}, cert ${cert || ""}` },
+      slabEl, el("div", { class: "shadow" }));
+    const bob = el("div", { class: "bob" }, tilt);
+    return { bob, tilt, scoreB, parts: { slab: slabEl, label, card, art, cert: certN, reticle } };
   }
+
+  // ---------- motion facade (CSS-lite defaults; gsapMotion() overrides when GSAP loads) ----------
+  // CSS-lite / calm scan: CSS laser loop (none in calm), brackets parked static on the card corners, plain phase text
+  function cssScan(panel, o = {}) {
+    const sl = panel.querySelector(".slab"), card = sl && sl.querySelector(".card"), rc = sl ? [...sl.querySelectorAll(".reticle .rc")] : [];
+    if (card) corners(boxIn(card, sl), 4).forEach(([x, y], i) => { rc[i].style.transform = `translate(${x}px,${y}px)`; rc[i].style.opacity = "1"; });
+    return {
+      phase(name, s) { if (o.ph) o.ph.textContent = name; if (o.sec) o.sec.textContent = ` · ${s}s`; },
+      stop() {},
+      fault() {   // instrument fault: grey, laser frozen, brackets off; no stamp, no red, no shake
+        panel.dataset.v = "fault"; rc.forEach((n) => { n.style.opacity = "0"; });
+        return new Promise((res) => setTimeout(res, calm() ? 0 : 450));
+      }
+    };
+  }
+  let rvTimer = 0;
+  const RV = ["rv", "rv-safe", "rv-caution", "rv-scam", "rv-quiet", "rv-calm", "rv-ex"];
+  function cssReveal(panel, r, o = {}) {
+    clearTimeout(rvTimer);
+    panel.classList.remove(...RV);
+    const mode = o.mode || "check";
+    if (mode === "example-pending") return;            // the example sits still until it is seen (armed later)
+    if (mode === "example" && calm()) return;           // calm: the example simply stays static
+    runStops(); void panel.offsetWidth;                  // a replay restarts the keyframes
+    const v = normVerdict(r.verdict), risk = clampRisk(r.risk);
+    const end = (ms) => { rvTimer = setTimeout(() => panel.classList.remove(...RV), ms); };
+    if (calm()) { panel.classList.add("rv-calm"); end(400); return; }
+    if (mode === "quiet") { panel.classList.add("rv-quiet"); end(400); return; }
+    panel.classList.add("rv", "rv-" + v);
+    if (mode === "example") panel.classList.add("rv-ex");   // muted: no shake   // CSS keyframes (backwards fill) play the verdict's beats; see #result.rv-* in the style
+    const b = panel.querySelector(".result-stage .score b"), dot = panel.querySelector(".meter i");
+    if (b) countUp(b, risk);
+    if (dot) { dot.style.setProperty("--p", "0"); requestAnimationFrame(() => requestAnimationFrame(() => dot.style.setProperty("--p", String(risk)))); }
+    end(2000);
+  }
+  // hand-written particles: one stage-sized canvas, one rAF loop, removed when done. motes drift UP (safe), shards FALL (scam)
+  function burst(host, kind, n) {
+    if (!host || calm() || n < 1) return;
+    const motes = kind === "motes", pad = 80, W = host.offsetWidth + pad * 2, H = host.offsetHeight + pad * 2, dpr = Math.min(devicePixelRatio || 1, innerWidth < 640 ? 1.5 : 2);
+    const c = el("canvas", { class: "fx-burst", "aria-hidden": "true", width: Math.round(W * dpr), height: Math.round(H * dpr), style: `left:${-pad}px;top:${-pad}px;width:${W}px;height:${H}px` });
+    const x = c.getContext("2d");
+    if (!x) return;
+    host.append(c);
+    const R = (a, b) => a + Math.random() * (b - a), HOLO = ["#ff7ab6", "#ffd36e", "#7dffb2", "#6fd8ff", "#a98bff"];
+    const bob = host.querySelector(".bob"), sp = host.querySelector(".stamp-pos"), bb = boxIn(bob || host, host), o = sp && boxIn(sp, host);
+    const ps = Array.from({ length: n }, (_, i) => {
+      const a = (motes ? R(-110, -70) : R(0, 360)) * Math.PI / 180, v = motes ? R(80, 200) : R(300, 800);
+      return { x: pad + (motes ? bb.x + R(.1, .9) * bb.w : o ? o.x : bb.x + bb.w / 2), y: pad + (motes ? bb.y + R(.25, .85) * bb.h : o ? o.y : bb.y + bb.h * .6),
+        vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: motes ? R(3, 6) : R(4, 9), r: R(0, 6.3), vr: R(-6, 6), c: motes ? HOLO[i % 5] : i % 3 ? "#ff4a55" : "#f6f7fb", life: motes ? R(.9, 1.1) : .9 };
+    });
+    const g = motes ? -120 : 1400, t0 = performance.now();
+    let raf = 0, last = t0;
+    const stop = () => { cancelAnimationFrame(raf); c.remove(); const i = stopFx.indexOf(stop); if (i >= 0) stopFx.splice(i, 1); };
+    stopFx.push(stop);
+    const f = (t) => {
+      const dt = Math.min(.033, (t - last) / 1000), age = (t - t0) / 1000; let alive = 0; last = t;
+      x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+      for (const p of ps) {
+        const k = age / p.life; if (k >= 1) continue; alive++;
+        p.vy += g * dt; if (!motes) { p.vx *= .985; p.vy *= .985; }
+        p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+        x.setTransform(dpr, 0, 0, dpr, p.x * dpr, p.y * dpr); x.rotate(p.r); x.globalAlpha = 1 - k * k; x.fillStyle = p.c; x.beginPath();
+        if (motes) { x.moveTo(0, -p.s); x.lineTo(p.s * .4, 0); x.lineTo(0, p.s); x.lineTo(-p.s * .4, 0); } else { x.moveTo(0, -p.s * .6); x.lineTo(p.s * .5, p.s * .4); x.lineTo(-p.s * .55, p.s * .3); }
+        x.fill();
+      }
+      if (alive) raf = requestAnimationFrame(f); else stop();
+    };
+    raf = requestAnimationFrame(f);
+  }
+  const M = {
+    calm,
+    tilt(tiltNode, { hero = false } = {}) { makeTilt(tiltNode, { idleFloat: hero }); },
+    heroIdle() {},
+    thumbsIn(nodes) { if (!calm()) nodes.forEach((n, i) => { n.style.animationDelay = i * 60 + "ms"; n.classList.add("t-in"); }); },
+    thumbOut(node, done) { done(); },
+    invalid(field) {   // the ring pulses twice (opacity) and the border stays red until the next edit; never a shake
+      const box = field.closest(".fieldbox") || field;
+      kick(box, "bad");
+      field.addEventListener("input", () => box.classList.remove("bad"), { once: true });
+    },
+    scanStart(panel, o) { return cssScan(panel, o); },
+    beforeRender() { clearTimeout(rvTimer); $("result").classList.remove(...RV); runStops(); },
+    reveal(panel, r, o) { return cssReveal(panel, r, o); },
+    print(btn, r) {},
+    saved(btn) {   // "Saved" for 1.6 s, then the resting label again (the label is the button's first text node)
+      const t = btn.firstChild;
+      if (!t || t.nodeType !== 3) return;
+      if (!btn._sv) btn.style.minWidth = btn.offsetWidth + "px";   // the shorter label must not move its neighbours
+      t.data = "Saved"; clearTimeout(btn._sv); btn._sv = setTimeout(() => { t.data = "Save verdict image"; btn.style.minWidth = ""; btn._sv = 0; }, 1600);
+    },
+    setCalm(on) {},
+  };
+  const CSS_M = Object.freeze({ ...M });
+  const call = (name, ...a) => { try { return M[name](...a); } catch (e) { try { return CSS_M[name] && CSS_M[name](...a); } catch (e2) { return undefined; } } };
 
   // ---------- photos ----------
   function addFiles(list) {
+    const before = photos.length;
     for (const f of list) {
       if (!/^image\/(jpeg|png|webp|gif)$/.test(f.type)) continue;
-      if (photos.length >= MAX_PHOTOS) { setStatus(`Only ${MAX_PHOTOS} photos fit in one check.`); break; }
+      if (photos.length >= MAX_PHOTOS) { setStatus(`Only ${MAX_PHOTOS} photos fit in one check.`); kick(document.querySelector(".drop .count"), "pulse"); break; }
       photos.push(f);
     }
     drawThumbs();
+    if (photos.length > before) call("thumbsIn", [...$("thumbs").children].slice(before));
   }
   function drawThumbs() {
     const box = $("thumbs"); box.replaceChildren();
+    const cnt = document.querySelector(".drop .count");
+    if (cnt) { cnt.textContent = `${photos.length}/${MAX_PHOTOS}`; cnt.classList.toggle("full", photos.length >= MAX_PHOTOS); }
     photos.forEach((f, i) => {
       const url = URL.createObjectURL(f);
       const img = el("img", { src: url, alt: f.name || `Photo ${i + 1}` });
       img.onload = () => URL.revokeObjectURL(url);
       const rm = el("button", { type: "button", "aria-label": `Remove photo ${i + 1}`, text: "×" });
-      rm.onclick = (e) => { e.preventDefault(); photos.splice(i, 1); drawThumbs(); };
-      box.append(el("div", { class: "thumb" }, img, rm));
+      const thumb = el("div", { class: "thumb" }, img, rm);
+      rm.onclick = (e) => { e.preventDefault(); call("thumbOut", thumb, () => { const k = photos.indexOf(f); if (k >= 0) photos.splice(k, 1); drawThumbs(); }); };
+      box.append(thumb);
     });
   }
   $("photos").addEventListener("change", (e) => { addFiles(e.target.files); e.target.value = ""; });
@@ -565,36 +1145,75 @@ Reply with ONLY one JSON object in this shape:
     e.preventDefault();
     const text = $("listing").value.trim();
     const price = $("price").value.trim();
-    if (!text && !photos.length) { setStatus("Paste a listing or chat, or add a photo first.", true); $("listing").focus(); return; }
-    $("check-btn").disabled = true;
+    if (!text && !photos.length) { setStatus("Paste a listing or chat, or add a photo first.", true); kick($("status")); call("invalid", $("listing")); $("listing").focus(); return; }
+    const btn = $("check-btn");
+    btn.disabled = true;
     setStatus("");
+    disarm();
     const photoUrl = photos[0] ? URL.createObjectURL(photos[0]) : null;
     const started = Date.now();
-    const { tilt } = slab({ verdict: "caution", risk: 0, cert: "SCANNING", photoUrl, scanning: true });
-    const tick = el("span", { class: "steps-live", text: "0s" });
+    call("beforeRender");
+    const { bob, tilt } = slab({ verdict: "caution", risk: 0, cert: "SCANNING", photoUrl, scanning: true });
     const phases = IN_CLAUDE
       ? ["Reading the listing", "Checking the photos", "Weighing red flags"]
       : ["Reading the listing", "Checking the photos", "Searching recent sold prices", "Weighing red flags"];
-    $("result").replaceChildren(el("div", { class: "result-top" },
-      el("div", { class: "result-stage" }, tilt),
-      el("div", { class: "loading" }, el("strong", { text: "Grading the deal…" }), el("span", { class: "summary", text: "This usually takes under a minute." }), tick)));
-    makeTilt(tilt);
-    if (innerWidth < 920) $("result").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" });
+    const ph = el("span", { text: phases[0] }), sec = el("span", { text: " · 0s" });
+    const tick = el("span", { class: "steps-live" }, ph, sec);
+    const sub = el("span", { class: "summary subline", text: "This usually takes under a minute." });
+    const ring = S("svg", { class: "ring", viewBox: "0 0 40 40", "aria-hidden": "true" }, S("circle", { class: "rt", cx: 20, cy: 20, r: 17 }), S("circle", { class: "rp", cx: 20, cy: 20, r: 17, pathLength: 1 }));
+    const loading = el("div", { class: "loading" }, ring, el("strong", { text: "Grading the deal…" }), sub, tick);
+    const res = $("result");
+    res.style.minHeight = res.offsetHeight + "px";   // hold the page height while scanning: no collapse, no footer jump, no scroll clamp
+    res.replaceChildren(el("div", { class: "result-top" }, el("div", { class: "result-stage" }, bob), loading));
+    res.setAttribute("aria-busy", "true");
+    delete $("result").dataset.v;
+    announce("Checking the deal. This can take up to a minute.");
+    // honest progress: 1 - e^(-t/18) never reaches 1 before the answer; each write eases (1 s linear) to the value due at the next tick
+    const P = (s) => 1 - Math.exp(-s / 18);
+    const prog = (p, how = "") => {
+      [btn, loading].forEach((n) => { n.classList.toggle("p-fast", how === "fast"); n.classList.toggle("p-back", how === "back"); });
+      btn.style.setProperty("--prog", p.toFixed(4)); ring.lastChild.style.strokeDashoffset = (1 - p).toFixed(4);
+    };
+    btn.classList.add("busy"); prog(0);
+    requestAnimationFrame(() => requestAnimationFrame(() => prog(calm() ? 0 : P(1))));
+    call("tilt", tilt);
+    const top = res.getBoundingClientRect().top, scrolled = innerWidth <= 920 || top < 0 || top > innerHeight * .5;
+    // result above the fold on desk (the sticky form sits under a long previous result) or far away: jump, so the form stays put and the slab is there at once
+    if (scrolled) res.scrollIntoView({ behavior: calm() || Math.abs(top) > innerHeight || (top < 0 && innerWidth > 920) ? "auto" : "smooth", block: "start" });
+    const scan = call("scanStart", res, { ph, sec, sub, phases, started, photoUrl, hasPhotos: !!photoUrl, scrolled }) || cssScan(res, { ph, sec });
+    let said = 0;
     const timer = setInterval(() => {
       const s = Math.round((Date.now() - started) / 1000);
-      tick.textContent = `${phases[Math.min(phases.length - 1, Math.floor(s / 9))]} · ${s}s`;
+      const name = phases[Math.min(phases.length - 1, Math.floor(s / 9))];
+      try { scan.phase(name, s); } catch (err) { ph.textContent = name; sec.textContent = ` · ${s}s`; }
+      prog(calm() ? P(s) : P(s + 1));
+      // long-wait calm-down: say why it is slow instead of speeding anything up
+      if (s >= 20 && said < 1) { said = 1; sub.textContent = "Bigger listings take longer. Still grading."; kick(sub, "xfade"); }
+      if (s >= 45 && said < 2) { said = 2; sub.textContent = IN_CLAUDE ? "Still working. This can take up to a minute." : "Still working. Live price lookups can take up to a minute."; kick(sub, "xfade"); }
     }, 1000);
+    const unbusy = () => { const off = () => { btn.classList.remove("busy"); setTimeout(() => prog(0), 320); }; calm() ? (btn.classList.remove("busy"), prog(0)) : setTimeout(off, 400); };
     try {
       const r = await runCheck(text, price);
       r.photoUrl = photoUrl;
+      clearInterval(timer);
+      try { scan.stop(); } catch (err) {}
+      prog(1, "fast");
+      $("result").removeAttribute("aria-busy");
       render(r);
+      unbusy();
     } catch (err) {
+      clearInterval(timer);
       const msg = err?.friendly || SAMPLE_ERRORS[err?.code] || "The check failed. Try again.";
-      setStatus(msg, true);
-      if (current) render(current, true); else $("result").replaceChildren();
+      setStatus(msg, true);   // also the one #announce message for this error
+      kick($("status"));
+      prog(0, "back");
+      try { await scan.fault(); } catch (e2) {}
+      btn.classList.remove("busy");
+      $("result").removeAttribute("aria-busy");
+      if (current) render(current, true); else { call("beforeRender"); res.replaceChildren(); res.style.minHeight = ""; }
     } finally {
       clearInterval(timer);
-      $("check-btn").disabled = false;
+      btn.disabled = false;
     }
   });
 
@@ -604,23 +1223,30 @@ Reply with ONLY one JSON object in this shape:
 
   // ---------- rendering ----------
   function render(r, keepId = false) {
+    call("beforeRender");
     const v = normVerdict(r.verdict);
     const risk = clampRisk(r.risk);
     if (!keepId || !r.cert) r.cert = r.example ? "TC-EXAMPLE" : certId();
     current = r;
 
-    const { tilt, scoreB } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl });
-    const meterDot = el("i", { style: "left:0%" });
+    const flags = Array.isArray(r.red_flags) ? r.red_flags : [];
+    const high = flags.filter((f) => f && f.severity === "high").length;   // data-driven intensity: cracks = high flags
+    const fakeFail = (Array.isArray(r.fake_checks) ? r.fake_checks : []).some((c) => c && c.result === "fail");
+    const { bob, tilt } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl, high, fakeFail });
+    const meterDot = el("i", { style: `--p:${risk}` });
     const verdictBlock = el("div", { class: "verdict-block" });
     if (r.example) verdictBlock.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
     verdictBlock.append(
-      el("span", { class: `pill p-${v}`, text: `${VERDICT_WORD[v]} · risk ${risk}` }),
-      el("p", { class: "headline", text: r.headline || VERDICT_WORD[v] }),
+      el("span", { class: `pill p-${v}`, "data-text": `${VERDICT_WORD[v]} · risk ${risk}`, text: `${VERDICT_WORD[v]} · risk ${risk}` }),
+      el("p", { class: "headline" }, ...String(r.headline || VERDICT_WORD[v]).split(/\s+/).filter(Boolean).flatMap((w, i) => [i ? " " : null, el("span", { class: "hw", text: w })])),
       el("div", { class: "meter", role: "img", "aria-label": `Risk ${risk} out of 100` }, meterDot),
       el("div", { class: "meter-scale", "aria-hidden": "true" }, el("span", { text: "0 safe" }), el("span", { text: "50" }), el("span", { text: "100 scam" })));
     if (r.summary) verdictBlock.append(el("p", { class: "summary", text: r.summary }));
 
-    const out = [el("div", { class: "result-top" }, el("div", { class: "result-stage" }, tilt), verdictBlock)];
+    const stage = el("div", { class: "result-stage", "data-v": v }, el("i", { class: "fx-aura", "aria-hidden": "true" }),
+      el("div", { class: "fx-rings", "aria-hidden": "true" }, ...Array.from({ length: v === "scam" && !r.example ? 3 : 1 }, () => el("i"))), bob);
+    const sect = (ev, title, ...kids) => el("div", { class: "section", "data-ev": ev }, el("h3", {}, title, el("i", { class: "rule", "aria-hidden": "true" })), ...kids);
+    const out = [el("div", { class: "result-top" }, stage, verdictBlock)];
 
     const cards = Array.isArray(r.cards) ? r.cards.filter((c) => c && c.name) : [];
     if (cards.length) {
@@ -633,22 +1259,22 @@ Reply with ONLY one JSON object in this shape:
           el("td", { class: "num", text: c.asking_price || "—" }),
           el("td", { class: "num" }, range, c.price_source ? el("span", { class: "sub", text: c.price_source }) : null)));
       }
-      const sec = el("div", { class: "section" }, el("h3", { text: "Cards and prices" }),
+      const sec = sect("cards", "Cards and prices",
         el("div", { class: "table-wrap" }, el("table", {},
           el("thead", {}, el("tr", {}, el("th", { text: "Card" }), el("th", { text: "Asking" }), el("th", { text: r.mode === "live" ? "Recent sold" : "Market (est.)" }))), tb)));
       if (r.price_check) sec.append(el("p", { class: "price-line", text: r.price_check }));
       out.push(sec);
     }
 
-    const flags = Array.isArray(r.red_flags) ? r.red_flags : [];
     if (flags.length) {
       const order = { high: 0, medium: 1, low: 2 };
       const ul = el("ul", { class: "flags" });
+      const gap = Math.min(70, 600 / flags.length);
       [...flags].sort((a, b) => (order[a.severity] ?? 1) - (order[b.severity] ?? 1)).forEach((f, i) => {
         const sev = ["high", "medium", "low"].includes(f.severity) ? f.severity : "medium";
-        ul.append(el("li", { style: `animation-delay:${i * 70}ms` }, el("span", { class: `sev sev-${sev}`, text: sev }), el("strong", { text: f.flag || "" }), el("span", { class: "why", text: f.why || "" })));
+        ul.append(el("li", { class: sev === "high" ? "sev-row-high" : "", style: `animation-delay:${Math.round(i * gap)}ms` }, el("span", { class: `sev sev-${sev}`, text: sev }), el("strong", { text: f.flag || "" }), el("span", { class: "why", text: f.why || "" })));
       });
-      out.push(el("div", { class: "section" }, el("h3", { text: `Red flags (${flags.length})` }), ul));
+      out.push(sect("flags", `Red flags (${flags.length})`, ul));
     }
 
     const cols = el("div", { class: "cols" });
@@ -659,28 +1285,31 @@ Reply with ONLY one JSON object in this shape:
         const res = ["pass", "fail", "unclear"].includes(c.result) ? c.result : "unclear";
         ul.append(el("li", {}, el("span", { class: `sev r-${res}`, text: res }), el("strong", { text: c.check || "" }), el("span", { class: "why", text: c.note || "" })));
       });
-      cols.append(el("div", { class: "section" }, el("h3", { text: "Fake-card checks" }), ul));
+      cols.append(sect("checks", "Fake-card checks", ul));
     }
     const side = el("div", { style: "display:grid;gap:18px;align-content:start" });
     const good = Array.isArray(r.good_signs) ? r.good_signs.filter(Boolean) : [];
-    if (good.length) side.append(el("div", { class: "section" }, el("h3", { text: "Good signs" }), el("ul", { class: "plain" }, ...good.map((g) => el("li", { text: g })))));
+    if (good.length) side.append(sect("good", "Good signs", el("ul", { class: "plain" }, ...good.map((g) => el("li", {}, el("i", { class: "gb", "aria-hidden": "true" }), g)))));
     const next = Array.isArray(r.next_steps) ? r.next_steps.filter(Boolean) : [];
-    if (next.length) side.append(el("div", { class: "section" }, el("h3", { text: "What to do next" }), el("ol", { class: "next" }, ...next.map((s) => el("li", { text: s })))));
+    if (next.length) side.append(sect("next", "What to do next", el("ol", { class: "next" }, ...next.map((s) => el("li", { text: s })))));
     if (side.childElementCount) cols.append(side);
     if (cols.childElementCount) out.push(cols);
 
-    const saveBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Save verdict image" });
+    const saveBtn = el("button", { class: "btn btn-ghost", type: "button", "data-save": "", "data-magnet": "", text: "Save verdict image" });
+    saveBtn.append(el("i", { class: "btn-sheen", "aria-hidden": "true" }));
     const copyBtn = el("button", { class: "btn btn-ghost", type: "button", text: "Copy summary" });
-    saveBtn.onclick = () => saveImage(r, saveBtn);
+    saveBtn.onclick = () => { saveImage(r, saveBtn); call("print", saveBtn, r); };   // saveImage first, synchronously, to keep the user gesture
     copyBtn.onclick = () => copySummary(r, copyBtn);
     if (IN_CLAUDE && !downloads) saveBtn.hidden = true;
     out.push(el("div", { class: "share" }, saveBtn, copyBtn,
       el("p", { class: "disclaimer", text: r.mode === "live" ? "Prices from a live web search at check time." : r.example ? "" : "Prices are Claude's estimates, not live data." })));
 
     $("result").replaceChildren(...out);
-    makeTilt(tilt);
-    if (!keepId) countUp(scoreB, risk);
-    requestAnimationFrame(() => requestAnimationFrame(() => { meterDot.style.left = risk + "%"; }));
+    $("result").style.minHeight = "";
+    $("result").dataset.v = v;
+    if (!keepId && !r.example) announce(`${VERDICT_WORD[v]}. Risk ${risk} out of 100. ${flags.length} red flag${flags.length === 1 ? "" : "s"}.`);
+    call("tilt", tilt);
+    call("reveal", $("result"), r, { mode: r.example ? "example-pending" : keepId ? "quiet" : "check" });
   }
 
   function summaryText(r) {
@@ -693,12 +1322,13 @@ Reply with ONLY one JSON object in this shape:
   }
   async function copySummary(r, btn) {
     const t = summaryText(r);
-    try { await navigator.clipboard.writeText(t); btn.textContent = "Copied"; }
+    btn.style.minWidth = btn.offsetWidth + "px";
+    try { await navigator.clipboard.writeText(t); btn.textContent = "Copied"; btn.append(S("svg", { class: "tick", viewBox: "0 0 16 16", "aria-hidden": "true" }, S("path", { d: "M3 8.5l3.2 3L13 4.5", pathLength: 1 }))); }
     catch {
       const ta = el("textarea", { readonly: "", "aria-label": "Summary to copy" }); ta.value = t; ta.style.minHeight = "120px";
       btn.after(ta); ta.select(); btn.textContent = "Select and copy";
     }
-    setTimeout(() => { btn.textContent = "Copy summary"; }, 2000);
+    setTimeout(() => { btn.textContent = "Copy summary"; btn.style.minWidth = ""; }, 2000);
   }
 
   // ---------- shareable image (fixed night palette so it looks the same everywhere) ----------
@@ -773,24 +1403,778 @@ Reply with ONLY one JSON object in this shape:
       } else {
         const a = el("a", { href: URL.createObjectURL(blob), download: filename }); document.body.append(a); a.click(); a.remove();
       }
+      call("saved", btn);
     } catch (err) {
       if (err?.code !== "cancelled" && err?.code !== "declined") setStatus("The image couldn't be saved. Use Copy summary instead.", true);
     } finally { btn.disabled = false; }
   }
 
+  // ---------- global: anchors, calm toggle, live reduced-motion ----------
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest && e.target.closest('a[href^="#"]');
+    if (!a) return;
+    const id = a.getAttribute("href").slice(1), t = id && document.getElementById(id);
+    if (!t) return;
+    e.preventDefault();
+    t.scrollIntoView({ behavior: calm() ? "auto" : "smooth", block: "start" });
+    if (!t.hasAttribute("tabindex")) t.setAttribute("tabindex", "-1");
+    t.focus({ preventScroll: true });
+    if (id === "result" && current && current.example) replayExample();
+  });
+
+  // ---------- the example plays once, when it is seen (and again from "See an example") ----------
+  let armIO = null, armT = 0;
+  const disarm = () => { if (armIO) armIO.disconnect(); armIO = null; clearTimeout(armT); };
+  const playExample = () => {
+    disarm();
+    const res = $("result");
+    if (!current || !current.example || calm() || res.hasAttribute("aria-busy")) return;
+    call("reveal", res, current, { mode: "example" });
+  };
+  // play when a good part of the slab is on screen (a 1 px sliver would waste the slam); visible at rest until then
+  const watchStage = (ratio, cb) => {
+    const stg = document.querySelector("#result .result-stage");
+    if (!stg || !("IntersectionObserver" in window)) return false;
+    armIO = new IntersectionObserver(([e]) => { if (e.intersectionRatio >= ratio) cb(); }, { threshold: [0, ratio] });
+    armIO.observe(stg); return true;
+  };
+  function armExample() { disarm(); if (!calm()) watchStage(.35, playExample); }
+  function replayExample() { disarm(); if (calm()) return; watchStage(.5, playExample); armT = setTimeout(playExample, 700); }
+
+  // ---------- compact nav: only between the hero and the checker, only when the page scrolls itself ----------
+  (() => {
+    const nav = $("compact"), hero = document.querySelector(".hero");
+    if (!nav || !hero || !("IntersectionObserver" in window)) return;
+    let heroIn = true, checkIn = false;
+    const upd = () => { const on = !heroIn && !checkIn && root.scrollHeight > innerHeight + 2; nav.classList.toggle("show", on); nav.inert = !on; };
+    new IntersectionObserver(([e]) => { heroIn = e.isIntersecting; upd(); }).observe(hero);
+    new IntersectionObserver(([e]) => { checkIn = e.isIntersecting; upd(); }, { rootMargin: "0px 0px -45% 0px" }).observe($("check"));   // the checker counts once its top passes the middle
+    addEventListener("resize", upd, { passive: true });
+  })();
+
+  // ---------- magnet (fine pointer, not calm): a hand lerp on the individual translate property ----------
+  (() => {
+    let mx = -1e4, my = -1e4, raf = 0;
+    const st = new Map(), clampN = (v, a) => Math.max(-a, Math.min(a, v));
+    const loop = () => {
+      raf = 0;
+      const on = root.classList.contains("m-fine") && !calm();
+      const nodes = [...document.querySelectorAll("[data-magnet]")].map((n) => [n, n.getBoundingClientRect()]);   // reads first
+      let busy = false;
+      for (const [n, r] of nodes) {
+        const s = st.get(n) || { x: 0, y: 0 }, cx = r.left + r.width / 2 - s.x, cy = r.top + r.height / 2 - s.y;
+        const near = on && !n.disabled && !n.hidden && r.width && Math.abs(mx - cx) < r.width / 2 + 40 && Math.abs(my - cy) < r.height / 2 + 40;
+        const over = near && Math.abs(mx - cx) < r.width / 2 && Math.abs(my - cy) < r.height / 2;
+        const tx = near ? clampN((mx - cx) * .3, 8) : 0, ty = near ? clampN((my - cy) * .3, 5) - (over && n.classList.contains("btn-primary") ? 1 : 0) : 0;
+        const k = near ? .3 : .18;
+        s.x += (tx - s.x) * k; s.y += (ty - s.y) * k;
+        if (!near && Math.abs(s.x) < .05 && Math.abs(s.y) < .05) { st.delete(n); n.style.translate = ""; n.classList.remove("mag"); continue; }
+        st.set(n, s); n.classList.add("mag"); n.style.translate = `${s.x.toFixed(2)}px ${s.y.toFixed(2)}px`; busy = true;
+      }
+      if (busy) raf = requestAnimationFrame(loop);
+    };
+    addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; mx = e.clientX; my = e.clientY; if (!raf) raf = requestAnimationFrame(loop); }, { passive: true });
+    document.documentElement.addEventListener("pointerleave", () => { mx = my = -1e4; if (!raf) raf = requestAnimationFrame(loop); });
+  })();
+
+  // ---------- hero callouts (>= 1340 px): drawn from the real element boxes, in the slab's own coordinates ----------
+  const CALLOUTS = [[".cert", .45, .5, -1, "CERT TC-261020-EMBR"], [".nameplate", .3, .5, -1, "NAME/HP · MATCH"], [".card", .55, .48, 1, "HOLO SHIFT · OK"], [".num", .35, .5, 1, "SET No. 042/198"]];
+  function drawCallouts() {   // updates the same nodes in place (a running intro keeps its targets when fonts arrive)
+    const svg = document.querySelector("#hero-stage .callouts");
+    if (!svg || innerWidth < 1340) return;
+    const sl = svg.parentNode, W = sl.offsetWidth;
+    if (svg.children.length !== CALLOUTS.length) svg.replaceChildren(...CALLOUTS.map(([, , , , txt]) => S("g", { class: "co" }, S("path", { class: "co-line", pathLength: 1 }), S("circle", { class: "co-dot", r: 2.6 }), S("text", { class: "co-t" }, txt))));
+    CALLOUTS.forEach(([sel, fx, fy, side, txt], i) => {
+      const n = sl.querySelector(sel), b = boxIn(n, sl), ax = b.x + b.w * fx, ay = b.y + b.h * fy;
+      const ex = side < 0 ? -16 : W + 16, kx = ex + side * 12, ky = ay - 12, len = txt.length * 6.9 + 6;
+      const [path, dot, text] = svg.children[i].children;
+      path.setAttribute("d", `M${ax.toFixed(1)} ${ay.toFixed(1)}H${ex}L${kx} ${ky}H${(kx + side * len).toFixed(1)}`);
+      dot.setAttribute("cx", ax.toFixed(1)); dot.setAttribute("cy", ay.toFixed(1));
+      text.setAttribute("x", (kx + side * 3).toFixed(1)); text.setAttribute("y", ky - 5); text.setAttribute("text-anchor", side < 0 ? "end" : "start");
+    });
+  }
+  const toggle = document.querySelector(".motion-toggle");
+  const paintToggle = () => { const on = calm(); toggle.setAttribute("aria-pressed", String(on)); toggle.textContent = on ? "Motion: calm" : "Motion: full"; };
+  const applyCalm = (on) => {
+    if (on === calm()) return;
+    root.classList.toggle("m-calm", on);
+    if (on) root.classList.remove("m-intro", "m-intro-short", "m-boot");
+    paintToggle();
+    call("setCalm", on);
+  };
+  toggle.addEventListener("click", () => {
+    const on = !calm();
+    try { localStorage.setItem("tc-motion", on ? "calm" : "full"); } catch (e) {}
+    applyCalm(on);
+  });
+  const rmq = matchMedia("(prefers-reduced-motion: reduce)");
+  const storedCalm = () => { try { return localStorage.getItem("tc-motion") === "calm"; } catch (e) { return false; } };
+  const onRmq = () => { if (!storedCalm()) applyCalm(rmq.matches); };
+  rmq.addEventListener ? rmq.addEventListener("change", onRmq) : rmq.addListener && rmq.addListener(onRmq);
+  paintToggle();
+  // h1 holo sweep replays on hover (fine pointer), at most every 4 s
+  let lastSweep = 0;
+  const h1 = document.querySelector("h1.display");
+  h1.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "mouse" || calm() || root.classList.contains("m-intro") || performance.now() - lastSweep < 4000) return;
+    lastSweep = performance.now();
+    h1.classList.remove("sweep"); void h1.offsetWidth; h1.classList.add("sweep");
+    setTimeout(() => h1.classList.remove("sweep"), 950);
+  });
+
   // ---------- boot ----------
   artNode($("hero-art"));
-  makeTilt($("hero-tilt"), { idleFloat: true });
+  const fine = root.classList.contains("m-fine") || matchMedia("(hover: hover) and (pointer: fine)").matches;
+  document.querySelector(".tilt-hint").textContent = fine ? "Hover to tilt · real holo shifts colour" : "Drag sideways to tilt";
+  call("tilt", $("hero-tilt"), { hero: true });
+  if ("IntersectionObserver" in window) {   // CSS-lite: pause the hero float off screen
+    new IntersectionObserver(([e]) => $("hero-stage").classList.toggle("off", !e.isIntersecting)).observe($("hero-stage"));
+  }
   render(EXAMPLE);
+  armExample();
+  drawCallouts();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawCallouts);
+  let rzT = 0;
+  addEventListener("resize", () => { clearTimeout(rzT); rzT = setTimeout(drawCallouts, 200); }, { passive: true });
   if (IN_CLAUDE) {
-    $("mode").innerHTML = "<b>Claude</b> · price estimates";
+    $("mode").innerHTML = "<b>Claude</b> · price estimates"; $("mode").classList.add("beat");
     $("mode-note").textContent = "Runs on your own Claude account. Prices are Claude's estimates; the hosted version looks up live sold prices.";
     claude.use("sample").then((s) => { sample = s; if (!s) { $("check-btn").disabled = true; setStatus("Checks need Claude. Open this page in Claude while signed in.", true); } });
-    claude.use("downloads").then((d) => { downloads = d; if (current) render(current, true); });
+    // unhide Save in place; never re-render (that could wipe a running check or replay the example)
+    claude.use("downloads").then((d) => { downloads = d; if (d) document.querySelectorAll("[data-save]").forEach((b) => { b.hidden = false; }); });
   } else {
-    $("mode").innerHTML = "<b>Live</b> · sold-price lookup";
+    $("mode").innerHTML = "<b>Live</b> · sold-price lookup"; $("mode").classList.add("beat");
     $("mode-note").textContent = "Each check reads your photos and searches recent sold prices. Checks are limited per hour so the site stays free.";
     loadArt();
   }
+  // ---------- GSAP layer: only ever called when window.gsap exists; the app code above never names gsap ----------
+  const EASES = {
+    "tc.out":     "0.16,1,0.3,1",
+    "tc.snap":    "0.2,0.8,0.2,1",
+    "tc.precise": "0.65,0,0.35,1",
+    "tc.settle":  "M0,0 C0.18,0.6 0.3,1.04 0.52,1.03 0.72,1.01 0.84,1 1,1",
+    "tc.slam":    "0.55,0,1,0.45",
+    "tc.stamp":   "M0,0 C0.25,0 0.32,1.22 0.5,1.08 0.64,0.98 0.78,1.01 1,1",
+    "tc.deal":    "M0,0 C0.16,0.62 0.3,1.08 0.56,1.035 0.74,1.005 0.86,1 1,1",
+    "tc.brake":   "M0,0 C0.18,0.9 0.32,1.1 0.5,1.06 0.68,1.02 0.8,0.995 1,1",
+    "tc.hunt":    "M0,0 C0.2,0 0.3,1.06 0.45,1.04 0.6,1.02 0.62,0.98 0.75,0.99 0.86,1 0.92,1 1,1",
+    "tc.lift":    "M0,0 C0.4,0 0.2,1 1,1",
+  };
+  const FALLBACK = { "tc.out": "expo.out", "tc.snap": "power3.out", "tc.precise": "power2.inOut", "tc.settle": "back.out(1.2)",
+    "tc.slam": "power4.in", "tc.stamp": "back.out(2)", "tc.deal": "back.out(1.4)", "tc.brake": "back.out(1.6)", "tc.hunt": "back.out(1.3)", "tc.lift": "power2.inOut" };
+  const E = (n) => (window.CustomEase && window.CustomEase.get(n)) ? n : FALLBACK[n];
+  const clamp01 = (v) => Math.max(0, Math.min(1, v)), lerp = (a, b, p) => a + (b - a) * p;
+
+  function gsapMotion({ introWindow }) {
+    const G = window.gsap;
+    const lite = () => root.classList.contains("m-lite");
+    const stage = $("hero-stage"), heroTilt = $("hero-tilt"), heroBob = heroTilt.closest(".bob"), heroSlab = heroTilt.querySelector(".slab");
+    const heroCard = heroSlab.querySelector(".card"), rc = [...heroSlab.querySelectorAll(".reticle .rc")];
+    // quickTo that always starts from the element's real value (another tween may have moved it since the last call)
+    const qt = (t, p, d, ease = "power3.out") => { const f = G.quickTo(t, p, { duration: d, ease }); return (v) => f(v, G.getProperty(t, p)); };
+    let bobTl = null, heroCtx = null, lamp = null, introTl = null, heroEntered = false, heroVisible = true, first = true;
+    const cleanups = [], played = {}, fine = root.classList.contains("m-fine");
+    // page-level entrances (not tied to a render): in view now -> play now; else play the moment the first pixel enters
+    const enter = (node, fn) => {
+      const r = node.getBoundingClientRect();
+      if (r.top < innerHeight && r.bottom > 0) return fn();
+      if (!("IntersectionObserver" in window)) return;
+      const io = new IntersectionObserver(([e]) => { if (!e.isIntersecting) return; io.disconnect(); heroCtx ? heroCtx.add(fn) : fn(); }, { threshold: 0 });
+      io.observe(node); cleanups.push(() => io.disconnect());
+    };
+
+    // ---- foil engine: GSAP moves the band, the spot and the foil opacity directly (no inherited vars) ----
+    const surfaces = new Map();
+    const surface = (card) => {
+      let s = surfaces.get(card); if (s) return s;
+      const band = card.querySelector(".foil-band"), spot = card.querySelector(".glare-spot"), foil = card.querySelector(".foil");
+      if (!band || !spot || !foil) return null;
+      G.set([band, spot], { x: 0, y: 0, xPercent: 0, yPercent: 0 });   // clean cache, whatever CSS was doing
+      s = { card, band, spot, foil, hovered: false, glintTl: null,
+        bx: qt(band, "xPercent", .35), sx: qt(spot, "xPercent", .25), sy: qt(spot, "yPercent", .25), fo: card.classList.contains("dead") ? () => {} : qt(foil, "opacity", .3) };
+      surfaces.set(card, s); return s;
+    };
+    const glint = (s) => {
+      if (!s || calm()) return null;
+      if (s.glintTl) s.glintTl.kill();
+      const tl = G.timeline({ onComplete: () => { s.glintTl = null; } });
+      tl.to(s.band, { xPercent: -14, duration: .14, ease: "power2.in" }, 0)
+        .to(s.band, { xPercent: 12, duration: .46, ease: "power2.inOut" }, .14)
+        .to(s.band, { xPercent: 0, duration: .35, ease: E("tc.out") }, .6)
+        .to(s.spot, { xPercent: 20, yPercent: 10, duration: .6, ease: "power2.inOut" }, 0)
+        .to(s.spot, { xPercent: 0, yPercent: 0, duration: .35, ease: E("tc.out") }, .6)
+        .to(s.foil, { opacity: .62, duration: .3, ease: "power2.out" }, 0)
+        .to(s.foil, { opacity: .2, duration: .35, ease: "power2.inOut" }, .3);
+      s.glintTl = tl; return tl;
+    };
+
+    // ---- idle float on .bob (starts from the current pose, so nothing jumps) ----
+    const startBob = (amp, delay = 0) => {
+      if (bobTl) bobTl.kill();
+      bobTl = G.timeline({ delay, paused: !heroVisible });
+      bobTl.to(heroBob, { rotationX: 4 * amp, rotationY: -8 * amp, y: 0, duration: 1.2, ease: "sine.out" })
+        .to(heroBob, { y: -10 * amp, rotationX: -3 * amp, rotationY: 8 * amp, duration: 3.5, ease: "sine.inOut", repeat: -1, yoyo: true });
+    };
+
+    // ---- pointer tilt (quickTo) + foil follow; elastic release with one glint ----
+    const gTilt = (node, { hero = false } = {}) => {
+      if (!node || node._gTilt) return;
+      const target = node.closest(".stage, .result-stage") || node;
+      const card = node.querySelector(".card"), s = card && surface(card);
+      if (!s) return;
+      const rx = qt(node, "rotationX", .45), ry = qt(node, "rotationY", .45);
+      let inside = false, rel = null, wc = 0;
+      const enter = () => {
+        inside = true; clearTimeout(wc); node.style.willChange = "transform";
+        if (rel) { rel.kill(); rel = null; }
+        if (s.glintTl) { s.glintTl.kill(); s.glintTl = null; }
+        s.hovered = true;
+        if (hero && bobTl) G.to(bobTl, { timeScale: .15, duration: .4, overwrite: true });
+      };
+      const move = (e) => {
+        if (calm()) return;
+        const r = node.getBoundingClientRect(); if (!r.width) return;
+        const px = clamp01((e.clientX - r.left) / r.width), py = clamp01((e.clientY - r.top) / r.height);
+        if (!inside) enter();
+        rx((.5 - py) * 26); ry((px - .5) * 32);
+        s.bx((.5 - px) * 20); s.sx((px - .5) * 50); s.sy((py - .5) * 50);
+        s.fo(.18 + .42 * Math.min(1, Math.hypot(px - .5, py - .5) * 1.6));
+      };
+      const leave = (e) => {
+        if (!inside || (e && e.type === "pointerup" && e.pointerType === "mouse")) return;
+        inside = false; s.hovered = false;
+        rel = G.to(node, { rotationX: 0, rotationY: 0, duration: .9, ease: "elastic.out(1,.55)" });
+        if (hero && bobTl) G.to(bobTl, { timeScale: 1, duration: .6, overwrite: true });
+        glint(s);
+        wc = setTimeout(() => { node.style.willChange = ""; }, 1000);
+      };
+      target.addEventListener("pointermove", move);
+      ["pointerleave", "pointerup", "pointercancel"].forEach((t) => target.addEventListener(t, leave));
+      node._gTilt = () => {
+        target.removeEventListener("pointermove", move);
+        ["pointerleave", "pointerup", "pointercancel"].forEach((t) => target.removeEventListener(t, leave));
+        clearTimeout(wc); if (rel) rel.kill(); node.style.willChange = ""; node._gTilt = null;
+      };
+    };
+
+    // ---- scroll lamp: on phones scrolling is the tilt; the holo catches the light as the slab crosses mid-screen ----
+    const startLamp = () => {
+      if (calm() || lite() || !("IntersectionObserver" in window)) return null;
+      const seen = new Set(); let raf = 0;
+      const io = new IntersectionObserver((es) => es.forEach((e) => (e.isIntersecting ? seen.add(e.target) : seen.delete(e.target))));
+      const frame = () => {
+        raf = 0; const reads = [];
+        for (const card of seen) {
+          if (!card.isConnected) { seen.delete(card); io.unobserve(card); surfaces.delete(card); continue; }
+          const s = surface(card);
+          if (!s || s.hovered || (s.glintTl && s.glintTl.isActive())) continue;
+          reads.push([s, card.getBoundingClientRect()]);
+          if (reads.length >= 2) break;
+        }
+        for (const [s, r] of reads) {   // all reads first, then writes
+          const p = clamp01((r.top + r.height / 2) / innerHeight);
+          s.bx(lerp(8, -8, p)); s.sy(lerp(-20, 20, p)); s.fo(.2 + .25 * (1 - Math.abs(p - .5) * 2));
+        }
+      };
+      const onScroll = () => { if (!raf) raf = requestAnimationFrame(frame); };
+      addEventListener("scroll", onScroll, { passive: true });
+      return { observe: (c) => { if (c) io.observe(c); }, stop() { io.disconnect(); removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); } };
+    };
+
+    // ---- instrument beats on the hero slab (decorations and the seal only) ----
+    const slabBox = () => ({ x: 0, y: 0, w: heroSlab.offsetWidth, h: heroSlab.offsetHeight });
+    // reticle: snap in from 18 px outside (stagger 30), or release outward and fade
+    const snapRc = (rcs, tl, at, b, pad = 6, stag = .03) => { const f = corners(b, pad, 18), t = corners(b, pad); rcs.forEach((n, i) => tl.fromTo(n, { x: f[i][0], y: f[i][1], opacity: 0, scale: 1 }, { x: t[i][0], y: t[i][1], opacity: 1, duration: .18, ease: "expo.out", immediateRender: false }, at + i * stag)); };
+    const releaseRc = (rcs, tl, at, b, out = 10, pad = 6) => { const t = corners(b, pad, out); rcs.forEach((n, i) => tl.to(n, { x: t[i][0], y: t[i][1], opacity: 0, scale: 1, duration: .2, ease: "power2.out" }, at)); };
+    const snap = (tl, at, b) => snapRc(rc, tl, at, b);
+    const release = (tl, at, b, out = 10) => releaseRc(rc, tl, at, b, out);
+    const laser = (tl, at, card) => {
+      const sl = card.querySelector(".scanline"); if (!sl) return;
+      tl.set(sl, { display: "block" }, at)
+        .fromTo(sl, { y: 0, yPercent: -110 }, { yPercent: 455, duration: .6, ease: "power2.inOut" }, at)
+        .set(sl, { clearProps: "display,transform" }, at + .6);
+    };
+    const sealIn = (tl, at) => {
+      const g = heroSlab.querySelector(".seal-g"); if (!g) return;
+      tl.fromTo(g, { scale: .6, opacity: .001, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: .16, ease: E("tc.settle") }, at)
+        .fromTo(heroSlab.querySelector(".rosette"), { strokeDashoffset: 1, fillOpacity: 0 }, { strokeDashoffset: 0, fillOpacity: 1, duration: .3, ease: E("tc.precise") }, at)
+        .fromTo(heroSlab.querySelector(".seal-ring"), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .3, ease: E("tc.precise") }, at + .08)
+        .fromTo(heroSlab.querySelector(".seal-check"), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .18, ease: E("tc.out") }, at + .2);
+    };
+    // phones: the slab is ~980 px down, so it gets its own entry when 35 % of the stage is visible (from the rest pose; nothing hidden)
+    const heroEntry = () => {
+      heroEntered = true;
+      const b = slabBox(), slots = stage.querySelectorAll(".ghost-slot");
+      const tl = G.timeline({ onComplete: () => startBob(innerWidth < 640 ? .5 : 1) });
+      snap(tl, 0, b); laser(tl, .04, heroCard); release(tl, .7, b);
+      slots.forEach((n, i) => tl.to(n, { xPercent: i ? 18 : -18, duration: .18, ease: "power2.in" }, 0).to(n, { xPercent: 0, duration: .42, ease: "back.out(1.8)" }, .18));
+      tl.add(() => glint(surface(heroCard)), .6).to({}, { duration: .6 }, .6);
+    };
+
+    // ================= page sections: steps deal, title words, Exhibit A scrub, desk lamp, UV loupe =================
+    const stepsDeal = () => {
+      const ol = document.querySelector(".steps ol");
+      if (!ol || played.steps) return;
+      played.steps = true;
+      const lis = [...ol.children], rail = document.querySelector(".steps-rail");
+      const deal = (items, withRail) => {
+        const t = G.timeline();
+        t.fromTo(items, { y: 24, rotationX: -50, transformOrigin: "50% 100%", transformPerspective: 900, opacity: .001 }, { y: 0, rotationX: 0, opacity: 1, duration: .48, ease: E("tc.deal"), stagger: .11, clearProps: "all" }, 0);
+        items.forEach((li, k) => {   // on landing: the rarity badge glows, the rare card catches one glint
+          const at = .34 + k * .11, g = li.querySelector(".badge-glow"), sh = li.querySelector(".step-sheen");
+          if (g) t.fromTo(g, { opacity: 0 }, { opacity: 1, duration: .18, ease: "power2.out" }, at).to(g, { opacity: .35, duration: .32, ease: "power2.inOut" }, at + .18);
+          if (sh) t.fromTo(sh, { x: 0, xPercent: -120 }, { xPercent: 120, duration: .6, ease: E("tc.precise"), immediateRender: false, clearProps: "transform" }, at + .06);
+        });
+        if (withRail && rail && rail.offsetWidth) {
+          const at = .48 + (items.length - 1) * .11 + .2, line = rail.firstElementChild, dots = [...rail.querySelectorAll("b")];
+          t.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: .6, ease: "power2.inOut" }, at);
+          dots.forEach((d, k) => t.fromTo(d, { scale: 0 }, { scale: 1, duration: .2, ease: "back.out(3)" }, at + k * .27));
+        }
+        return t;
+      };
+      if (innerWidth >= 761) enter(ol, () => deal(lis, true)); else lis.forEach((li) => enter(li, () => deal([li], false)));
+    };
+    const titleWords = () => {
+      document.querySelectorAll(".section-title.split").forEach((h, k) => {
+        if (played["t" + k]) return;
+        played["t" + k] = true;
+        enter(h, () => G.fromTo(h.querySelectorAll(".w > i"), { yPercent: 105, rotation: 5 }, { yPercent: 0, rotation: 0, duration: .42, ease: E("tc.snap"), stagger: .05, clearProps: "transform" }));
+      });
+    };
+    // Exhibit A: one paused timeline (1 unit), scrubbed by scroll; dim at arm, never hidden. Auto-height frame: plays once.
+    const exhibit = () => {
+      const sec = $("exhibit");
+      if (!sec || !("IntersectionObserver" in window)) return;
+      const post = sec.querySelector(".post"), laserN = post.querySelector(".exhibit-laser"), stampN = post.querySelector(".mini-stamp");
+      const marks = [...post.querySelectorAll("mark[data-pin]")], notes = [...sec.querySelectorAll(".notes li")];
+      let tl = null, cur = 0, raf = 0, on = false, auto = false, rz = 0;
+      const mk = () => {
+        const H = post.offsetHeight, t = G.timeline({ paused: true });
+        t.fromTo(laserN, { y: 0, opacity: 1 }, { y: H + 26, duration: .85, ease: "none" }, 0).to(laserN, { opacity: 0, duration: .03, ease: "none" }, .85);
+        marks.forEach((m) => {
+          const k = +m.dataset.pin, pin = m.nextElementSibling, note = notes[k - 1], np = note && note.querySelector(".pin");
+          const at = clamp01((boxIn(m, post).y + m.offsetHeight * .5) / H) * .85;
+          t.fromTo(m, { backgroundSize: "0% 40%" }, { backgroundSize: "100% 40%", duration: .05, ease: "none" }, at);
+          if (pin) t.fromTo(pin, { scale: .8, opacity: .45 }, { scale: 1, opacity: 1, duration: .04, ease: "back.out(2)" }, at);
+          if (note) t.fromTo(note, { opacity: .45 }, { opacity: 1, duration: .05, ease: "none" }, at);
+          if (np) t.call(() => { if (!t.reversed() && on) { np.textContent = "E0"; decode(np, "E" + k, 240); } }, null, at + .02);
+        });
+        t.fromTo(stampN, { scale: 1.4, opacity: .35 }, { scale: 1, opacity: 1, duration: .08, ease: E("tc.slam") }, .88).to({}, { duration: .04 }, .96);
+        return t;
+      };
+      const target = () => { const r = post.getBoundingClientRect(), vh = innerHeight; return clamp01((vh * .8 - r.top) / (r.height + vh * .3)); };
+      const loop = () => { raf = 0; if (!tl || auto) return; const t = target(); cur += (t - cur) * .18; if (Math.abs(t - cur) < .001) cur = t; tl.progress(cur); if (on && cur !== t) raf = requestAnimationFrame(loop); };
+      const kick = () => { if (on && !raf && tl && !auto) raf = requestAnimationFrame(loop); };
+      const io = new IntersectionObserver(([e]) => {
+        on = e.isIntersecting;
+        if (on && !tl) {
+          tl = mk();
+          if (root.scrollHeight <= innerHeight + 2) auto = true;   // auto-height frame: nothing scrolls, so play it once
+          else { cur = target() > .98 ? 1 : 0; tl.progress(cur); }
+        }
+        if (auto && on && e.intersectionRatio >= .5 && !tl.isActive() && tl.progress() < 1) tl.timeScale(1 / 2.4).play();
+        if (!on && tl && !auto) { cancelAnimationFrame(raf); raf = 0; cur = target(); tl.progress(cur); }   // left fast: snap to where it belongs
+        kick();
+      }, { threshold: [0, .5] });
+      io.observe(sec);
+      const onRz = () => { clearTimeout(rz); rz = setTimeout(() => { if (!tl) return; const p = tl.progress(); tl.revert(); tl = mk(); tl.progress(p); }, 200); };
+      addEventListener("scroll", kick, { passive: true });
+      addEventListener("resize", onRz, { passive: true });
+      cleanups.push(() => { io.disconnect(); removeEventListener("scroll", kick); removeEventListener("resize", onRz); cancelAnimationFrame(raf); clearTimeout(rz); if (tl) { tl.revert(); tl = null; } });
+    };
+    // desk lamp: a faint pool of light follows the pointer; it dims while the page scrolls
+    const deskLamp = () => {
+      if (!fine || lite()) return;
+      const n = el("div", { class: "lamp", "aria-hidden": "true" });
+      document.body.prepend(n);
+      const qx = qt(n, "x", .6), qy = qt(n, "y", .6);
+      let shown = false, scrolling = false, sT = 0;
+      const show = (o, d) => G.to(n, { opacity: o, duration: d, ease: "power2.out", overwrite: "auto" });
+      const move = (e) => {
+        if (e.pointerType !== "mouse") return;
+        const x = e.clientX - 260, y = e.clientY - 260;
+        if (!shown) { shown = true; G.set(n, { x, y }); if (!scrolling) show(1, .3); }
+        qx(x); qy(y);
+      };
+      const scroll = () => { if (!shown) return; if (!scrolling) { scrolling = true; show(0, .12); } clearTimeout(sT); sT = setTimeout(() => { scrolling = false; if (shown) show(1, .3); }, 150); };
+      const out = () => { shown = false; show(0, .2); };
+      addEventListener("pointermove", move, { passive: true });
+      addEventListener("scroll", scroll, { passive: true });
+      root.addEventListener("pointerleave", out);
+      cleanups.push(() => { removeEventListener("pointermove", move); removeEventListener("scroll", scroll); root.removeEventListener("pointerleave", out); clearTimeout(sT); G.killTweensOf(n); n.remove(); });
+    };
+    // UV loupe (hero card, fine pointer): the lens moves, its pattern moves the other way, so the microtext stays printed on the card
+    const uvLoupe = () => {
+      const lens = heroCard.querySelector(".uv");
+      if (!lens || !fine) return;
+      const pat = lens.querySelector(".uv-pat"), R = 70, q = [qt(lens, "x", .18), qt(lens, "y", .18), qt(pat, "x", .18), qt(pat, "y", .18)];
+      let inside = false;
+      const move = (e) => {
+        if (e.pointerType !== "mouse" || calm()) return;
+        const r = heroCard.getBoundingClientRect(); if (!r.width) return;
+        const x = (e.clientX - r.left) / r.width * heroCard.offsetWidth - R, y = (e.clientY - r.top) / r.height * heroCard.offsetHeight - R;
+        if (!inside) { inside = true; G.set(lens, { x, y }); G.set(pat, { x: -x, y: -y }); G.to(lens, { opacity: 1, duration: .16, ease: "power2.out", overwrite: "auto" }); }
+        q[0](x); q[1](y); q[2](-x); q[3](-y);
+      };
+      const leave = () => { if (!inside) return; inside = false; G.to(lens, { opacity: 0, duration: .16, ease: "power2.in", overwrite: "auto" }); };
+      heroCard.addEventListener("pointermove", move);
+      heroCard.addEventListener("pointerleave", leave);
+      cleanups.push(() => { heroCard.removeEventListener("pointermove", move); heroCard.removeEventListener("pointerleave", leave); G.killTweensOf([lens, pat]); G.set([lens, pat], { clearProps: "all" }); });
+    };
+
+    // ================= check flow (§8): mount, scan loop, fault =================
+    let scanCtx = null, revealCtx = null, finishReveal = null;
+    // desktop: the photos fly from the tray into the card window (no photo: a blank listing slip does)
+    const flyIn = (tl, o, card, art, keep) => {
+      const to = card.getBoundingClientRect();
+      if (!to.width || to.bottom < 0 || to.top > innerHeight) return;
+      const L = fxLayer(), place = (n) => { Object.assign(n.style, { left: to.left + "px", top: to.top + "px", width: to.width + "px", height: to.height + "px" }); L.append(n); keep.push(n); return n; };
+      const from = (f, rot) => ({ x: f.left - to.left, y: f.top - to.top, scaleX: f.width / to.width, scaleY: f.height / to.height, rotation: rot });
+      const land = { x: 0, y: 0, scaleX: 1, scaleY: 1, rotation: 0, ease: E("tc.deal") };
+      if (o.hasPhotos) {
+        const src = [...$("thumbs").children].slice(0, MAX_PHOTOS).map((t) => t.getBoundingClientRect()).filter((r) => r.width && r.bottom > 0 && r.top < innerHeight);
+        if (!src.length) return;
+        tl.set(art, { opacity: .001 }, 0).set(art, { opacity: 1 }, .46);
+        G.delayedCall(.6, () => G.set(art, { opacity: 1 }));   // failsafe
+        src.forEach((f, k) => {   // clone 1 is the slab's own live photo URL; the rest are blank tiles that fade on arrival
+          const n = place(k ? el("div", { class: "fx-tile" }) : el("img", { src: o.photoUrl, alt: "" })), at = k * .07;
+          tl.fromTo(n, from(f, k % 2 ? 3 : -3), { ...land, duration: .46 }, at);
+          if (k) tl.to(n, { opacity: 0, duration: .12, ease: "none" }, at + .34);
+          tl.add(() => n.remove(), at + .46);
+        });
+      } else {
+        const lr = $("listing").getBoundingClientRect();
+        if (!lr.width || lr.bottom < 0 || lr.top > innerHeight) return;
+        const h = Math.min(lr.height * .9, 150), w = h * 63 / 88, n = place(el("div", { class: "fx-paper" }));
+        tl.fromTo(n, from({ left: lr.left + lr.width / 2 - w / 2, top: lr.top + lr.height / 2 - h / 2, width: w, height: h }, -4), { ...land, duration: .42 }, 0)
+          .to(n, { opacity: 0, duration: .16, ease: "none" }, .36).add(() => n.remove(), .52);
+      }
+    };
+    const scanStart = (panel, o) => {
+      if (calm()) return cssScan(panel, o);
+      const tiltN = panel.querySelector(".tilt"), sl = tiltN.querySelector(".slab"), label = sl.querySelector(".label"), card = sl.querySelector(".card");
+      const art = card.querySelector(".art"), bobN = tiltN.parentNode, certN = label.querySelector(".cert"), rcs = [...sl.querySelectorAll(".reticle .rc")], ro = sl.querySelector(".readout");
+      const cb = boxIn(card, sl), P = o.hasPhotos, keep = [];
+      // hunt targets in slab offset coordinates (immune to the 3D tilt); readouts name what is checked, never findings
+      const T = [[{ x: cb.x + 9, y: cb.y + 9, w: cb.w - 18, h: cb.h * .1 }, P ? "HP FONT" : "SELLER CHAT"],
+        [{ x: cb.x + cb.w * .2, y: cb.y + cb.h * .3, w: cb.w * .6, h: cb.h * .36 }, P ? "HOLO / PRINT" : "PAYMENT"],
+        [{ x: cb.x + cb.w * .6, y: cb.y + cb.h * .85, w: cb.w * .32, h: cb.h * .09 }, P ? "SET No." : "PRICE"],
+        [boxIn(label.querySelector(".score"), sl), P ? "CERT LABEL" : "URGENCY"]];
+      let laser = null, step = null, ts = 1, i = 0, lastPh = o.ph ? o.ph.textContent : "";
+      tiltN.classList.add("gs");
+      scanCtx = G.context((self) => {
+        const tl = G.timeline();
+        if (innerWidth > 920 && !o.scrolled) flyIn(tl, o, card, art, keep);
+        else {   // stacked: the slab drops in as the panel scrolls up; the photo slides into the window
+          tl.fromTo(bobN, { y: -40 }, { y: 0, duration: .42, ease: E("tc.settle") }, .16);
+          if (P) tl.fromTo(art, { yPercent: -100 }, { yPercent: 0, duration: .38, ease: "power3.out" }, .16);
+        }
+        tl.fromTo(label, { y: -14, z: 26 }, { y: 0, z: 26, duration: .26, ease: E("tc.settle") }, .3);
+        certN.textContent = "··········";
+        tl.add(() => decode(certN, "SCANNING", 400), .3);
+        snapRc(rcs, tl, .56, cb, 4, 0);
+        tl.add(() => self.hunt(), .74);
+        laser = G.fromTo(card.querySelector(".scanline"), { y: 0, yPercent: -110 }, { yPercent: 455, duration: lite() ? 2.7 : 1.8, ease: "sine.inOut", yoyo: true, repeat: -1, delay: .6 });
+        self.add("hunt", () => {
+          const [b, txt] = T[i++ % T.length], c = corners(b, 4), ry = b.y + b.h + 8 > sl.offsetHeight - 14 ? b.y - 22 : b.y + b.h + 8;
+          step = G.timeline({ onComplete: () => self.hunt() }).timeScale(ts);
+          rcs.forEach((n, k) => step.to(n, { x: c[k][0], y: c[k][1], duration: .42, ease: E("tc.precise") }, 0));
+          step.to(ro, { opacity: 0, duration: .1 }, 0).set(ro, { x: b.x - 4, y: ry }, .1)
+            .fromTo(rcs, { scale: 1.25, opacity: .6 }, { scale: 1, opacity: 1, duration: .12, ease: "expo.out", immediateRender: false }, .42)
+            .set(ro, { opacity: 1 }, .42).add(() => decode(ro, txt, 300), .42)
+            .to({}, { duration: .9 }, .54);
+        });
+        // long wait: the instrument calms down (the subline says why; see the submit handler)
+        G.delayedCall(20, () => { ts = .66; G.to([laser, step].filter(Boolean), { timeScale: .66, duration: 1 }); });
+        let io = null;
+        if ("IntersectionObserver" in window) { io = new IntersectionObserver(([e]) => { laser.paused(!e.isIntersecting); if (step) step.paused(!e.isIntersecting); }); io.observe(sl); }
+        return () => { if (io) io.disconnect(); keep.forEach((n) => n.remove()); };
+      }, panel);
+      return {
+        phase(name, s) { if (name !== lastPh) { lastPh = name; decode(o.ph, name, 380); } o.sec.textContent = ` · ${s}s`; },
+        stop() { if (laser) laser.pause(); if (step) step.pause(); },
+        fault() {   // grey NO READING, brackets spread and fade; no stamp, no red, no shake
+          return new Promise((res) => {
+            setTimeout(res, 900);
+            if (!scanCtx) return res();
+            scanCtx.add(() => {
+              panel.dataset.v = "fault";
+              if (laser) laser.pause(); if (step) step.kill();
+              const tl = G.timeline({ onComplete: res });
+              rcs.forEach((n, k) => tl.to(n, { x: (SPREAD[k][0] < 0 ? "-" : "+") + "=8", y: (SPREAD[k][1] < 0 ? "-" : "+") + "=8", opacity: 0, scale: 1, duration: .22, ease: "power2.out" }, 0));
+              tl.set(ro, { opacity: 1 }, 0).add(() => decode(ro, "NO READING", 300), 0).to({}, { duration: .45 }, 0);
+            });
+          });
+        }
+      };
+    };
+
+    // ================= verdict reveals (§10): safe rises, caution brakes sideways, scam slams down =================
+    const evSection = (t, sec, v) => {
+      const six = (s) => [...sec.querySelectorAll(s)].slice(0, 6), ev = sec.dataset.ev, rule = sec.querySelector("h3 .rule");
+      if (rule) t.fromTo(rule, { scaleX: 0 }, { scaleX: 1, duration: .32, ease: E("tc.out") }, 0);
+      const trs = six("tbody tr");
+      if (trs.length) t.fromTo(trs, v === "safe" ? { y: 8, opacity: .001 } : { x: 14, opacity: .001 }, { x: 0, y: 0, opacity: 1, duration: .26, stagger: .05 }, .08);
+      const lis = six("ul.flags > li");
+      if (ev === "flags" && lis.length) {
+        const st = Math.min(.07, .6 / lis.length), from = v === "safe" ? { y: 12 } : v === "caution" ? { x: -16 } : { x: -24, y: -8, rotation: -3 };
+        t.fromTo(lis, { ...from, opacity: .001 }, { x: 0, y: 0, rotation: 0, opacity: 1, duration: v === "scam" ? .32 : .36, ease: E(v === "safe" ? "tc.out" : "tc.deal"), stagger: st }, .08);
+        if (v === "scam") lis.forEach((li, k) => { const c = li.querySelector(".sev-high"); if (c) t.fromTo(c, { scale: 1.5 }, { scale: 1, duration: .2, ease: E("tc.stamp"), immediateRender: false }, .08 + k * st + .3); });
+      }
+      if (ev === "checks" && lis.length) {
+        t.fromTo(lis, { rotationX: -75, opacity: .001, transformOrigin: "50% 0%", transformPerspective: 800 }, { rotationX: 0, opacity: 1, duration: .38, ease: E("tc.deal"), stagger: .07 }, .08);
+        lis.forEach((li, k) => {
+          const c = li.querySelector(".sev"), at = .38 + k * .07;
+          if (!c) return;
+          if (c.classList.contains("r-pass")) t.fromTo(c, { scale: .6 }, { scale: 1, duration: .24, ease: "back.out(3)", immediateRender: false }, at);
+          else if (c.classList.contains("r-fail")) t.fromTo(c, { scale: 1.3 }, { scale: 1, duration: .24, ease: E("tc.out"), immediateRender: false }, at);
+          else t.to(c, { keyframes: { rotation: [0, -4, 3, 0] }, duration: .24, ease: "none" }, at);
+        });
+      }
+      if (ev === "good") t.fromTo(six("li"), { opacity: .001 }, { opacity: 1, duration: .24, stagger: .06 }, .08).fromTo(six("li .gb"), { rotation: 0, scale: 0 }, { rotation: 45, scale: 1, duration: .18, ease: E("tc.stamp"), stagger: .06 }, .08);
+      if (ev === "next") t.fromTo(six("ol.next > li"), { y: 10, opacity: .001 }, { y: 0, opacity: 1, duration: .3, stagger: .06 }, .08);
+      return t;
+    };
+    const evShare = (t, share) => {
+      const bs = [...share.querySelectorAll(".btn")].filter((b) => !b.hidden), save = share.querySelector("[data-save]");
+      if (bs.length) t.fromTo(bs, { y: 14, opacity: .001 }, { y: 0, opacity: 1, duration: .32, ease: E("tc.snap"), stagger: .06, clearProps: "all" }, 0);
+      if (save && !save.hidden) t.fromTo(save.querySelector(".btn-sheen"), { x: 0, xPercent: -120 }, { xPercent: 120, duration: .7, ease: "power2.out", immediateRender: false, clearProps: "transform" }, .4);
+      return t;
+    };
+    const reveal = (panel, r, o = {}) => {
+      const mode = o.mode || "check", q = (s, n = panel) => n.querySelector(s), qa = (s, n = panel) => [...n.querySelectorAll(s)];
+      if (revealCtx) { if (finishReveal) finishReveal(false); revealCtx.revert(); revealCtx = null; runStops(); }   // a replay starts from the rest pose
+      clearTimeout(rvTimer); panel.classList.remove(...RV);
+      if (mode === "example-pending" || calm()) return cssReveal(panel, r, o);
+      if (mode === "quiet") { revealCtx = G.context(() => { G.fromTo(q(".result-top"), { opacity: .001 }, { opacity: 1, duration: .2, ease: "none", clearProps: "opacity" }); }, panel); return; }
+      const ex = mode === "example", fx = !ex, v = normVerdict(r.verdict), risk = clampRisk(r.risk), phone = innerWidth < 640, lt = lite();
+      const high = (r.red_flags || []).filter((f) => f && f.severity === "high").length, fakeFail = (r.fake_checks || []).some((c) => c && c.result === "fail");
+      const stageN = q(".result-stage"), bobN = q(".bob", stageN), sl = q(".slab", stageN), label = q(".label", sl), card = q(".card", sl);
+      const score = q(".score b", sl), sfx = q(".cert-sfx", sl), rcs = qa(".reticle .rc", sl), laserN = q(".scanline", card), aura = q(".fx-aura", stageN), rings = qa(".fx-rings i", stageN);
+      const dot = q(".meter i"), pill = q(".verdict-block .pill"), hws = qa(".headline .hw"), summ = q(".verdict-block .summary"), flash = q(".flash", label);
+      const gl = [q(".verdict", label), pill].filter(Boolean), stag = (s) => (k) => Math.min(k, 15) * s;   // max 16 words animated
+      let skipping = false, finish = null;
+      const glitch = (on) => gl.forEach((n) => n.classList.toggle("glitch", on && !skipping));
+      revealCtx = G.context((self) => {
+        const tl = G.timeline({ onComplete: () => finish && finish(false) }), lb = boxIn(label, sl);
+        // LOCK: the laser flares out on the card, the brackets lock on the label; the verdict colour is there from frame one
+        tl.set(laserN, { display: "block" }, 0).fromTo(laserN, { y: 0, yPercent: 200, scaleY: 1, opacity: 1 }, { scaleY: 3, opacity: 0, duration: .12, ease: "power3.in" }, 0).set(laserN, { display: "none" }, .12);
+        corners(lb, 4).forEach(([x, y], k) => tl.fromTo(rcs[k], { x, y, scale: 1.25, opacity: 1 }, { scale: 1, duration: .12, ease: "expo.out" }, 0));
+        tl.fromTo(aura, { opacity: 0, scale: .7 }, { opacity: .8, scale: 1.05, duration: .2, ease: "power2.out" }, 0);
+        if (sfx) decode(sfx, sfx.textContent, 480);   // only the 4-char suffix scrambles; "TC-YYMMDD-" stays put
+        // the number: 0 -> risk, never above it; then one punch
+        const cAt = { safe: .12, caution: .1, scam: ex ? .36 : .45 }[v], cDur = { safe: .5, caution: .6, scam: .42 }[v], cnt = { n: 0 };
+        score.textContent = "0";
+        tl.to(cnt, { n: risk, duration: cDur, ease: E("tc.out"), onUpdate: () => { score.textContent = String(Math.round(cnt.n)); } }, cAt)
+          .fromTo(score, { scale: 1.18 }, { scale: 1, duration: .22, ease: "back.out(3)", immediateRender: false }, cAt + cDur);
+        // the meter dot may overshoot only on caution (+4 %) and scam (+9 %), never across a band edge into a worse band
+        const cap = risk < 34 ? 33.9 : risk < 67 ? 66.9 : 100, mp = { p: 0 };
+        dot.style.setProperty("--p", "0");
+        tl.to(mp, { p: risk, duration: cDur + .15, ease: v === "safe" ? E("tc.out") : v === "caution" ? E(risk * 1.04 >= 67 ? "tc.out" : "tc.hunt") : E("tc.stamp"), onUpdate: () => dot.style.setProperty("--p", Math.min(cap, mp.p).toFixed(2)) }, cAt);
+        const buzz = (at, ks) => { const b = { k: 0 }; tl.to(b, { k: ks.length - 1, duration: .36, ease: "none", onUpdate: () => { const j = Math.floor(b.k), f = b.k - j; dot.style.setProperty("--bx", (ks[j] + ((ks[j + 1] ?? ks[j]) - ks[j]) * f).toFixed(2) + "px"); } }, at); };
+        if (fakeFail) tl.fromTo(q(".foil", card), { opacity: .2 }, { opacity: 0, duration: .4, ease: "power2.out" }, .7).fromTo(q(".foil-dead", card), { opacity: 0 }, { opacity: 1, duration: .4, ease: "power2.out" }, .7);
+        let evAt, settle;
+        if (v === "safe") {   // UP and outward: lift, seal, foil ignition, one ring, motes drifting up
+          tl.to(bobN, { y: -12, duration: .3, ease: "power2.out" }, .16).to(bobN, { y: 0, duration: .44, ease: E("tc.lift") }, .46);
+          releaseRc(rcs, tl, .24, lb, 8, 4);
+          tl.fromTo(q(".seal-g", label), { scale: .6, opacity: .001, transformOrigin: "50% 50%" }, { scale: 1, opacity: 1, duration: .16, ease: E("tc.settle") }, .32)
+            .fromTo(q(".rosette", label), { strokeDashoffset: 1, fillOpacity: 0 }, { strokeDashoffset: 0, fillOpacity: 1, duration: .3, ease: E("tc.precise") }, .34)
+            .fromTo(q(".seal-ring", label), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .3, ease: E("tc.precise") }, .42)
+            .fromTo(q(".seal-check", label), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .2, ease: E("tc.out") }, .56);
+          const s = !lt && !fakeFail && surface(card);
+          if (s) { const ig = G.timeline(); ig.fromTo(s.band, { xPercent: -10 }, { xPercent: 10, duration: .7, ease: "power2.inOut" }, 0).fromTo(s.foil, { opacity: .2 }, { opacity: .6, duration: .3, ease: "power2.inOut" }, 0).to(s.foil, { opacity: .3, duration: .4, ease: "power2.inOut" }, .3); tl.add(ig, .4); s.glintTl = ig; }
+          tl.fromTo(rings[0], { scale: .4, opacity: .7 }, { scale: 2.2, opacity: 0, duration: .6, ease: "expo.out", immediateRender: false }, .52);
+          if (fx) tl.add(() => { if (!skipping) burst(stageN, "motes", lt ? 5 : phone ? 10 : 16); }, .56);
+          if (!phone) tl.to(qa(".glint", card), { keyframes: { scale: [0, 1, 0] }, duration: .4, ease: "power2.out", stagger: .09 }, .6);
+          tl.fromTo(pill, { scale: .8, opacity: .001 }, { scale: 1, opacity: 1, duration: .24, ease: "back.out(2)" }, .3)
+            .fromTo(hws, { yPercent: 60, opacity: .001 }, { yPercent: 0, opacity: 1, duration: .38, ease: E("tc.out"), stagger: stag(.028) }, .38);
+          if (summ) tl.fromTo(summ, { y: 10, opacity: .001 }, { y: 0, opacity: 1, duration: .3, ease: E("tc.out") }, .6);
+          evAt = .76; settle = 1.3;
+        } else if (v === "caution") {   // SIDEWAYS then brake: the stamp slides in and thuds, tape snaps across, the loupe looks closer
+          const st = q(".stamp", card), loupe = q(".loupe", card), cw = card.offsetWidth, ch = card.offsetHeight, em = parseFloat(getComputedStyle(q(".headline")).fontSize) * .6;
+          tl.fromTo(st, { x: -40, rotation: -6, scale: 1.25, opacity: .001 }, { x: 0, rotation: 0, scale: 1, duration: .32, ease: E("tc.brake") }, .14).to(st, { opacity: 1, duration: .06, ease: "none" }, .14)
+            .to(st, { scaleX: 1.05, scaleY: .94, duration: .06 }, .46).to(bobN, { y: 3, duration: .08, ease: "power2.out" }, .46)
+            .to(st, { scaleX: 1, scaleY: 1, duration: .22, ease: E("tc.settle") }, .51).to(bobN, { y: 0, duration: .22, ease: E("tc.settle") }, .51)
+            .fromTo(q(".ink", card), { scale: .3, opacity: .5 }, { scale: 1.1, opacity: 0, duration: .6, ease: "expo.out", immediateRender: false }, .51)
+            .fromTo(q(".tape", label), { scaleX: 0 }, { scaleX: 1, duration: .28, ease: "power4.out" }, .52)
+            .fromTo(q(".tape-crawl", label), { x: 0 }, { x: -50.9, duration: .6, ease: "none", repeat: 1, immediateRender: false }, .8);
+          if (fx && flash) tl.fromTo(flash, { opacity: .35 }, { opacity: 0, duration: .06, ease: "none", immediateRender: false }, .46);
+          releaseRc(rcs, tl, .46, lb, 8, 4);
+          tl.fromTo(loupe, { x: 10, y: 10, scale: 1, opacity: 0 }, { opacity: 1, duration: .08, ease: "none", immediateRender: false }, .64)
+            .to(loupe, { x: (cw - 72) / 2, y: (ch - 72) / 2, duration: .6, ease: E("tc.precise") }, .64)
+            .fromTo(loupe, { scale: 1.15 }, { scale: 1, duration: .12, ease: "expo.out", immediateRender: false }, 1.24)
+            .to(loupe, { opacity: 0, duration: .2, ease: "power2.in" }, 1.36);
+          buzz(.76, [0, 2, -2, 1.5, -1, 0]);
+          tl.fromTo(pill, { x: -12, opacity: .001 }, { x: 0, opacity: 1, duration: .24, ease: E("tc.brake") }, .42)
+            .fromTo(hws, { x: em, opacity: .001 }, { x: 0, opacity: 1, duration: .38, ease: E("tc.brake"), stagger: stag(.024) }, .48);
+          if (summ) tl.fromTo(summ, { x: 10, opacity: .001 }, { x: 0, opacity: 1, duration: .3, ease: E("tc.out") }, .7);
+          evAt = .7; settle = 1.5;
+        } else {   // DOWN into an impact: anticipation, slam, hit-stop, shake, cracks, shards falling
+          const st = q(".stamp", card), go = ex ? .36 : .45;
+          tl.to(sl, { scale: .97, rotationX: 6, y: -6, duration: .22, ease: "power2.in" }, 0)
+            .fromTo(st, { scale: 2.2, rotation: -16, y: -30, opacity: 0 }, { opacity: 1, duration: .06, ease: "none" }, 0)
+            .to(st, { scale: 1, rotation: 0, y: 0, duration: .14, ease: E("tc.slam") }, .22).to(sl, { scale: 1, rotationX: 0, y: 0, duration: .14, ease: "power4.in" }, .22)
+            .to(st, { scaleX: 1.08, scaleY: .9, duration: .06 }, .36).to(sl, { scaleX: 1.02, scaleY: .97, duration: .07 }, .36)
+            .to([st, sl], { scaleX: 1, scaleY: 1, duration: .26, ease: E("tc.settle") }, go)   // .36-.45: hit-stop, nothing new starts
+            .fromTo(q(".ink", card), { scale: .2, opacity: .6 }, { scale: 1.15, opacity: 0, duration: .65, ease: "expo.out", immediateRender: false }, go)
+            .fromTo(rings, { scale: .2, opacity: 1 }, { scale: 2.6, opacity: 0, duration: .6, ease: "expo.out", stagger: .09, immediateRender: false }, go);
+          if (fx) {
+            if (flash) tl.fromTo(flash, { opacity: .7 }, { opacity: 0, duration: .07, ease: "none", immediateRender: false }, .36);
+            tl.add(() => { if (!skipping) shake(stageN, .7 + .3 * clamp01((risk - 67) / 33), lt ? 4 : phone ? 6 : 10); }, go)
+              .add(() => { if (!skipping) burst(stageN, "shards", Math.min(16 + 6 * high, lt ? 8 : phone ? 24 : 40)); }, go + .03);
+            if (!lt) [go, go + .35].forEach((t) => tl.add(() => glitch(true), t).add(() => glitch(false), t + .12));
+            if (!lt) tl.fromTo(qa(".cracks polyline", card), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .22, ease: "power4.out", stagger: .03 }, go);
+          }
+          releaseRc(rcs, tl, .52, lb, 16, 4);
+          buzz(.87, [0, 1.5, -1.2, .8, -.4, 0]);
+          tl.fromTo(pill, { y: -10, opacity: .001 }, { y: 0, opacity: 1, duration: .24, ease: E("tc.stamp") }, .6)
+            .fromTo(hws, { yPercent: -60, opacity: .001 }, { yPercent: 6, opacity: 1, duration: .24, ease: E("tc.slam"), stagger: stag(.02) }, .64)
+            .to(hws, { yPercent: 0, duration: .14, ease: E("tc.stamp"), stagger: stag(.02) }, .88);
+          if (summ) tl.fromTo(summ, { y: -8, opacity: .001 }, { y: 0, opacity: 1, duration: .3, ease: E("tc.out") }, .9);
+          evAt = .9; settle = 1.6;
+        }
+        // evidence: in-view lists join the master timeline; lists below the fold play the moment they enter
+        const later = (fn) => () => { let out; self.add(() => { out = fn(G.timeline()); }); return out; };
+        qa(".section").forEach((sec, k) => onEnter(sec, later((t) => evSection(t, sec, v)), tl, evAt + k * .08));
+        const share = q(".share");
+        if (share) onEnter(share, later((t) => evShare(t, share)), tl, evAt + .3);
+        tl.to(aura, { opacity: .22, scale: 1, duration: .4, ease: "power2.inOut" }, settle);
+        // skip: a click, a key, or a wheel on a fine pointer jumps to the rest state (a touch scroll never fires click)
+        const types = ["click", "keydown", "wheel"], onSkip = (e) => { if (e.type !== "wheel" || root.classList.contains("m-fine")) finish(true); };
+        const unbind = () => types.forEach((t) => removeEventListener(t, onSkip, { capture: true }));
+        types.forEach((t) => addEventListener(t, onSkip, { capture: true, passive: true }));
+        finish = (skip) => {
+          unbind(); finishReveal = null;
+          if (!skip) return;
+          skipping = true; tl.progress(1); runStops(); glitch(false); qa("canvas", stageN).forEach((c) => c.remove());
+        };
+        finishReveal = finish;
+        return unbind;
+      }, panel);
+    };
+
+    const build = () => {
+      if (calm()) return;
+      // hand over from CSS-lite: keep the float's current pose, then stop the CSS tilt/float
+      if (first) {
+        const pose = { rotationX: G.getProperty(heroBob, "rotationX"), rotationY: G.getProperty(heroBob, "rotationY"), y: G.getProperty(heroBob, "y") };
+        G.set(heroBob, pose);
+      }
+      if (heroTilt._tiltStop) heroTilt._tiltStop();
+      heroCtx = G.context(() => {
+        lamp = startLamp();
+        gTilt(heroTilt, { hero: true });
+        if (lamp) lamp.observe(heroCard);
+        document.querySelectorAll("#result .tilt").forEach((t) => { if (t._tiltStop) t._tiltStop(); gTilt(t); if (lamp) lamp.observe(t.querySelector(".card")); });
+        stepsDeal(); titleWords(); exhibit(); deskLamp(); uvLoupe();
+        const phoneLayout = innerWidth < 881;
+        if (first && introWindow && !phoneLayout && root.classList.contains("m-intro")) {
+          const t0 = performance.now() / 1000, A = (ms) => Math.max(0, ms / 1000 - t0), b = slabBox();
+          introTl = G.timeline();
+          snap(introTl, A(600), b);
+          laser(introTl, A(640), heroCard);
+          sealIn(introTl, A(1180));
+          [...heroSlab.querySelectorAll(".callouts .co")].forEach((g, k) => {   // >= 1340 px: the four callout lines draw, then their labels decode
+            const [pth, dot, txt] = g.children, at = A(760) + k * .09;
+            if (!pth) return;
+            introTl.fromTo(pth, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .32, ease: "power3.out" }, at)
+              .fromTo(dot, { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: .16, ease: "back.out(3)" }, at)
+              .fromTo(txt, { opacity: 0 }, { opacity: 1, duration: .06, ease: "none" }, at + .24)
+              .add(() => decode(txt, CALLOUTS[k][4], 360), at + .24);
+          });
+          release(introTl, A(1250), b);
+          const skip = () => { if (introTl) introTl.progress(1); };
+          ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, skip, { once: true, passive: true }));
+          startBob(1, A(1500));
+        } else if (phoneLayout && !heroEntered && "IntersectionObserver" in window) {
+          const io = new IntersectionObserver(([e]) => { if (e.isIntersecting && e.intersectionRatio >= .35) { io.disconnect(); heroCtx && heroCtx.add(heroEntry); } }, { threshold: [0, .35, .6] });
+          io.observe(stage); cleanups.push(() => io.disconnect());
+        } else startBob(innerWidth < 640 ? .5 : 1);
+      });
+      first = false;
+    };
+    const teardown = () => {
+      if (introTl) { introTl.progress(1); introTl = null; }
+      if (bobTl) { bobTl.kill(); bobTl = null; }
+      if (heroCtx) { heroCtx.revert(); heroCtx = null; }
+      cleanups.splice(0).forEach((f) => { try { f(); } catch (e) {} });
+      if (lamp) { lamp.stop(); lamp = null; }
+      surfaces.forEach((s) => { if (s.glintTl) s.glintTl.kill(); G.killTweensOf([s.band, s.spot, s.foil]); G.set([s.band, s.spot, s.foil], { clearProps: "transform,opacity" }); });
+      surfaces.clear();
+      document.querySelectorAll(".tilt").forEach((t) => { if (t._gTilt) t._gTilt(); G.killTweensOf(t); G.set(t, { clearProps: "transform" }); });
+      G.killTweensOf(heroBob); G.set(heroBob, { clearProps: "transform" });
+    };
+
+    // pause rules: the hero bob sleeps off screen; every loop sleeps while the tab is hidden
+    if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => { heroVisible = e.isIntersecting; if (bobTl) heroVisible ? bobTl.resume() : bobTl.pause(); }).observe(stage);
+    document.addEventListener("visibilitychange", () => (document.hidden ? G.globalTimeline.pause() : G.globalTimeline.resume()));
+    build();
+
+    return {
+      tilt(node, { hero = false } = {}) {
+        if (!node) return;
+        if (node._tiltStop) node._tiltStop();
+        if (calm()) return;
+        gTilt(node, { hero });
+        if (lamp) lamp.observe(node.querySelector(".card"));
+      },
+      setCalm(on) { if (on && finishReveal) finishReveal(true); teardown(); if (!on) build(); },
+      thumbsIn(nodes) {
+        if (calm()) return;
+        nodes.forEach((n, i) => { const r = G.getProperty(n, "rotation"); G.fromTo(n, { scale: .6, y: -12, rotation: r + (i % 2 ? -5 : 5), opacity: .001 }, { scale: 1, y: 0, rotation: r, opacity: 1, duration: .32, ease: E("tc.stamp"), delay: i * .06, clearProps: "all" }); });
+      },
+      thumbOut(node, done) {   // flick away, then the thumbs after it slide from where they were (hand FLIP)
+        if (calm()) return done();
+        const box = $("thumbs"), kids = [...box.children], k = kids.indexOf(node);
+        const old = kids.slice(k + 1).map((n) => [n.getBoundingClientRect(), G.getProperty(n, "rotation")]);
+        node.style.pointerEvents = "none";
+        G.to(node, { x: 30, y: -20, rotation: "+=18", opacity: 0, duration: .2, ease: "power2.in", onComplete: () => {
+          done();
+          [...box.children].slice(Math.max(0, k)).forEach((n, i) => { const o = old[i]; if (!o) return; const r = n.getBoundingClientRect(); G.from(n, { x: o[0].left - r.left, y: o[0].top - r.top, rotation: o[1], duration: .26, ease: E("tc.snap"), delay: i * .07, clearProps: "all" }); });
+        } });
+      },
+      scanStart,
+      reveal,
+      beforeRender() {   // revert the previous reveal and scan BEFORE the panel is replaced
+        if (finishReveal) finishReveal(false);
+        if (revealCtx) { revealCtx.revert(); revealCtx = null; }
+        if (scanCtx) { scanCtx.revert(); scanCtx = null; }
+        CSS_M.beforeRender();
+      },
+      print(btn, r) {   // a mini slab "prints" out of the Save button, alongside (never before) the real save
+        const b = btn.getBoundingClientRect();
+        if (calm() || !b.width) return;
+        const box = el("div", { class: "fx-print", "data-v": normVerdict(r.verdict), style: `left:${b.left + b.width / 2 - 27}px;top:${b.top - 110}px` }, el("i", { class: "fx-slip" }));
+        fxLayer().append(box);
+        G.timeline({ onComplete: () => box.remove() }).fromTo(box.firstChild, { yPercent: 100 }, { yPercent: -40, duration: .36, ease: "steps(6)" })
+          .to(box.firstChild, { yPercent: -28, duration: .18, ease: E("tc.stamp") }).to(box, { opacity: 0, duration: .3, ease: "power2.in" }, "+=.3");
+      },
+    };
+  }
+
+  // ---------- upgrade: GSAP replaces the CSS-lite defaults when (and if) the deferred CDN scripts arrive ----------
+  const T_BOOT = performance.now();
+  function upgrade() {
+    if (!window.gsap) return false;
+    try {
+      const G = window.gsap;
+      if (window.CustomEase) { G.registerPlugin(window.CustomEase); for (const k in EASES) window.CustomEase.create(k, EASES[k]); }
+      G.defaults({ ease: E("tc.out"), duration: 0.42 });
+      G.config({ force3D: "auto" });
+      Object.assign(M, gsapMotion({ introWindow: performance.now() < 900 }));   // performance.now() ~ time since navigation start
+      root.classList.add("gsap-on");
+    } catch (e) {   // stay on CSS-lite; never console.error (the harness counts console errors)
+      Object.assign(M, CSS_M);
+      try { if (!$("hero-tilt")._tiltStop) CSS_M.tilt($("hero-tilt"), { hero: true }); } catch (e2) {}
+    }
+    root.classList.remove("m-boot");
+    return true;
+  }
+  const poll = () => upgrade() || (performance.now() - T_BOOT < 4000 ? setTimeout(poll, 100) : (root.classList.add("no-gsap"), root.classList.remove("m-boot")));
+  document.readyState === "loading" ? addEventListener("DOMContentLoaded", poll, { once: true }) : poll();
+
+  void REDUCED;   // boot value kept for the contract; motion decisions call calm()
 })();
 </script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/CustomEase.min.js"></script>

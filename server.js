@@ -3,6 +3,7 @@
 import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -148,7 +149,11 @@ const indexHtml = () =>
 const server = http.createServer(async (req, res) => {
   try {
     if (req.method === "GET" && (req.url === "/" || req.url.startsWith("/?"))) {
-      return send(res, 200, indexHtml(), "text/html; charset=utf-8");
+      const html = indexHtml();
+      if (!/\bgzip\b/.test(req.headers["accept-encoding"] || "")) return send(res, 200, html, "text/html; charset=utf-8");
+      // The page is about 170 KB of HTML; gzip makes it about 50 KB on phones.
+      res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", "content-encoding": "gzip", vary: "accept-encoding" });
+      return res.end(zlib.gzipSync(html));
     }
     if (req.method === "POST" && req.url === "/api/check") {
       const ip = (req.headers["x-forwarded-for"] || req.socket.remoteAddress || "").split(",")[0].trim();
