@@ -23,6 +23,7 @@ Settings (environment variables):
 
 - `ANTHROPIC_API_KEY`: required. Get one at console.anthropic.com.
 - `CHECKS_PER_HOUR`: checks allowed per visitor per hour. Default 10. This protects your credits once the link is public.
+- `CHECKS_PER_HOUR_TOTAL`: checks allowed per hour for all visitors together. Default 200. A backstop in case someone gets around the per-visitor limit.
 - `TRADE_CHECK_MODEL`: default `claude-opus-5-5`.
 - `PORT`: default 8787.
 
