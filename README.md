@@ -24,9 +24,9 @@ Settings (environment variables):
 - `ANTHROPIC_API_KEY`: required. Get one at console.anthropic.com.
 - `CHECKS_PER_HOUR`: checks allowed per visitor per hour. Default 10. This protects your credits once the link is public.
 - `CHECKS_PER_HOUR_TOTAL`: checks allowed per hour for all visitors together. Default 200. A backstop in case someone gets around the per-visitor limit.
-- `CHECKS_IN_FLIGHT`: checks that may run at the same time, for all visitors together. Default 5. Each running check holds its photos in memory, so keep this low on a small instance. Each visitor can run one check at a time.
+- `CHECKS_IN_FLIGHT`: checks that may run at the same time, for all visitors together. Each running check holds its photos in memory (up to about 60 MB with four large photos), so the default follows Node's heap size: 5 on an instance with 512 MB or more, fewer on a smaller one. Use an instance with at least 512 MB of memory. Each visitor can run one check at a time.
 - `TRUST_PROXY`: how the server tells visitors apart. By default it uses the address the last proxy added to `X-Forwarded-For`, or the connection address. Set `cloudflare` when Cloudflare is in front, so it uses `CF-Connecting-IP`. On Render this is the default; set `none` there to turn it off. IPv6 visitors are counted per /64 block.
-- `PUBLIC_URL`: the site's public address, such as `https://trade-check.example.com`. Used for the link-preview URL. On Render, `RENDER_EXTERNAL_URL` is used when this is not set. Without either, the preview has no URL.
+- `PUBLIC_URL`: the site's public address, such as `https://trade-check.example.com`. Used for the link preview (its URL and image). On Render, `RENDER_EXTERNAL_URL` is used when this is not set. Without either, the preview has no URL and no image.
 - `TRADE_CHECK_MODEL`: default `claude-opus-5-5`.
 - `PORT`: default 8787.
 
@@ -39,7 +39,7 @@ The repo includes `render.yaml`, so Render can set everything up:
 3. Paste your Anthropic API key when Render asks for `ANTHROPIC_API_KEY`, then click **Apply**.
 4. When the build finishes, open the `onrender.com` link Render shows.
 
-The free plan sleeps when idle, so the first visit after a quiet spell can take up to a minute to load. Any other Node host works too (Railway, Fly.io): start command `npm start`, with `ANTHROPIC_API_KEY` set as a secret. Never put the key in `index.html`.
+The free plan sleeps when idle, so the first visit after a quiet spell can take up to a minute to load. Link previews (Slack, iMessage, X, Facebook) only wait a few seconds, so a link shared while the site sleeps can show up bare, and Facebook and X keep that bare preview for days. Before you post the link publicly, use a plan that doesn't sleep or open the site once just before sharing. Any other Node host works too (Railway, Fly.io): start command `npm start`, with `ANTHROPIC_API_KEY` set as a secret. Never put the key in `index.html`.
 
 Set a monthly spend limit in the Anthropic Console before sharing the link.
 
@@ -47,9 +47,9 @@ Set a monthly spend limit in the Anthropic Console before sharing the link.
 
 `server.js` sends the photos and text to Claude with the web search tool turned on (up to 5 searches per check). Claude identifies the cards, searches recent sold prices, checks for scam patterns and visible counterfeit signs, and answers in JSON. The page renders that JSON.
 
-The server only accepts checks from its own page: `POST /api/check` must be JSON (`content-type: application/json`) and same-origin. A request body over 9 MB is refused. A check stops after 140 seconds, and stops at once if the visitor closes the page or presses Stop, so no credits are spent on an answer nobody will see. Requests that are malformed or refused don't count toward the hourly limits.
+The server only accepts checks from its own page: `POST /api/check` must be JSON (`content-type: application/json`) and same-origin, and the page can't be put in another site's frame. A request body over 9 MB is refused, and the upload itself must arrive within 40 seconds, so a stalled upload can't hold a check slot. A check stops after 140 seconds, and stops at once if the visitor closes the page or presses Stop, so no credits are spent on an answer nobody will see. Requests that are malformed or refused don't count toward the hourly limits, and neither does a check that fails because Claude is unavailable or overloaded. If Claude is down, visitors see a short "Claude is busy" message; the details go to the server log.
 
-The page is served with link-preview tags (description, Open Graph, Twitter card) and a small icon, so a shared link shows a title and a one-line pitch. There is no preview image yet. The page is cached in memory and sent with an ETag, so repeat visits get a quick `304 Not Modified`.
+The page is served with link-preview tags (description, Open Graph, Twitter card) and a small icon, so a shared link shows a title and a one-line pitch. When `PUBLIC_URL` or `RENDER_EXTERNAL_URL` is set, the preview also has an image: `og.png` (1200 x 630, about 165 KB), served at `/og.png` and drawn from the site's own visuals (the night playmat, the holo slab with the stand-in creature art, and the headline). The image URL carries a version (`/og.png?v=...`) that changes with the file, so after you replace `og.png` and restart, Facebook, X and Slack fetch the new one. Keep a replacement at 1200 x 630 and under about 300 KB (WhatsApp drops larger previews). Facebook keeps old previews until you re-scrape the link with its [Sharing Debugger](https://developers.facebook.com/tools/debug/). The page is cached in memory and sent with an ETag, so repeat visits get a quick `304 Not Modified`.
 
 Cost per check has not been measured yet. It depends on photo count and how many searches Claude runs. Watch the Usage page in the Anthropic Console after the first few real checks.
 
@@ -57,4 +57,4 @@ Cost per check has not been measured yet. It depends on photo count and how many
 
 - It is a risk check, not an authentication. Photos can't prove a card is real.
 - The rate limit is kept in memory, so it resets when the server restarts.
-- The saved result image shows the card window from your first photo. Without a photo, it shows stand-in art and says so.
+- The saved result image shows the card window from your first photo. Without a photo, it shows stand-in art labelled "Stand-in art · No photo was shared".

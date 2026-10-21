@@ -354,12 +354,13 @@ ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15p
 .loading .steps-live { font-family: var(--f-mono); font-size: 13px; color: #6fd8ff; }
 #result[data-v="fault"] .loading .steps-live { color: var(--fault); }   /* a fault is not "still working" */
 .loading .subline, .loading .steps-live { min-height: 3.1em; }   /* the text changes while scanning; two lines reserved, so nothing shifts */
-.loading .steps-live { line-height: 1.55; min-height: 2.6em; }
+.loading .steps-live { line-height: 1.55; }
 .loading .stop { justify-self: start; margin-top: 4px; }
+.result-top > .stop.dock { position: sticky; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9; justify-self: center; min-width: 160px; margin-block: -14px -8px; background: #1b2131; box-shadow: 0 10px 24px -8px rgb(0 0 0 / .8); }
 .loading .reading { position: relative; display: block; overflow: hidden; white-space: nowrap; font: 12.5px/1.7 var(--f-mono); color: var(--muted); -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.loading .reading > span { display: inline-block; animation: tape var(--tape-d, 20s) linear infinite; }
+.loading .reading > span { display: inline-block; animation: reading-tape var(--tape-d, 20s) linear infinite; }
 .loading .reading::after { content: ""; position: absolute; top: 0; bottom: 0; left: 28%; width: 56px; background: rgb(111 216 255 / .16); border-left: 1px solid #6fd8ff; mix-blend-mode: screen; }
-@keyframes tape { to { transform: translateX(-50%); } }
+@keyframes reading-tape { to { transform: translateX(-50%); } }
 .m-calm .loading .reading > span, #result[data-v="fault"] .loading .reading > span { animation: none; }
 @media (max-height: 600px) { .loading .reading { display: none; } }   /* short screens: Stop stays in view */
 
@@ -602,7 +603,7 @@ footer .wrap { display: grid; gap: 12px; justify-items: start; }
 @keyframes i-spot { from { transform: translate(-60%, -30%); } }
 html.m-intro .logo-mark i { animation: i-led .22s var(--e-out) backwards; }
 html.m-intro .eyebrow { animation: i-wipe .3s steps(36) backwards; }
-html.m-intro h1.display .w > i { animation: i-word .46s var(--e-out) backwards; animation-delay: calc(40ms + var(--row, 0) * 110ms); }
+html.m-intro h1.display .w > i { animation: i-word .46s var(--e-out) backwards; animation-delay: var(--rd, 40ms); }
 html.m-intro h1.display::after { animation: i-hair .48s linear backwards; }
 html.m-intro .holo > i { animation: i-holo .9s var(--e-precise) .7s backwards; }
 html.m-intro .mode { animation: i-pill .24s var(--e-out) .12s backwards; }
@@ -1057,8 +1058,8 @@ Reply with ONLY one JSON object in this shape:
     // a late arrival fades in over the fallback (decoded first, so the fade never shows a half-painted frame); calm: a plain swap
     const swap = () => { artOk = true; document.querySelectorAll("[data-art=creature]").forEach((n) => {
       if (calm() || !n.classList.contains("fallback") || !n.isConnected) return artNode(n);
-      const lay = el("i", { class: "art-in", style: `background-image:url("${ART_URL}")` });
-      const done = () => { if (lay.parentNode === n) artNode(n); };
+      // the faded-in layer stays as the art (swapping it for a background repaints, and showed a dark gap when the image wasn't cached)
+      const lay = el("i", { class: "art-in", style: `background-image:url("${ART_URL}")` }), done = () => n.classList.remove("fallback");
       lay.addEventListener("animationend", done, { once: true }); lay.addEventListener("animationcancel", done, { once: true }); n.append(lay);
     }); };
     img.onload = () => (img.decode ? img.decode().then(swap, swap) : swap());
@@ -1113,7 +1114,7 @@ Reply with ONLY one JSON object in this shape:
     if (scanning) reticle.append(el("span", { class: "readout" }));
     const slabEl = el("div", { class: "slab" + (small ? " small" : "") }, label, box, reticle);
     const tilt = el("div", { class: "tilt" + (scanning ? " scanning" : ""), role: "img",
-      "aria-label": done ? `${example ? "Example result. " : ""}Trade Check slab: ${VERDICT_WORD[v]}, risk ${clampRisk(risk)}, cert ${cert || ""}` : scanning ? "Slab being checked" : "No reading: the check did not finish" },
+      "aria-label": done ? `${example ? "Example result. " : ""}Trade Check slab: ${VERDICT_WORD[v]}, risk ${clampRisk(risk)}${subj ? `, ${subj}` : ""}, cert ${cert || ""}` : scanning ? "Slab being checked" : "No reading: the check did not finish" },
       slabEl, el("div", { class: "shadow" }));
     const bob = el("div", { class: "bob" }, tilt);
     return { bob, tilt, scoreB, parts: { slab: slabEl, label, card, art, cert: certN, reticle } };
@@ -1253,7 +1254,8 @@ Reply with ONLY one JSON object in this shape:
     if (photos.length > before) {
       call("thumbsIn", fresh);
       const add = photos.slice(before);
-      setTimeout(() => add.forEach((f) => { if (photos.includes(f)) { preview(f); if (!IN_CLAUDE) encode(f); } }), 450);   // after the thumbs land, long before Check
+      // after the thumbs land, long before Check; one photo at a time, so four 12 MP photos don't snapshot canvases all at once
+      setTimeout(() => add.reduce((p, f) => p.then(() => photos.includes(f) && Promise.all([preview(f), IN_CLAUDE ? null : encode(f)]).catch(() => {})), Promise.resolve()), 450);
     }
   }
   function countPhotos() {
@@ -1271,7 +1273,7 @@ Reply with ONLY one JSON object in this shape:
     photos.forEach((f, i) => {
       if (thumbOf.has(f)) return;
       const url = URL.createObjectURL(f);
-      const img = el("img", { src: url, alt: f.name || `Photo ${i + 1}`, decoding: "async" });
+      const img = el("img", { src: url, alt: "", decoding: "async" });   // its remove button names it ("Remove photo 1"); no raw file names read out
       img.onload = img.onerror = () => URL.revokeObjectURL(url);
       const rm = el("button", { type: "button", text: "×" });
       const thumb = el("div", { class: "thumb" }, img, rm);
@@ -1345,7 +1347,7 @@ Reply with ONLY one JSON object in this shape:
       return r;
     }
     // the 2 MB body is built and copied after the photo fly-in lands, not in its first frames
-    if (photos.length && !calm()) await Promise.race([new Promise((ok) => setTimeout(ok, 480)), stopped]);
+    if (photos.length && !calm()) await Promise.race([new Promise((ok) => setTimeout(ok, innerWidth <= 920 ? 820 : 480)), stopped]);   // stacked: after the drop and the reticle snap
     const images = await Promise.all(photos.map((f) => encode(f).catch(() => { throw { friendly: "One photo couldn't be read. Remove it and try again." }; })));
     const res = await fetch("/api/check", {
       method: "POST", headers: { "content-type": "application/json" },
@@ -1386,14 +1388,18 @@ Reply with ONLY one JSON object in this shape:
       $("listing").setAttribute("aria-invalid", "true"); $("listing").setAttribute("aria-describedby", "status"); $("listing").addEventListener("input", listingOk, { once: true });
       $("listing").focus(); return;
     }
-    const btn = $("check-btn"), run = ++runId, prev = current;
+    const btn = $("check-btn"), run = ++runId, prev = current, shown0 = $("result").dataset.shows;
     busy = true; btn.setAttribute("aria-disabled", "true");
+    // Stop and Clear work from the first moment (also during the preview wait below)
+    const ctl = new AbortController(); let why = "";
+    stopCheck = (w) => { why = w; ctl.abort(); };
     // the slab and the fly-in use the small preview, never the 12 MP original: a Check pressed right after an add waits for it (capped)
     const pv = photos[0] ? await Promise.race([preview(photos[0]), new Promise((ok) => setTimeout(ok, 350))]) : null;
+    if (ctl.signal.aborted) { busy = false; stopCheck = null; btn.removeAttribute("aria-disabled"); return; }   // cleared before anything was sent
     setStatus("");
     disarm();
     if (staleUrl) { URL.revokeObjectURL(staleUrl); staleUrl = null; }
-    const photoUrl = photos[0] ? URL.createObjectURL(pv || photos[0]) : null;
+    const photoUrl = photos[0] ? URL.createObjectURL(pv || photos[0]) : null, photo0 = photos[0] || null;
     const started = Date.now();
     call("beforeRender");
     const { bob, tilt } = slab({ verdict: "caution", risk: 0, cert: "SCANNING", photoUrl, scanning: true });
@@ -1411,6 +1417,9 @@ Reply with ONLY one JSON object in this shape:
     const res = $("result"), focusIn = res.contains(document.activeElement);   // "Try again" lives in the panel that is about to be replaced
     res.style.minHeight = res.offsetHeight + "px";   // hold the page height while scanning: no collapse, no footer jump, no scroll clamp
     res.replaceChildren(el("div", { class: "result-top" }, el("div", { class: "result-stage" }, bob), loading));
+    // stacked: the loading block sits under a tall slab, often below the fold; Stop moves up under the slab, and on a short screen
+    // docks to the bottom edge (over the slab picture, never over the text) until it scrolls into place
+    if (getComputedStyle(res.firstChild).gridTemplateColumns.trim().split(/\s+/).length < 2) { stopB.classList.add("dock"); res.firstChild.insertBefore(stopB, loading); }
     if (focusIn) btn.focus({ preventScroll: true });   // focus waits on the busy (aria-disabled) button, as in the main path
     res.setAttribute("aria-busy", "true");
     delete res.dataset.v; res.dataset.shows = "scan";
@@ -1429,8 +1438,6 @@ Reply with ONLY one JSON object in this shape:
     if (scrolled) res.scrollIntoView({ behavior: calm() || Math.abs(top) > innerHeight || (top < 0 && innerWidth > 920) ? "auto" : "smooth", block: "start" });
     const scan = call("scanStart", res, { ph, sec, sub, phases, started, photoUrl, hasPhotos: !!photoUrl, scrolled }) || cssScan(res, { ph, sec });
     // a check that never answers ends: 150 s (server: up to four web-search rounds), or Clear stops it
-    const ctl = new AbortController(); let why = "";
-    stopCheck = (w) => { why = w; ctl.abort(); };
     const limit = setTimeout(() => stopCheck("timeout"), 150000);
     let said = 0, rotAt = 27, rot = 0;
     const slow = IN_CLAUDE ? "Still working. This can take up to a minute." : "Still working. Live price lookups can take up to a minute.";
@@ -1450,7 +1457,7 @@ Reply with ONLY one JSON object in this shape:
     const unbusy = () => { const off = () => { if (run !== runId) return; btn.classList.remove("busy"); setTimeout(() => { if (run === runId) prog(0); }, 320); }; calm() ? (btn.classList.remove("busy"), prog(0)) : setTimeout(off, 400); };
     try {
       const r = await runCheck(text, price, ctl.signal);
-      r.photoUrl = photoUrl; r.at = Date.now();
+      r.photoUrl = photoUrl; r.photoFile = photo0; r.at = Date.now();   // photoFile: the share image draws from a sharper rendition
       clearInterval(timer);
       try { scan.stop(); } catch (err) {}
       prog(1, "fast");
@@ -1469,7 +1476,8 @@ Reply with ONLY one JSON object in this shape:
         btn.classList.remove("busy"); res.removeAttribute("aria-busy");
         const fin = res.contains(document.activeElement);   // Stop lives in the panel that is about to be replaced
         // a real previous check comes back as it was; a first check gets a grey "stopped" slab, never the red example out of nowhere
-        if (prev && !prev.example) restore(prev); else renderFault("Check stopped.", photoUrl, prev);
+        // (only when the panel showed it: after a failed check the grey card comes back, with "Show previous check")
+        if (prev && !prev.example && shown0 === "result") restore(prev); else renderFault("Check stopped.", photoUrl, prev);
         if (fin) { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); }
         setStatus($("listing").value.trim() || photos.length ? "Check stopped. Your listing is still in the form." : "Check stopped.");
         return;
@@ -1494,6 +1502,8 @@ Reply with ONLY one JSON object in this shape:
       btn.classList.remove("busy");
       res.removeAttribute("aria-busy");
       renderFault(msg, shown, prev);
+      // stacked layouts: focus goes where the reader is (the fault card), not to the button screens above
+      if (innerWidth <= 920 && document.activeElement === btn) { const a = res.querySelector(".fault-actions button"); if (a) a.focus({ preventScroll: true }); else { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); } }
     } finally {
       clearInterval(timer); clearTimeout(limit);
       if (run === runId) { busy = false; stopCheck = null; if (!checksOff) btn.removeAttribute("aria-disabled"); }
@@ -1565,7 +1575,7 @@ Reply with ONLY one JSON object in this shape:
     const high = flags.filter((f) => f.severity === "high").length;   // data-driven intensity: cracks = high flags
     const fakeFail = (Array.isArray(r.fake_checks) ? r.fake_checks : []).some((c) => c && c.result === "fail");
     const c0 = (Array.isArray(r.cards) ? r.cards : []).find((c) => c && c.name);   // the label names the checked card, like a grading label
-    const { bob, tilt } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl, high, fakeFail, example: !!r.example, subj: c0 ? [c0.name, c0.number, c0.grade].filter(Boolean).join(" · ") : "" });
+    const { bob, tilt } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl, high, fakeFail, example: !!r.example, subj: c0 ? [c0.name, c0.grade, c0.number].filter(Boolean).join(" · ") : "" });   // the grade before the number: an ellipsis never eats it
     const meterDot = el("i", { style: `--p:${risk}` });
     const verdictBlock = el("div", { class: "verdict-block" }), hlText = String(r.headline || VERDICT_WORD[v]);
     if (r.example) verdictBlock.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
@@ -1600,7 +1610,7 @@ Reply with ONLY one JSON object in this shape:
           el("td", { class: "num" }, range, c.price_source ? el("span", { class: "sub", text: c.price_source }) : null)));
       }
       const sec = sect("cards", "Cards and prices",
-        el("div", { class: "table-wrap", tabindex: "0", role: "region", "aria-label": "Cards and prices" }, el("table", {},
+        el("div", { class: "table-wrap", role: "region", "aria-label": "Cards and prices" }, el("table", {},
           el("thead", {}, el("tr", {}, el("th", { text: "Card" }), el("th", { text: "Asking" }), el("th", { text: r.mode === "live" ? "Recent sold" : "Market (est.)" }))), tb)));
       if (r.price_check) sec.append(el("p", { class: "price-line", text: r.price_check }));
       out.push(sec);
@@ -1654,9 +1664,22 @@ Reply with ONLY one JSON object in this shape:
     call("tilt", tilt);
     call("reveal", $("result"), r, { mode: r.example ? "example-pending" : keepId ? "quiet" : "check" });
     // the image is made while the reader takes in the verdict, so Share opens the sheet at once (Safari needs the tap's own task)
-    if (!r.example && !r._png) setTimeout(() => { if (current !== r) return; const go = () => { if (current === r) pngFor(r).catch(() => {}); }; window.requestIdleCallback ? requestIdleCallback(go, { timeout: 2500 }) : go(); }, 1600);
+    // (it paints in one task, so it waits until the page has been still for half a second: a reader scrolling the verdict never hitches)
+    if (!r.example && !r._png) setTimeout(() => {
+      let t = 0;
+      const go = () => { removeEventListener("scroll", arm); if (current === r) pngFor(r).catch(() => {}); };
+      const arm = () => { clearTimeout(t); t = setTimeout(() => (window.requestIdleCallback ? requestIdleCallback(go, { timeout: 2500 }) : go()), 500); };
+      if (current === r) { addEventListener("scroll", arm, { passive: true }); arm(); }
+    }, 1600);
+    tableStop();
   }
 
+  // the price table is a tab stop only while it actually scrolls sideways (keyboard users can then reach the hidden columns)
+  function tableStop() {
+    const tw = $("result").querySelector(".table-wrap");
+    if (tw) tw.scrollWidth > tw.clientWidth + 1 ? tw.setAttribute("tabindex", "0") : tw.removeAttribute("tabindex");
+  }
+  addEventListener("resize", () => requestAnimationFrame(tableStop), { passive: true });
   // stacked layouts: the form is screens away once a result is read; go back to it and put the cursor in the listing
   function backToForm() {
     const lst = $("listing");
@@ -1708,7 +1731,7 @@ Reply with ONLY one JSON object in this shape:
       if (w(l) <= maxW && !(i === n - 1 && lines.length > n)) return;
       let t = l;
       while (t.length > 1 && w(t + "…") > maxW) t = t.includes(" ") ? t.replace(/\s*\S+$/, "") : t.slice(0, -1);
-      out[i] = t + "…";
+      out[i] = t.replace(/[\s·,–-]+$/, "") + "…";   // never a dangling " ·…"
     });
     return out;
   }
@@ -1727,7 +1750,9 @@ Reply with ONLY one JSON object in this shape:
   let corsArt = null;
   async function drawImage(r) {
     await document.fonts.ready.catch(() => {});
-    const img = await loadImg(r.photoUrl), art = img || IN_CLAUDE || !artOk ? null : await (corsArt || (corsArt = loadImg(ART_URL, true)));
+    // the photo from its 1568 px rendition (the 720 px preview was upscaled up to 1.55x into the card window), else the preview
+    const big = r.photoFile ? await encode(r.photoFile).catch(() => null) : null;
+    const img = (big && await loadImg(big)) || await loadImg(r.photoUrl), art = img || IN_CLAUDE || !artOk ? null : await (corsArt || (corsArt = loadImg(ART_URL, true)));
     const c = document.createElement("canvas"), blob = () => new Promise((ok, no) => c.toBlob((b) => (b ? ok(b) : no(new Error("no image"))), "image/png"));
     paintVerdict(c, r, { img, art });
     try { return await blob(); } catch (e) { paintVerdict(c, r, {}); return blob(); }   // a tainted canvas can't export: repaint with drawn art only
@@ -1754,7 +1779,7 @@ Reply with ONLY one JSON object in this shape:
     x.fillStyle = ink; font(`900 36px ${A}`, "condensed", 1); x.fillText("TRADE CHECK", P + 52, 88);
     x.textAlign = "right"; font(`500 20px ${MONO}`, "normal", 2);
     if (r.example) { const t = "EXAMPLE · MADE-UP LISTING", tw = x.measureText(t).width + 28; roundRect(x, W - P - tw, 56, tw, 38, 8); x.fillStyle = "#0b4f6a"; x.fill(); x.fillStyle = "#fff"; x.fillText(t, W - P - 14, 82); }
-    else { x.fillStyle = muted; x.fillText("RISK CHECK · " + new Date(r.at || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).toUpperCase(), W - P, 82); }
+    else { x.fillStyle = muted; x.fillText("CHECKED WITH CLAUDE · " + new Date(r.at || Date.now()).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }).toUpperCase(), W - P, 82); }
     x.textAlign = "left";
 
     // ---- the slab ----
@@ -1767,9 +1792,13 @@ Reply with ONLY one JSON object in this shape:
     // card window: the user's first photo (cover-cropped, never recoloured), else the creature card
     x.save(); roundRect(x, LX, CY, CW, CH, 18); x.clip();
     if (opt.img) {
-      const im = opt.img, k = Math.max(CW / im.naturalWidth, CH / im.naturalHeight), w = im.naturalWidth * k, h = im.naturalHeight * k;
+      const im = opt.img, iw = im.naturalWidth, ih = im.naturalHeight, k = Math.max(CW / iw, CH / ih), w = iw * k, h = ih * k;
       x.fillStyle = "#0b1018"; x.fillRect(LX, CY, CW, CH); x.drawImage(im, LX + (CW - w) / 2, CY + (CH - h) / 2, w, h);
-    } else creatureCard(x, LX, CY, CW, CH, opt.art, A, B, MONO);
+      if (iw / ih > 1.05) {   // a landscape screenshot: the whole of it, across the window, over a dimmed fill of itself (cover kept only 40 % of it)
+        x.fillStyle = "rgba(9,12,21,.72)"; x.fillRect(LX, CY, CW, CH);
+        const k2 = CW / iw; x.drawImage(im, LX, CY + (CH - ih * k2) / 2, CW, ih * k2);
+      }
+    } else standinCard(x, LX, CY, CW, CH, opt.art, A, B);
     const gl = x.createLinearGradient(LX, CY, LX + CW, CY + CH); gl.addColorStop(.28, "rgba(255,255,255,0)"); gl.addColorStop(.4, "rgba(255,255,255,.13)"); gl.addColorStop(.52, "rgba(255,255,255,0)");
     x.fillStyle = gl; x.fillRect(LX, CY, CW, CH);   // acrylic glare, soft: a photo stays evidence
     if (v === "scam") cracksOn(x, LX, CY, CW, CH, topFlags(r).filter((f) => f.severity === "high").length, 1);
@@ -1777,7 +1806,7 @@ Reply with ONLY one JSON object in this shape:
     // label (the frame is the verdict colour; the wordmark is red only on scam)
     roundRect(x, LX, LY, LW, LH, 16); x.fillStyle = "#f6f7fb"; x.fill(); x.lineWidth = 6; x.strokeStyle = INK; x.stroke();
     x.fillStyle = v === "scam" ? INK : "#141a2b"; font(`900 26px ${A}`, "normal", 4); x.fillText("TRADE CHECK", LX + 24, LY + 44);
-    x.fillStyle = "#5a6378"; font(`500 20px ${MONO}`); x.fillText(r.cert || "", LX + 24, LY + 76, LW - 200);
+    x.fillStyle = "#5a6378"; font(`500 20px ${MONO}`); x.fillText(r.cert ? "CHECK " + r.cert : "", LX + 24, LY + 76, LW - 200);   // a check id, not a grading cert
     x.fillStyle = INK; font(`900 34px ${A}`, "normal", 1); x.fillText(VERDICT_WORD[v].toUpperCase(), LX + 24, LY + 124, LW - 190);
     const SCX = LX + LW - 74; x.textAlign = "center";
     x.fillStyle = "#5a6378"; font(`800 16px ${A}`, "normal", 4); x.fillText("RISK", SCX + 2, LY + 40);
@@ -1792,13 +1821,12 @@ Reply with ONLY one JSON object in this shape:
       stampOn(x, VERDICT_WORD[v].toUpperCase(), LX + CW / 2, CY + CH * (v === "scam" ? .64 : .62), (v === "scam" ? -8 : -6) * Math.PI / 180, v, A);
     }
     // under the slab: what was checked, like a grading label's subject line
-    const cd = (Array.isArray(r.cards) ? r.cards : []).find((k) => k && k.name), sub = cd ? [cd.set, cd.number, cd.grade].filter(Boolean).join(" · ") : "";
+    const cd = (Array.isArray(r.cards) ? r.cards : []).find((k) => k && k.name), sub = cd ? [cd.grade, cd.number, cd.set].filter(Boolean).join(" · ") : "";   // what a collector checks first
     x.textAlign = "center";
     x.fillStyle = cd ? ink : muted; font(`800 30px ${A}`); x.fillText(fitLines(x, cd ? cd.name : "Card not identified", SW, 1)[0] || "", SX + SW / 2, SY + SH + 70);
     x.fillStyle = muted; font(`500 20px ${MONO}`, "normal", 1);
-    const subT = sub || (opt.img ? "YOUR PHOTO, AS SHARED" : "STAND-IN ART · NO PHOTO");
+    const subT = sub || (opt.img ? "YOUR PHOTO, AS SHARED" : "TEXT-ONLY CHECK");   // no photo: the card window itself says it is stand-in art
     x.fillText(fitLines(x, subT, SW, 1)[0] || "", SX + SW / 2, SY + SH + 104);
-    if (sub && !opt.img) { font(`500 17px ${MONO}`, "normal", 2); x.fillStyle = "#6e7891"; x.fillText("STAND-IN ART · NO PHOTO", SX + SW / 2, SY + SH + 136); }   // the art is never mistaken for their card
     x.textAlign = "left";
 
     // ---- the reading ----
@@ -1860,11 +1888,24 @@ Reply with ONLY one JSON object in this shape:
       }
     }
     // short reading: Claude's summary fills what is left of the column, so the image is never half empty
-    const room = Math.floor((limit - y - 78 - 20) / 34);
+    const room = Math.floor((limit - y - 78) / 34);
     if (r.summary && room >= 2) {
       const big = room >= 9, lh = big ? 40 : 34;
       head("IN SHORT"); x.fillStyle = ink;
       lines(r.summary, `400 ${big ? 31 : 26}px ${B}`, Math.min(6, Math.floor(room * 34 / lh)), RW).forEach((ln) => { y += lh; x.fillText(ln, RX, y); });
+    }
+    // still room (a sparse answer): the fake-card checks, which the image otherwise never shows
+    const fc = (Array.isArray(r.fake_checks) ? r.fake_checks : []).filter((c) => c && c.check);
+    if (fc.length && y + 66 + 12 + 46 < limit) {
+      head("FAKE-CARD CHECKS");
+      for (const c of fc.slice(0, 3)) {
+        if (y + 46 > limit) break;
+        y += 46; const res = ["pass", "fail", "unclear"].includes(c.result) ? c.result : "unclear", col = { pass: "#4fdc9a", fail: "#ff6b74", unclear: "#ffc15e" }[res];
+        font(`900 17px ${A}`, "normal", 2); const cw2 = x.measureText(res.toUpperCase()).width + 20;
+        roundRect(x, RX, y - 25, cw2, 32, 16); x.fillStyle = col.replace(/^#(..)(..)(..)$/, (m, a, b, d) => `rgba(${parseInt(a, 16)},${parseInt(b, 16)},${parseInt(d, 16)},.16)`); x.fill();
+        x.fillStyle = col; x.fillText(res.toUpperCase(), RX + 10, y - 3);
+        x.fillStyle = ink; x.fillText(lines(c.check, `400 25px ${B}`, 1, RW - cw2 - 16)[0] || "", RX + cw2 + 14, y);
+      }
     }
     if (hasPrice) {
       y = limit; head("PRICE"); x.fillStyle = ink;
@@ -1874,13 +1915,15 @@ Reply with ONLY one JSON object in this shape:
     // footer: where to check your own (hosted site only, never on the example), and what this is
     x.fillStyle = "#2a3350"; x.fillRect(P, 1206, W - 2 * P, 2);
     const link = !r.example && !IN_CLAUDE && location.host ? "Check yours at " + location.host : "";
-    if (link) { font(`800 30px ${A}`, "condensed"); x.fillStyle = holo(P, 0, P + Math.min(W - 2 * P, x.measureText(link).width), 0); x.fillText(link, P, 1256, W - 2 * P); }
-    x.fillStyle = muted; font(`400 21px ${B}`);
-    x.fillText(r.example ? "Example result for a made-up listing. Not a real check." : "Checked with Claude. A risk check, not an authentication.", P, link ? 1296 : 1262, W - 2 * P);
+    if (link) { font(`800 30px ${A}`, "condensed"); x.fillStyle = holo(P, 0, P + Math.min(W - 2 * P, x.measureText(link).width), 0); x.fillText(link, P, 1252, W - 2 * P); }
+    // what this is, at a size that still reads when a feed shows the image a third as wide
+    x.fillStyle = "#c9d0de"; font(`400 30px ${B}`);
+    x.fillText(r.example ? "Example result for a made-up listing. Not a real check." : "A risk check of what was shared. Not an authentication.", P, link ? 1302 : 1266, W - 2 * P);
     return c;
   }
-  // the CSS fallback creature card (.art.fallback, frame, nameplate, footplate), redrawn; `art` is the CORS-loaded illustration if any
-  function creatureCard(x, cx, cy, cw, ch, art, A, B, MONO) {
+  // no photo: the page's fallback creature art in its frame, labelled as stand-in art (never a named card next to the checked card's
+  // real name); `art` is the CORS-loaded illustration if any
+  function standinCard(x, cx, cy, cw, ch, art, A, B) {
     x.fillStyle = "#e9c46a"; x.fillRect(cx, cy, cw, ch);
     const f = 14, ax = cx + f, ay = cy + f, aw = cw - 2 * f, ah = ch - 2 * f;
     if (art) { const k = Math.max(aw / art.naturalWidth, ah / art.naturalHeight), w = art.naturalWidth * k, h = art.naturalHeight * k; x.save(); x.beginPath(); x.rect(ax, ay, aw, ah); x.clip(); x.drawImage(art, ax + (aw - w) / 2, ay + (ah - h) / 2, w, h); x.restore(); }
@@ -1899,14 +1942,11 @@ Reply with ONLY one JSON object in this shape:
     x.globalCompositeOperation = "source-over"; x.globalAlpha = 1;
     const np = x.createLinearGradient(0, ay, 0, ay + 56); np.addColorStop(0, "rgba(255,244,214,.97)"); np.addColorStop(1, "rgba(240,220,170,.95)");
     x.fillStyle = np; x.fillRect(ax, ay, aw, 56);
-    x.fillStyle = "#2a1c08"; x.font = `900 30px ${A}`; x.fontStretch = "condensed"; x.letterSpacing = "0px"; x.fillText("Emberkit", ax + 18, ay + 39);
-    x.textAlign = "right"; x.fillStyle = "#b3141d"; x.font = `900 32px ${A}`; x.fillText("120", ax + aw - 18, ay + 40);
-    const hpw = x.measureText("120").width; x.fillStyle = "#2a1c08"; x.font = `800 18px ${A}`; x.fillText("HP", ax + aw - 24 - hpw, ay + 40);
-    x.textAlign = "left"; x.fontStretch = "normal";
+    x.fillStyle = "#2a1c08"; x.font = `900 30px ${A}`; x.fontStretch = "normal"; x.letterSpacing = "3px"; x.fillText("STAND-IN ART", ax + 18, ay + 40, aw - 36);
+    x.letterSpacing = "0px";
     x.fillStyle = "rgba(255,244,214,.94)"; x.fillRect(ax, ay + ah - 92, aw, 92);
-    x.fillStyle = "#3b2a10"; x.font = `900 24px ${A}`; x.fillText("Cinder Leap", ax + 18, ay + ah - 60);
-    x.font = `400 18px ${B}`; x.fillText("Flip a coin. If heads, this attack does 30 more.", ax + 18, ay + ah - 32, aw - 36);
-    x.textAlign = "right"; x.fillStyle = "#7a6540"; x.font = `500 15px ${MONO}`; x.fillText("042/198 ★", ax + aw - 18, ay + ah - 10); x.textAlign = "left";
+    x.fillStyle = "#3b2a10"; x.font = `900 28px ${A}`; x.fillText("No photo was shared", ax + 18, ay + ah - 52, aw - 36);
+    x.font = `400 22px ${B}`; x.fillText("Drawn art, not the checked card.", ax + 18, ay + ah - 22, aw - 36);
   }
   // fracture from the stamp's impact point, the same branches as the page's .cracks (100 x 140 card units): dark under-stroke, light line
   function cracksOn(x, cx, cy, cw, ch, high, s) {
@@ -1954,10 +1994,11 @@ Reply with ONLY one JSON object in this shape:
     if (!canShareFiles()) return saveImage(r, btn);
     if (btn.getAttribute("aria-disabled") === "true") return;
     const go = (b) => { try { return navigator.share({ files: [new File([b], pngName(r), { type: "image/png" })], title: "Trade Check", text: summaryText(r) }); } catch (e) { return Promise.reject(e); } };
-    const after = (p) => p.then(() => announce("Shared."), (e) => { if (!e || e.name !== "AbortError") return saveImage(r, btn); });
+    const save = () => { btn.removeAttribute("aria-disabled"); return saveImage(r, btn); };   // a refused share always ends in a saved file or a message
+    const after = (p) => p.then(() => announce("Shared."), (e) => { if (!e || e.name !== "AbortError") return save(); });
     if (r._blob) return void after(go(r._blob));
     btn.setAttribute("aria-disabled", "true");
-    pngFor(r).then((b) => after(go(b)), () => saveImage(r, btn)).finally(() => btn.removeAttribute("aria-disabled"));
+    pngFor(r).then((b) => after(go(b)), save).finally(() => btn.removeAttribute("aria-disabled"));
   }
   // busy as aria-disabled (a disabled focused button drops focus to <body>); the outcome is said in the share row, where the reader is
   async function saveImage(r, btn) {
@@ -1975,7 +2016,8 @@ Reply with ONLY one JSON object in this shape:
       if (IN_CLAUDE) {
         await downloads.save({ filename, data: blob });
       } else {
-        const a = el("a", { href: URL.createObjectURL(blob), download: filename }); document.body.append(a); a.click(); a.remove();
+        const url = URL.createObjectURL(blob), a = el("a", { href: url, download: filename }); document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
       }
       call("saved", btn); announce("Verdict image saved.");
     } catch (err) {
@@ -2017,9 +2059,10 @@ Reply with ONLY one JSON object in this shape:
   });
 
   // ---------- the example plays once, when it is seen (and again from "See an example") ----------
-  // Armed just before it is seen (from-states applied while it is off screen), played once a good part of the slab is on screen.
-  let armIOs = [], armT = 0, armPlay = null;
-  const disarm = () => { armIOs.forEach((io) => io.disconnect()); armIOs = []; clearTimeout(armT); armPlay = null; };
+  // Armed just before it is seen (from-states applied while it is off screen), played once the stamp itself is on screen
+  // (the tall stage passed 15 % long before the stamp and score were visible, so the slam played below the fold).
+  let armIOs = [], armT = 0, armPlay = null, armWait = null;
+  const disarm = () => { armIOs.forEach((io) => io.disconnect()); armIOs = []; clearTimeout(armT); armPlay = null; if (armWait) removeEventListener("scroll", armWait); armWait = null; };
   function watchExample(ratio, now) {
     disarm();
     const res = $("result"), stg = res.querySelector(".result-stage");
@@ -2029,15 +2072,17 @@ Reply with ONLY one JSON object in this shape:
     if (now) { arm(); armT = setTimeout(play, 250); }
     if (!("IntersectionObserver" in window)) return void (now || (arm(), play()));
     const ioA = new IntersectionObserver(([e]) => { if (e.isIntersecting) arm(); }, { rootMargin: "0px 0px 25% 0px" });   // cross-origin frames ignore the margin: arms at the first pixel
+    const wait = armWait = () => { clearTimeout(armT); armT = setTimeout(play, 250); };
     const ioP = new IntersectionObserver(([e]) => {
+      removeEventListener("scroll", wait);
       if (!e.isIntersecting) { if (!now) clearTimeout(armT); return; }
       arm();
       if (e.intersectionRatio >= ratio) play();
-      else if (!now) { clearTimeout(armT); armT = setTimeout(play, 250); }   // the reader stopped short of the ratio: play anyway, nothing waits hidden
+      else if (!now) { wait(); addEventListener("scroll", wait, { passive: true }); }   // the reader stopped short of the ratio: play once the page is still, nothing waits hidden
     }, { threshold: [0, ratio] });
-    ioA.observe(stg); ioP.observe(stg); armIOs = [ioA, ioP];
+    ioA.observe(stg); ioP.observe(stg.querySelector(".stamp-pos") || stg); armIOs = [ioA, ioP];
   }
-  const armExample = () => watchExample(.15, false);
+  const armExample = () => watchExample(.9, false);
   const replayExample = () => watchExample(.5, true);
 
   // ---------- compact nav: from the moment the hero CTAs leave until the checker reaches the top fifth; only when the page scrolls itself ----------
@@ -2138,22 +2183,28 @@ Reply with ONLY one JSON object in this shape:
   if (!root.lang) root.lang = "en";   // the artifact host's skeleton has no lang
   artNode($("hero-art"));
   // stats below the fold (any width): their digits roll when they come into view (the intro would play them off screen)
-  // armed (showing 0) before any digit can be read, rolled once they are in view; on screen: the intro plays them (phones: roll now)
+  // the gate is the digit rows, not the block: armed (showing 0) only while every number is below the fold, rolled at the first
+  // visible pixel of any of them, so a 0 is never left readable; any number on screen at load: the intro plays them (phones: roll now)
   // checked again once the fonts are in (they move the stats): a late arm happens below the fold, where nobody sees the switch
   if (!calm() && "IntersectionObserver" in window) {
-    const stats = document.querySelector(".hero .stats");
+    const stats = document.querySelector(".hero .stats"), digits = [...stats.querySelectorAll(".stat > b")];
     const gate = () => {
       if (stats.classList.contains("armed") || stats.classList.contains("roll") || calm()) return;
-      if (stats.getBoundingClientRect().bottom <= innerHeight) { if (innerWidth <= 640) stats.classList.add("roll"); return; }
+      if (digits.some((b) => b.getBoundingClientRect().top < innerHeight)) { if (innerWidth <= 640) stats.classList.add("roll"); return; }
       if (scrollY > 0) return;   // the reader already scrolled: the intro is theirs to see
       stats.classList.add("armed");
-      const io = new IntersectionObserver(([e]) => { if (e.intersectionRatio < .85) return; io.disconnect(); stats.classList.remove("armed"); if (!calm()) stats.classList.add("roll"); }, { threshold: [0, .85, 1] });
-      io.observe(stats);
+      const io = new IntersectionObserver((es) => { if (!es.some((e) => e.isIntersecting)) return; io.disconnect(); stats.classList.remove("armed"); if (!calm()) stats.classList.add("roll"); });
+      digits.forEach((b) => io.observe(b));
     };
     gate(); if (document.fonts) document.fonts.ready.then(gate);
   }
   // intro: the words rise row by row as the laser hairline crosses each line (rows depend on the wrap at this width)
-  if (root.classList.contains("m-intro")) { let row = -1, top = -1e4; document.querySelectorAll("h1.display .w").forEach((w) => { if (w.offsetTop > top + 4) { row++; top = w.offsetTop; } w.firstElementChild.style.setProperty("--row", row); }); }
+  // each row starts 110 ms before the .48 s hairline reaches its baseline (four rows: the old 40/150/260/370 ms), so a two-row wrap
+  // never shows the line striking glyphs that rose long before it
+  if (root.classList.contains("m-intro")) {
+    let row = -1, top = -1e4; const ws = [...document.querySelectorAll("h1.display .w")], rs = ws.map((w) => { if (w.offsetTop > top + 4) { row++; top = w.offsetTop; } return row; });
+    ws.forEach((w, i) => { w.firstElementChild.style.setProperty("--rd", Math.max(40, Math.round(480 * (rs[i] + 1) / (row + 1) - 110)) + "ms"); });
+  }
   const fine = root.classList.contains("m-fine") || matchMedia("(hover: hover) and (pointer: fine)").matches;
   document.querySelector(".tilt-hint").textContent = fine ? "Hover to tilt · real holo shifts colour" : "Drag sideways to tilt";
   call("tilt", $("hero-tilt"), { hero: true });
@@ -2446,7 +2497,7 @@ Reply with ONLY one JSON object in this shape:
           t.fromTo(m, { backgroundSize: "0% 40%" }, { backgroundSize: "100% 40%", duration: .05, ease: "none" }, at);
           if (pin) t.fromTo(pin, { scale: .8, opacity: .45 }, { scale: 1, opacity: 1, duration: .04, ease: "back.out(2)" }, at);
           if (note) t.fromTo(note, { opacity: .45 }, { opacity: 1, duration: .05, ease: "none" }, at);
-          if (np) t.call(() => { if (!t.reversed() && on) { np.textContent = "E0"; decode(np, "E" + k, 240, 1, "0123456789"); } }, null, at + .02);
+          if (np) t.call(() => { if (!t.reversed() && on) np.textContent = "E" + k; }, null, at + .02);   // exhibit numbers never scramble: a wrong number reads as an error
         });
         t.fromTo(stampN, { scale: 1.15, opacity: .35 }, { scale: 1, opacity: 1, duration: .08, ease: E("tc.slam") }, .88).to({}, { duration: .04 }, .96);
         return t;
