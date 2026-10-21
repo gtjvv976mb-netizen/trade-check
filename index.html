@@ -183,7 +183,7 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .label .cert { font-family: var(--f-mono); font-size: 10.5px; color: #5a6378; font-variant-numeric: tabular-nums; }
 .label .subj { font-family: var(--f-mono); font-size: 10.5px; color: #5a6378; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (min-width: 921px) { .label .subj { font-size: 11.5px; } }
-.standin { position: absolute; left: 9px; right: 9px; bottom: 9px; z-index: 4; padding: 3px 6px; text-align: center; font: 700 11px/1.2 var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: #e9dfc8; background: rgb(14 18 30 / .72); border-radius: 0 0 6px 6px; pointer-events: none; }
+.standin { position: absolute; left: 9px; right: 9px; bottom: 9px; z-index: 4; padding: 3px 6px; text-align: center; font: 700 9.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #e9dfc8; background: rgb(14 18 30 / .72); border-radius: 0 0 6px 6px; pointer-events: none; }
 .label .verdict { font-family: var(--f-display); font-stretch: 78%; font-weight: 900; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
 .label .score { grid-column: 2; grid-row: 1 / span 3; text-align: center; line-height: 1; }
 .label .score small { display: block; font-family: var(--f-display); font-weight: 800; font-size: 9.5px; letter-spacing: .16em; color: #5a6378; }
@@ -217,7 +217,7 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
   background: #1a2034; box-shadow: 0 14px 28px -10px rgb(0 0 0 / .7);
 }
 .card .art { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.card .art > .art-in { position: absolute; inset: 0; animation: art-in .4s var(--e-out) both; }
+.card .art > .art-in { position: absolute; inset: 0; background: center / cover; animation: art-in .4s var(--e-out) both; }
 @keyframes art-in { from { opacity: 0; } }
 .card .art.fallback {
   background:
@@ -346,18 +346,17 @@ ul.plain li { padding-left: 18px; position: relative; font-size: 15px; }
 ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15px; }
 .share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-top: 1px solid var(--line); padding-top: 16px; }
 .quick-share { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 2px; }
-.btn-v { color: var(--v); background: rgb(var(--scan-rgb) / .12); border: 1px solid rgb(var(--scan-rgb) / .5); }   /* colour is truth: the verdict's colour, never brand red on SAFE */
-.btn-v:hover { background: rgb(var(--scan-rgb) / .2); }
 @media (max-width: 640px) { .quick-share .btn { flex: 1 1 100%; min-height: 48px; } .share .btn { flex: 1 1 100%; } }
 .disclaimer { font-size: 12.5px; color: var(--muted); margin: 0; }
 .loading { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: center; }
 .loading > :not(.ring) { grid-column: 2; }
 .loading strong { font-family: var(--f-display); font-stretch: 80%; font-size: 24px; }
-.loading .steps-live { font-family: var(--f-mono); font-size: 13px; line-height: 1.55; color: #6fd8ff; }
+.loading .steps-live { font-family: var(--f-mono); font-size: 13px; color: #6fd8ff; }
 #result[data-v="fault"] .loading .steps-live { color: var(--fault); }   /* a fault is not "still working" */
 .loading .subline, .loading .steps-live { min-height: 3.1em; }   /* the text changes while scanning; two lines reserved, so nothing shifts */
+.loading .steps-live { line-height: 1.55; }
 .loading .stop { justify-self: start; margin-top: 4px; }
-.result-top > .stop.dock { grid-column: 1 / -1; position: sticky; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9; justify-self: center; min-width: 160px; margin-block: -14px -8px; background: #1b2131; box-shadow: 0 10px 24px -8px rgb(0 0 0 / .8); }
+.result-top > .stop.dock { position: sticky; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9; justify-self: center; min-width: 160px; margin-block: -14px -8px; background: #1b2131; box-shadow: 0 10px 24px -8px rgb(0 0 0 / .8); }
 .loading .reading { position: relative; display: block; overflow: hidden; white-space: nowrap; font: 12.5px/1.7 var(--f-mono); color: var(--muted); -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .loading .reading > span { display: inline-block; animation: reading-tape var(--tape-d, 20s) linear infinite; }
 .loading .reading::after { content: ""; position: absolute; top: 0; bottom: 0; left: 28%; width: 56px; background: rgb(111 216 255 / .16); border-left: 1px solid #6fd8ff; mix-blend-mode: screen; }
@@ -639,10 +638,6 @@ html.m-intro .tilt-hint { animation: i-fade .3s var(--e-out) .95s backwards; }
   html.m-intro .ghost-card.b { animation-delay: .46s; }
 }
 html.m-intro-short h1.display .w > i { animation: i-word .3s var(--e-out) backwards; animation-delay: calc(var(--i) * 20ms); }
-/* the text waits (at its start pose) for the display face, at most 700 ms, so the swap from the fallback never lands mid-rise;
-   when the face is late anyway the words only fade */
-html.m-wait :is(.eyebrow, h1.display .w > i, .holo > i, .mode, .lede, .cta-row .btn, .stats, .source, .reel > span, .tilt-hint), html.m-wait h1.display::after { animation-play-state: paused; }
-html.m-ifade h1.display .w > i { animation-name: i-fade; }
 
 /* reduced motion: m-calm (the boot script sets it from the OS setting unless the footer toggle says "off") is the one switch */
 .m-calm .fieldbox.bad::after, .m-calm .count.pulse, .m-calm .status.err.kick::after, .m-calm .bob.float, .m-calm .scanning .scanline, .m-calm ul.flags li, .m-calm .mode.beat::after, .m-calm [data-save][aria-disabled="true"]::after, .m-calm h1.display.sweep .holo > i, .m-calm .thumb.t-in { animation: none; }
@@ -682,10 +677,8 @@ try{st=localStorage.getItem("tc-motion");calm=st==="calm";seen=sessionStorage.ge
 const rm=calm||(st!=="full"&&mq("(prefers-reduced-motion: reduce)"));if(rm)d.classList.add("m-calm");
 if(mq("(hover: hover) and (pointer: fine)"))d.classList.add("m-fine");
 const n=navigator;if((n.connection&&n.connection.saveData)||(n.deviceMemory||8)<=2||(n.hardwareConcurrency||8)<=2)d.classList.add("m-lite");
-if(!rm){d.classList.add(seen?"m-intro-short":"m-intro","m-wait");if(!seen)d.classList.add("m-boot");
-const end=()=>d.classList.remove("m-intro","m-intro-short","m-wait");let go=0;
-const run=(late)=>{if(go)return;go=1;if(late)d.classList.add("m-ifade");d.classList.remove("m-wait");dispatchEvent(new Event("tc-intro"));setTimeout(end,1800)};
-const f=document.fonts;if(f&&f.load)Promise.race([f.load("900 1em Archivo").then(()=>0),new Promise(r=>setTimeout(r,700,1))]).then(run,()=>run(0));else run(0);
+if(!rm){d.classList.add(seen?"m-intro-short":"m-intro");if(!seen)d.classList.add("m-boot");
+const end=()=>d.classList.remove("m-intro","m-intro-short");setTimeout(end,1800);
 setTimeout(()=>d.classList.remove("m-boot"),1400);
 ["pointerdown","keydown","wheel","touchstart"].forEach(t=>addEventListener(t,end,{once:true,passive:true}));}})();</script>
 
@@ -950,7 +943,7 @@ Reply with ONLY one JSON object in this shape:
   // ---------- motion helpers (hand-written; every one returns a stop()) ----------
   const CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
   // Scramble for machine text only (cert suffix, readouts, phase names). Writes textContent, never innerHTML.
-  function decode(node, text, ms = 400) {
+  function decode(node, text, ms = 400, keep = 0, set = CHARSET) {   // keep: leading characters that never scramble
     if (node._dec) node._dec();   // one scramble per node
     let raf = 0, done = false;
     const stop = () => { if (done) return; done = true; cancelAnimationFrame(raf); node.textContent = text; node._dec = null; const i = stopFx.indexOf(stop); if (i >= 0) stopFx.splice(i, 1); };
@@ -961,8 +954,8 @@ Reply with ONLY one JSON object in this shape:
       const k = (t - t0) / ms;
       if (k >= 1) return stop();
       if (fr++ % 2 === 0) {
-        const n = Math.floor(Math.max(0, k) * len); let s = text.slice(0, n);
-        for (let i = n; i < len; i++) s += text[i] === " " ? " " : CHARSET[(Math.random() * CHARSET.length) | 0];
+        const n = keep + Math.floor(Math.max(0, k) * (len - keep)); let s = text.slice(0, n);
+        for (let i = n; i < len; i++) s += text[i] === " " ? " " : set[(Math.random() * set.length) | 0];
         node.textContent = s;
       }
       raf = requestAnimationFrame(step);
@@ -1066,13 +1059,8 @@ Reply with ONLY one JSON object in this shape:
     const swap = () => { artOk = true; document.querySelectorAll("[data-art=creature]").forEach((n) => {
       if (calm() || !n.classList.contains("fallback") || !n.isConnected) return artNode(n);
       // the faded-in layer stays as the art (swapping it for a background repaints, and showed a dark gap when the image wasn't cached)
-      // a decoded <img> per slab, appended only once it can paint: the fade never runs over an empty layer
-      const lay = new Image(), done = () => n.classList.remove("fallback");
-      lay.className = "art-in"; lay.alt = ""; lay.src = ART_URL;
-      (lay.decode ? lay.decode() : Promise.resolve()).catch(() => {}).then(() => {
-        if (!n.isConnected || !n.classList.contains("fallback")) return;
-        lay.addEventListener("animationend", done, { once: true }); lay.addEventListener("animationcancel", done, { once: true }); n.append(lay);
-      });
+      const lay = el("i", { class: "art-in", style: `background-image:url("${ART_URL}")` }), done = () => n.classList.remove("fallback");
+      lay.addEventListener("animationend", done, { once: true }); lay.addEventListener("animationcancel", done, { once: true }); n.append(lay);
     }); };
     img.onload = () => (img.decode ? img.decode().then(swap, swap) : swap());
     img.onerror = () => { artOk = false; };
@@ -1084,8 +1072,7 @@ Reply with ONLY one JSON object in this shape:
     if (calm()) { node.textContent = String(to); return; }
     const t0 = performance.now() + delay, dur = 900;
     let raf = 0;
-    const step = (t) => { if (t < t0) { raf = requestAnimationFrame(step); return; }   // the placeholder stays until the count starts
-      const k = Math.min(1, (t - t0) / dur); node.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
+    const step = (t) => { const k = Math.max(0, Math.min(1, (t - t0) / dur)); node.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
     raf = requestAnimationFrame(step);
     stopFx.push(() => { cancelAnimationFrame(raf); node.textContent = String(to); });
   }
@@ -1099,9 +1086,8 @@ Reply with ONLY one JSON object in this shape:
     const art = el("div", { class: "art fallback" });
     const card = el("div", { class: "card" + (photoUrl ? " photo" : "") + ((done && fakeFail) || fault ? " dead" : "") }, art, el("div", { class: photoUrl ? "frame plain" : "frame" }));
     const box = el("div", { class: "cardbox" }, card);   // the stamp sits here, beside the card: the card clips, the stamp's wind-up must not
-    // no photo (a text-only check): the card window says it is stand-in art and never names a card, like the saved image
-    if (!photoUrl) card.append(example ? el("div", { class: "nameplate" }, "Emberkit ", el("small", {}, "HP ", el("em", { text: "120" }))) : el("div", { class: "nameplate", text: "STAND-IN ART" }));
-    if (!photoUrl && !example) card.append(el("span", { class: "standin", text: "No photo was shared" }));
+    if (!photoUrl) card.append(el("div", { class: "nameplate" }, "Emberkit ", el("small", {}, "HP ", el("em", { text: "120" }))));
+    if (!photoUrl && done && !example) card.append(el("span", { class: "standin", text: "Stand-in art · no photo" }));   // never read as the checked card
     card.append(el("div", { class: "foil" }, el("i", { class: "foil-band" })), el("div", { class: "glare" }, el("i", { class: "glare-spot" })));
     if (fault) card.append(el("i", { class: "foil-dead" }));
     if (done) {   // verdict marks, all at their final pose at rest (motion only decorates)
@@ -1169,7 +1155,7 @@ Reply with ONLY one JSON object in this shape:
     panel.classList.add("rv", "rv-" + v);
     if (mode === "example") panel.classList.add("rv-ex");   // muted: no shake
     const b = panel.querySelector(".result-stage .score b"), dot = panel.querySelector(".meter i");
-    if (b) b.textContent = "··";   // never a 0 next to the verdict: the placeholder holds until the count starts
+    if (b) b.textContent = mode === "example" ? "··" : "0";   // armed example: no red verdict next to a 0
     if (dot) dot.style.setProperty("--p", "0");
     const play = () => {
       if (!panel.classList.contains("rv")) return;
@@ -1368,7 +1354,7 @@ Reply with ONLY one JSON object in this shape:
       body: JSON.stringify({ text, askingPrice: price, images }), signal
     }).catch((e) => { throw signal.aborted ? { code: "aborted" } : { friendly: "Trade Check couldn't be reached. Check your connection and try again." }; });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw { friendly: body.error || "The check failed. Try again.", final: body.retry === false };   // final: no Try again
+    if (!res.ok) throw { friendly: body.error || "The check failed. Try again." };
     return normResult(body);
   }
 
@@ -1431,26 +1417,10 @@ Reply with ONLY one JSON object in this shape:
     const res = $("result"), focusIn = res.contains(document.activeElement);   // "Try again" lives in the panel that is about to be replaced
     res.style.minHeight = res.offsetHeight + "px";   // hold the page height while scanning: no collapse, no footer jump, no scroll clamp
     res.replaceChildren(el("div", { class: "result-top" }, el("div", { class: "result-stage" }, bob), loading));
-    // stacked phone and tablet layouts: the loading block sits under a tall slab, often below the fold; Stop moves up under the slab,
-    // and on a short screen docks to the bottom edge (over the slab picture, never over the text) until it scrolls into place.
-    // Desk keeps it in the loading block. Decided again on every resize or rotation while the scan runs.
-    const mqDock = matchMedia("(max-width: 920px), (pointer: coarse)");
-    const placeStop = () => {
-      const top = res.firstChild;
-      if (!stopB.parentNode || !loading.isConnected || top !== loading.parentNode) return;   // already stopped, or the panel moved on
-      const dock = mqDock.matches && getComputedStyle(top).gridTemplateColumns.trim().split(/\s+/).length < 2;
-      if (dock === stopB.classList.contains("dock")) return;
-      const f = document.activeElement === stopB;
-      stopB.classList.toggle("dock", dock);
-      if (dock) top.insertBefore(stopB, loading); else loading.append(stopB);
-      if (f) stopB.focus({ preventScroll: true });   // moving a node drops its focus
-    };
-    let rzRaf = 0;
-    const onRz = () => { cancelAnimationFrame(rzRaf); rzRaf = requestAnimationFrame(placeStop); };
-    placeStop(); addEventListener("resize", onRz, { passive: true });
+    // stacked: the loading block sits under a tall slab, often below the fold; Stop moves up under the slab, and on a short screen
+    // docks to the bottom edge (over the slab picture, never over the text) until it scrolls into place
+    if (getComputedStyle(res.firstChild).gridTemplateColumns.trim().split(/\s+/).length < 2) { stopB.classList.add("dock"); res.firstChild.insertBefore(stopB, loading); }
     if (focusIn) btn.focus({ preventScroll: true });   // focus waits on the busy (aria-disabled) button, as in the main path
-    // keyboard on a stacked layout: the one Stop is in view, the form (and Clear) is not; Enter on Check lands focus on Stop
-    if (stopB.classList.contains("dock") && document.activeElement === btn) stopB.focus({ preventScroll: true });
     res.setAttribute("aria-busy", "true");
     delete res.dataset.v; res.dataset.shows = "scan";
     announce("Checking the deal. This can take up to a minute.");
@@ -1469,21 +1439,20 @@ Reply with ONLY one JSON object in this shape:
     const scan = call("scanStart", res, { ph, sec, sub, phases, started, photoUrl, hasPhotos: !!photoUrl, scrolled }) || cssScan(res, { ph, sec });
     // a check that never answers ends: 150 s (server: up to four web-search rounds), or Clear stops it
     const limit = setTimeout(() => stopCheck("timeout"), 150000);
-    // the subline moves off the phase beat (phases change every 9 s; it moves at 31 s, then every 6 s) and speaks to the last phase
-    let said = 0, rotAt = 31, rot = 0;
+    let said = 0, rotAt = 27, rot = 0;
     const slow = IN_CLAUDE ? "Still working. This can take up to a minute." : "Still working. Live price lookups can take up to a minute.";
-    const busyLines = ["Weighing the payment terms.", "Weighing it against the scam playbook.", ...(photos.length ? ["Weighing what the photos show."] : [])];
+    const busyLines = [...(IN_CLAUDE ? [] : ["Comparing with recent sales."]), "Reading the payment terms.", "Looking for the scam playbook.", ...(photos.length ? ["Double-checking the card details."] : [])];
     const timer = setInterval(() => {
       const s = Math.round((Date.now() - started) / 1000);
       const name = phases[Math.min(phases.length - 1, Math.floor(s / 9))];
       try { scan.phase(name, s); } catch (err) { ph.textContent = name; sec.textContent = ` · ${s}s`; }
       prog(calm() ? P(s) : P(s + 1));
-      // long-wait calm-down: say why it is slow instead of speeding anything up (the 45 s and 120 s lines are also announced)
-      const say = (t, sr) => { sub.textContent = t; kick(sub, "xfade"); if (sr) announce(t); };
-      if (s >= 120) { if (said < 3) { said = 3; say("Almost at the time limit. If nothing comes back soon, try again.", true); } }
-      else if (s >= 45 && said < 2) { said = 2; rotAt = s + 6; say(slow, true); }
+      // long-wait calm-down: say why it is slow instead of speeding anything up; from 27 s the line moves on every 9 s (45 s and 120 s come first)
+      const say = (t) => { sub.textContent = t; kick(sub, "xfade"); };
+      if (s >= 120) { if (said < 3) { said = 3; say("Almost at the time limit. If nothing comes back soon, try again."); } }
+      else if (s >= 45 && said < 2) { said = 2; rotAt = s + 9; say(slow); }
       else if (s >= 20 && said < 1) { said = 1; say("Bigger listings take longer. Still grading."); }
-      else if (s >= rotAt) { rotAt = s + 6; const pool = said >= 2 ? [...busyLines, slow] : busyLines; say(pool[rot++ % pool.length]); }
+      else if (s >= rotAt) { rotAt = s + 9; const pool = said >= 2 ? [...busyLines, slow] : busyLines; say(pool[rot++ % pool.length]); }
     }, 1000);
     const unbusy = () => { const off = () => { if (run !== runId) return; btn.classList.remove("busy"); setTimeout(() => { if (run === runId) prog(0); }, 320); }; calm() ? (btn.classList.remove("busy"), prog(0)) : setTimeout(off, 400); };
     try {
@@ -1493,24 +1462,22 @@ Reply with ONLY one JSON object in this shape:
       try { scan.stop(); } catch (err) {}
       prog(1, "fast");
       res.removeAttribute("aria-busy");
-      const fin = res.contains(document.activeElement);   // focus on Stop, which the render replaces
       render(r);
       if (prev && prev.photoUrl && prev.photoUrl !== photoUrl) URL.revokeObjectURL(prev.photoUrl);
       unbusy();
       // stacked layouts: the result is where the reader is; focus goes there (not to the button screens above), so Tab moves on from it
-      if (fin || (innerWidth <= 920 && document.activeElement === btn)) { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); }
+      if (innerWidth <= 920 && document.activeElement === btn) { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); }
     } catch (err) {
       clearInterval(timer);
       prog(0, "back");
       staleUrl = photoUrl;
-      if (why === "user" || why === "clear") {   // Stop or Clear during a check: nothing failed, so no fault; the panel goes back to what it showed
+      if (why === "user") {   // Clear during a check: nothing failed, so no fault; the panel goes back to what it showed
         try { scan.stop(); } catch (e2) {}
         btn.classList.remove("busy"); res.removeAttribute("aria-busy");
         const fin = res.contains(document.activeElement);   // Stop lives in the panel that is about to be replaced
         // a real previous check comes back as it was; a first check gets a grey "stopped" slab, never the red example out of nowhere
         // (only when the panel showed it: after a failed check the grey card comes back, with "Show previous check")
-        // (after Clear, the photo the user just cleared is not left on the slab)
-        if (prev && !prev.example && shown0 === "result") restore(prev); else renderFault("Check stopped.", why === "clear" ? null : photoUrl, prev);
+        if (prev && !prev.example && shown0 === "result") restore(prev); else renderFault("Check stopped.", photoUrl, prev);
         if (fin) { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); }
         setStatus($("listing").value.trim() || photos.length ? "Check stopped. Your listing is still in the form." : "Check stopped.");
         return;
@@ -1534,12 +1501,11 @@ Reply with ONLY one JSON object in this shape:
       try { await scan.fault(); } catch (e2) {}
       btn.classList.remove("busy");
       res.removeAttribute("aria-busy");
-      renderFault(msg, shown, prev, !err?.final);
-      // stacked layouts: focus goes where the reader is (the fault card), not to the button screens above; the panel itself when
-      // "Try again" is below the fold (the smallest phones)
-      if (innerWidth <= 920 && document.activeElement === btn) { const a = res.querySelector(".fault-actions button"); if (a && a.getBoundingClientRect().bottom <= innerHeight) a.focus({ preventScroll: true }); else { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); } }
+      renderFault(msg, shown, prev);
+      // stacked layouts: focus goes where the reader is (the fault card), not to the button screens above
+      if (innerWidth <= 920 && document.activeElement === btn) { const a = res.querySelector(".fault-actions button"); if (a) a.focus({ preventScroll: true }); else { res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); } }
     } finally {
-      clearInterval(timer); clearTimeout(limit); removeEventListener("resize", onRz); cancelAnimationFrame(rzRaf);
+      clearInterval(timer); clearTimeout(limit);
       if (run === runId) { busy = false; stopCheck = null; if (!checksOff) btn.removeAttribute("aria-disabled"); }
     }
   });
@@ -1558,13 +1524,13 @@ Reply with ONLY one JSON object in this shape:
   }
 
   // after a failed check: a grey, ungraded slab that holds the message (never the red example, never an older verdict for a new listing)
-  function renderFault(msg, photoUrl, prev, retry = true) {
+  function renderFault(msg, photoUrl, prev) {
     const res = $("result");
     try {
       call("beforeRender");
       const { bob, tilt } = slab({ verdict: "caution", risk: 0, cert: "NOT GRADED", photoUrl, fault: true });
       const acts = el("div", { class: "fault-actions" }), kept = !!($("listing").value.trim() || photos.length);
-      if (!checksOff && kept && retry) { const again = el("button", { class: "btn btn-ghost", type: "button", text: "Try again" }); again.onclick = () => $("form").requestSubmit(); acts.append(again); }
+      if (!checksOff && kept) { const again = el("button", { class: "btn btn-ghost", type: "button", text: "Try again" }); again.onclick = () => $("form").requestSubmit(); acts.append(again); }
       if (prev && !prev.example) { const back = el("button", { class: "btn btn-ghost", type: "button", text: "Show previous check" }); back.onclick = () => { restore(prev); setStatus(""); res.setAttribute("tabindex", "-1"); res.focus({ preventScroll: true }); }; acts.append(back); }
       const oldImg = photoUrl && res.querySelector(".result-stage .art img"), newArt = bob.querySelector(".art");
       if (oldImg && oldImg.complete && newArt) newArt.replaceChildren(oldImg);   // the decoded photo moves over: no blank frame while a new <img> decodes
@@ -1588,11 +1554,13 @@ Reply with ONLY one JSON object in this shape:
   const longNote = () => { $("long-note").hidden = $("listing").value.trim().length <= TEXT_MAX; };
   $("listing").addEventListener("input", longNote);
   $("clear").addEventListener("click", () => {
-    if (stopCheck) stopCheck("clear");
+    if (stopCheck) stopCheck("user");
     $("listing").value = ""; $("price").value = ""; photos = []; drawThumbs(); setStatus(""); longNote();
     document.querySelector(".fieldbox").classList.remove("bad"); listingOk();
-    // the fault card no longer says the form still holds the deal, and no longer shows the cleared photo
-    if ($("result").dataset.shows === "fault") { const h = $("result").querySelector(".verdict-block .headline"); renderFault(h ? h.textContent : "Nothing was graded.", null, current); }
+    if ($("result").dataset.shows === "fault") {   // the fault card no longer says the form still holds the deal
+      const sm = $("result").querySelector(".verdict-block .summary"); if (sm) sm.textContent = "Nothing was graded.";
+      $("result").querySelectorAll(".fault-actions button").forEach((b) => { if (b.textContent === "Try again") b.remove(); });
+    }
   });
 
   // ---------- rendering ----------
@@ -1607,7 +1575,7 @@ Reply with ONLY one JSON object in this shape:
     const high = flags.filter((f) => f.severity === "high").length;   // data-driven intensity: cracks = high flags
     const fakeFail = (Array.isArray(r.fake_checks) ? r.fake_checks : []).some((c) => c && c.result === "fail");
     const c0 = (Array.isArray(r.cards) ? r.cards : []).find((c) => c && c.name);   // the label names the checked card, like a grading label
-    const { bob, tilt } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl, high, fakeFail, example: !!r.example, subj: c0 ? [c0.grade, c0.name, c0.number].filter(Boolean).join(" · ") : "" });   // the grade first: an ellipsis eats the name, never the grade
+    const { bob, tilt } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl, high, fakeFail, example: !!r.example, subj: c0 ? [c0.name, c0.grade, c0.number].filter(Boolean).join(" · ") : "" });   // the grade before the number: an ellipsis never eats it
     const meterDot = el("i", { style: `--p:${risk}` });
     const verdictBlock = el("div", { class: "verdict-block" }), hlText = String(r.headline || VERDICT_WORD[v]);
     if (r.example) verdictBlock.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
@@ -1619,7 +1587,7 @@ Reply with ONLY one JSON object in this shape:
       el("div", { class: "meter-scale", "aria-hidden": "true" }, el("span", { text: "0 safe" }), el("span", { text: "50" }), el("span", { text: "100 scam" })));
     if (r.summary) verdictBlock.append(el("p", { class: "summary", text: r.summary }));
     if (!r.example) {   // the one action people take with a verdict, right under it: the share sheet where it can take the image, else a save
-      const quick = el("button", { class: "btn btn-v btn-sm", type: "button", "data-save": "", text: canShareFiles() ? "Share result" : "Save image" });
+      const quick = el("button", { class: "btn btn-primary btn-sm", type: "button", "data-save": "", text: canShareFiles() ? "Share result" : "Save image" });
       quick.onclick = () => shareImage(r, quick);
       if (IN_CLAUDE && !downloads) quick.hidden = true;
       verdictBlock.append(el("div", { class: "quick-share" }, quick));
@@ -1709,7 +1677,7 @@ Reply with ONLY one JSON object in this shape:
   // the price table is a tab stop only while it actually scrolls sideways (keyboard users can then reach the hidden columns)
   function tableStop() {
     const tw = $("result").querySelector(".table-wrap");
-    if (tw) tw.setAttribute("tabindex", tw.scrollWidth > tw.clientWidth + 1 ? "0" : "-1");   // -1, not none: Chrome makes an overflowing scroller (rows mid-entrance) a stop
+    if (tw) tw.scrollWidth > tw.clientWidth + 1 ? tw.setAttribute("tabindex", "0") : tw.removeAttribute("tabindex");
   }
   addEventListener("resize", () => requestAnimationFrame(tableStop), { passive: true });
   // stacked layouts: the form is screens away once a result is read; go back to it and put the cursor in the listing
@@ -1823,18 +1791,13 @@ Reply with ONLY one JSON object in this shape:
     roundRect(x, SX + 9, SY + 9, SW - 18, SH - 18, 27); x.lineWidth = 2; x.strokeStyle = "rgba(255,255,255,.10)"; x.stroke();
     // card window: the user's first photo (cover-cropped, never recoloured), else the creature card
     x.save(); roundRect(x, LX, CY, CW, CH, 18); x.clip();
-    let stampY = CY + CH * (v === "scam" ? .64 : .62);
     if (opt.img) {
       const im = opt.img, iw = im.naturalWidth, ih = im.naturalHeight, k = Math.max(CW / iw, CH / ih), w = iw * k, h = ih * k;
-      x.fillStyle = "#0b1018"; x.fillRect(LX, CY, CW, CH);
-      if (iw / ih > 1.05) {   // a landscape screenshot: the whole of it, high in the window, over an unreadable blur of itself; the stamp goes in the band below
-        const t = document.createElement("canvas"); t.width = 22; t.height = 31; const tk = Math.max(22 / iw, 31 / ih);
-        t.getContext("2d").drawImage(im, (22 - iw * tk) / 2, (31 - ih * tk) / 2, iw * tk, ih * tk);   // a 22 x 31 copy, scaled up: a blur every browser draws (no ctx.filter)
-        x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(t, LX, CY, CW, CH);
+      x.fillStyle = "#0b1018"; x.fillRect(LX, CY, CW, CH); x.drawImage(im, LX + (CW - w) / 2, CY + (CH - h) / 2, w, h);
+      if (iw / ih > 1.05) {   // a landscape screenshot: the whole of it, across the window, over a dimmed fill of itself (cover kept only 40 % of it)
         x.fillStyle = "rgba(9,12,21,.72)"; x.fillRect(LX, CY, CW, CH);
-        const h2 = ih * CW / iw, top = CY + (CH - h2) * .3; x.drawImage(im, LX, top, CW, h2);
-        stampY = Math.min(CY + CH * .82, top + h2 + (CY + CH - top - h2) / 2);
-      } else x.drawImage(im, LX + (CW - w) / 2, CY + (CH - h) / 2, w, h);
+        const k2 = CW / iw; x.drawImage(im, LX, CY + (CH - ih * k2) / 2, CW, ih * k2);
+      }
     } else standinCard(x, LX, CY, CW, CH, opt.art, A, B);
     const gl = x.createLinearGradient(LX, CY, LX + CW, CY + CH); gl.addColorStop(.28, "rgba(255,255,255,0)"); gl.addColorStop(.4, "rgba(255,255,255,.13)"); gl.addColorStop(.52, "rgba(255,255,255,0)");
     x.fillStyle = gl; x.fillRect(LX, CY, CW, CH);   // acrylic glare, soft: a photo stays evidence
@@ -1855,7 +1818,7 @@ Reply with ONLY one JSON object in this shape:
       x.fillStyle = "rgba(255,255,255,.9)"; [[.07, .05, 13], [.88, .09, 9], [.09, .9, 13], [.86, .86, 9]].forEach(([px, py, s]) => { const gx = LX + CW * px, gy = CY + CH * py; x.beginPath(); x.moveTo(gx, gy - s); x.quadraticCurveTo(gx, gy, gx + s, gy); x.quadraticCurveTo(gx, gy, gx, gy + s); x.quadraticCurveTo(gx, gy, gx - s, gy); x.quadraticCurveTo(gx, gy, gx, gy - s); x.fill(); });
     } else {
       if (v === "caution") tapeOn(x, SX - 14, LY + LH + 11, SW + 28, MONO);
-      stampOn(x, VERDICT_WORD[v].toUpperCase(), LX + CW / 2, stampY, (v === "scam" ? -8 : -6) * Math.PI / 180, v, A);
+      stampOn(x, VERDICT_WORD[v].toUpperCase(), LX + CW / 2, CY + CH * (v === "scam" ? .64 : .62), (v === "scam" ? -8 : -6) * Math.PI / 180, v, A);
     }
     // under the slab: what was checked, like a grading label's subject line
     const cd = (Array.isArray(r.cards) ? r.cards : []).find((k) => k && k.name), sub = cd ? [cd.grade, cd.number, cd.set].filter(Boolean).join(" · ") : "";   // what a collector checks first
@@ -1926,10 +1889,10 @@ Reply with ONLY one JSON object in this shape:
     }
     // short reading: Claude's summary fills what is left of the column, so the image is never half empty
     const room = Math.floor((limit - y - 78) / 34);
-    if (r.summary && room >= 2) {   // the room sets the line count: large type when the whole summary fits in it, else the normal size
-      const nBig = Math.min(10, Math.floor(room * 34 / 40)), big = room >= 9 && (font(`400 31px ${B}`), wrapLines(x, r.summary, RW).length <= nBig), lh = big ? 40 : 34;
+    if (r.summary && room >= 2) {
+      const big = room >= 9, lh = big ? 40 : 34;
       head("IN SHORT"); x.fillStyle = ink;
-      lines(r.summary, `400 ${big ? 31 : 26}px ${B}`, big ? nBig : Math.min(10, room), RW).forEach((ln) => { y += lh; x.fillText(ln, RX, y); });
+      lines(r.summary, `400 ${big ? 31 : 26}px ${B}`, Math.min(6, Math.floor(room * 34 / lh)), RW).forEach((ln) => { y += lh; x.fillText(ln, RX, y); });
     }
     // still room (a sparse answer): the fake-card checks, which the image otherwise never shows
     const fc = (Array.isArray(r.fake_checks) ? r.fake_checks : []).filter((c) => c && c.check);
@@ -2106,17 +2069,16 @@ Reply with ONLY one JSON object in this shape:
     if (calm() || !current || !current.example || res.dataset.shows !== "example" || !stg) return;
     const arm = () => { if (!armPlay) { const h = call("reveal", res, current, { mode: "example", hold: true }); armPlay = (h && h.play) || (() => {}); } };
     const play = () => { const p = armPlay || (arm(), armPlay); disarm(); p(); };
-    // "See an example": the page is still scrolling there, so it plays once the stamp is in view (at once only if it already is)
-    if (now) { arm(); const b = (stg.querySelector(".stamp-pos") || stg).getBoundingClientRect(); if (b.top >= 0 && b.bottom <= innerHeight) armT = setTimeout(play, 250); }
-    if (!("IntersectionObserver" in window)) return void (now ? (armT = armT || setTimeout(play, 900)) : (arm(), play()));
+    if (now) { arm(); armT = setTimeout(play, 250); }
+    if (!("IntersectionObserver" in window)) return void (now || (arm(), play()));
     const ioA = new IntersectionObserver(([e]) => { if (e.isIntersecting) arm(); }, { rootMargin: "0px 0px 25% 0px" });   // cross-origin frames ignore the margin: arms at the first pixel
     const wait = armWait = () => { clearTimeout(armT); armT = setTimeout(play, 250); };
     const ioP = new IntersectionObserver(([e]) => {
       removeEventListener("scroll", wait);
-      if (!e.isIntersecting) { clearTimeout(armT); return; }
+      if (!e.isIntersecting) { if (!now) clearTimeout(armT); return; }
       arm();
       if (e.intersectionRatio >= ratio) play();
-      else { wait(); addEventListener("scroll", wait, { passive: true }); }   // the reader stopped short of the ratio: play once the page is still, nothing waits hidden
+      else if (!now) { wait(); addEventListener("scroll", wait, { passive: true }); }   // the reader stopped short of the ratio: play once the page is still, nothing waits hidden
     }, { threshold: [0, ratio] });
     ioA.observe(stg); ioP.observe(stg.querySelector(".stamp-pos") || stg); armIOs = [ioA, ioP];
   }
@@ -2192,7 +2154,7 @@ Reply with ONLY one JSON object in this shape:
   const applyCalm = (on) => {
     if (on === calm()) return;
     root.classList.toggle("m-calm", on);
-    if (on) { root.classList.remove("m-intro", "m-intro-short", "m-boot", "m-wait"); disarm(); $("result").classList.remove(...RV); document.querySelector(".hero .stats").classList.remove("armed"); }
+    if (on) { root.classList.remove("m-intro", "m-intro-short", "m-boot"); disarm(); $("result").classList.remove(...RV); document.querySelector(".hero .stats").classList.remove("armed"); }
     paintToggle();
     call("setCalm", on);
   };
@@ -2239,13 +2201,10 @@ Reply with ONLY one JSON object in this shape:
   // intro: the words rise row by row as the laser hairline crosses each line (rows depend on the wrap at this width)
   // each row starts 110 ms before the .48 s hairline reaches its baseline (four rows: the old 40/150/260/370 ms), so a two-row wrap
   // never shows the line striking glyphs that rose long before it
-  // (measured again once the display face is in: the rows are its rows)
-  const rowDelays = () => {
-    if (!root.classList.contains("m-intro")) return;
+  if (root.classList.contains("m-intro")) {
     let row = -1, top = -1e4; const ws = [...document.querySelectorAll("h1.display .w")], rs = ws.map((w) => { if (w.offsetTop > top + 4) { row++; top = w.offsetTop; } return row; });
     ws.forEach((w, i) => { w.firstElementChild.style.setProperty("--rd", Math.max(40, Math.round(480 * (rs[i] + 1) / (row + 1) - 110)) + "ms"); });
-  };
-  rowDelays(); addEventListener("tc-intro", rowDelays, { once: true });
+  }
   const fine = root.classList.contains("m-fine") || matchMedia("(hover: hover) and (pointer: fine)").matches;
   document.querySelector(".tilt-hint").textContent = fine ? "Hover to tilt · real holo shifts colour" : "Drag sideways to tilt";
   call("tilt", $("hero-tilt"), { hero: true });
@@ -2799,8 +2758,8 @@ Reply with ONLY one JSON object in this shape:
         // on caution and scam, never across a band edge into a worse band); then one punch
         const cAt = { safe: .12, caution: .1, scam: ex ? .36 : .45 }[v], cDur = { safe: .5, caution: .6, scam: .42 }[v];
         const cap = risk < 34 ? 33.9 : risk < 67 ? 66.9 : 100, mp = { p: 0 };
-        let shown = -1;
-        score.textContent = "··"; dot.style.setProperty("--p", "0");   // never a 0 next to the verdict: the placeholder holds until the count starts
+        let shown = 0;
+        score.textContent = ex ? "··" : "0"; dot.style.setProperty("--p", "0");   // armed example: no red verdict next to a 0
         tl.to(mp, { p: risk, duration: cDur + .15, ease: v === "safe" ? E("tc.out") : v === "caution" ? E(risk * 1.04 >= 67 ? "tc.out" : "tc.hunt") : E("tc.stamp"),
           onUpdate: () => { const p = Math.min(cap, mp.p), n = Math.min(risk, Math.round(p)); dot.style.setProperty("--p", p.toFixed(2)); if (n > shown) { shown = n; score.textContent = String(n); } } }, cAt)
           .fromTo(score, { scale: 1.18 }, { scale: 1, duration: .22, ease: "back.out(3)", immediateRender: false }, cAt + cDur + .15);
