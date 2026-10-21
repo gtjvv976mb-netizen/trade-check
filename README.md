@@ -24,7 +24,7 @@ Settings (environment variables):
 - `ANTHROPIC_API_KEY`: required. Get one at console.anthropic.com.
 - `CHECKS_PER_HOUR`: checks allowed per visitor per hour. Default 10. This protects your credits once the link is public.
 - `CHECKS_PER_HOUR_TOTAL`: checks allowed per hour for all visitors together. Default 200. A backstop in case someone gets around the per-visitor limit.
-- `CHECKS_IN_FLIGHT`: checks that may run at the same time, for all visitors together. Default 3. Each running check holds its photos in memory, so keep this low on a small instance. Each visitor can run one check at a time.
+- `CHECKS_IN_FLIGHT`: checks that may run at the same time, for all visitors together. Default 5. Each running check holds its photos in memory, so keep this low on a small instance. Each visitor can run one check at a time.
 - `TRUST_PROXY`: how the server tells visitors apart. By default it uses the address the last proxy added to `X-Forwarded-For`, or the connection address. Set `cloudflare` when Cloudflare is in front, so it uses `CF-Connecting-IP`. On Render this is the default; set `none` there to turn it off. IPv6 visitors are counted per /64 block.
 - `PUBLIC_URL`: the site's public address, such as `https://trade-check.example.com`. Used for the link-preview URL. On Render, `RENDER_EXTERNAL_URL` is used when this is not set. Without either, the preview has no URL.
 - `TRADE_CHECK_MODEL`: default `claude-opus-5-5`.
