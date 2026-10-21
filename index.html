@@ -95,6 +95,7 @@ h1.display { position: relative; font-family: var(--f-display); font-stretch: 68
 .w { display: inline-block; overflow: hidden; overflow: clip; padding: .08em .04em; margin: -.08em -.04em; }
 .w > i { display: inline-block; font-style: normal; }
 h1.display .ln { display: block; }
+.hero .eyebrow, .hero h1.display, .hero .lede { position: relative; z-index: 2; }   /* the intro slab falls behind the headline */
 @media (max-width: 400px) { h1.display { font-size: min(54px, 13.6vw); } }   /* two phrases: the line count no longer depends on which font has loaded */
 .holo > i { background: var(--holo); background-size: 300% 100%; background-position: calc(var(--h) * 33%) 0; -webkit-background-clip: text; background-clip: text; color: transparent; }
 h1.display::after { /* laser hairline for the intro pass */
@@ -193,7 +194,7 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 /* the label frame carries the verdict (colour is truth): scanning is instrument ink, never red; only SCAM keeps the red frame and wordmark */
 [data-v=safe] { --v-ink: #138a52; } [data-v=caution] { --v-ink: #b06a00; } [data-v=scam] { --v-ink: #c8202a; }
 .result-stage .label { border-color: var(--v-ink, #086e93); }
-#hero-stage .label { border-color: #138a52; }
+#hero-stage .label { border-color: var(--v-ink, #138a52); transition: border-color .3s; }
 .result-stage:not([data-v=scam]) .label .brand, #hero-stage .label .brand { color: #141a2b; }
 /* safe seal: a calm mark, never a stamp (and it never says authentic) */
 .label .seal { position: absolute; right: 64px; bottom: -20px; width: 46px; height: 46px; rotate: -8deg; overflow: visible; z-index: 3; }
@@ -562,9 +563,11 @@ nav.compact .logo-mark { width: 19px; height: 25px; border-width: 2px; box-shado
 .btn.mag:active { transition-duration: 70ms; }
 
 /* ---------- desktop lamp, hero callouts, UV loupe ---------- */
-.lamp { position: fixed; left: 0; top: 0; width: 520px; height: 520px; border-radius: 50%; pointer-events: none; z-index: 0; opacity: 0; background: radial-gradient(closest-side, rgb(111 216 255 / .075), transparent); }
+
 .callouts { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; display: none; pointer-events: none; transform: translateZ(30px); z-index: 8; }
 @media (min-width: 1340px) { .callouts { display: block; } .hero .stage { margin-right: 92px; } }   /* below this the right labels would run off the viewport; the stage steps in so both label sides sit inside the column */
+#hero-stage .callouts { transition: opacity .35s; }
+#hero-stage[data-v=caution] .callouts, #hero-stage[data-v=scam] .callouts { opacity: 0; }   /* "HOLO SHIFT · OK" never sits beside a demo warning */
 .co-line { fill: none; stroke: rgb(111 216 255 / .62); stroke-width: 1; stroke-dasharray: 1 1; stroke-dashoffset: 0; }
 .co-dot { fill: #0b1020; stroke: #6fd8ff; stroke-width: 1.5; }
 .co-t { font: 700 10.5px var(--f-mono); letter-spacing: .06em; fill: #a9e6ff; paint-order: stroke; stroke: #090c15; stroke-width: 4px; stroke-linejoin: round; }
@@ -573,7 +576,6 @@ nav.compact .logo-mark { width: 19px; height: 25px; border-width: 2px; box-shado
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='12'%3E%3Ctext x='1' y='9' font-family='monospace' font-size='6.5' font-weight='700' fill='%23c4b3ff' letter-spacing='.4'%3ETRADE CHECK %C2%B7 TC-261020-EMBR %C2%B7%3C/text%3E%3C/svg%3E") 0 0 / 150px 24px, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='12'%3E%3Ctext x='1' y='9' font-family='monospace' font-size='6.5' font-weight='700' fill='%23c4b3ff' letter-spacing='.4'%3ETRADE CHECK %C2%B7 TC-261020-EMBR %C2%B7%3C/text%3E%3C/svg%3E") 75px 12px / 150px 24px,
     radial-gradient(circle at 50% 45%, rgb(120 70 255 / .3), transparent 60%), rgb(22 10 58 / .62); }
 .uv-tag { position: absolute; left: 50%; bottom: 12px; translate: -50% 0; font: 700 9px/1 var(--f-mono); letter-spacing: .12em; color: #e2d8ff; background: rgb(22 10 58 / .85); border: 1px solid rgb(185 166 255 / .5); padding: 3px 5px; border-radius: 3px; white-space: nowrap; }
-#result.rv-ex .result-stage { animation: none; }
 
 footer { padding-block: 24px 40px; color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); position: relative; z-index: 1; }
 footer .wrap { display: grid; gap: 12px; justify-items: start; }
@@ -583,61 +585,84 @@ footer .wrap { display: grid; gap: 12px; justify-items: start; }
 @media (pointer: coarse) { .motion-toggle { min-height: 44px; padding: 12px 14px; } }
 @media (max-width: 920px) { .sev { font-size: 12px; padding: 4px 8px; } .meter-scale, .count, th { font-size: 12px; } }
 
-/* ---------- intro: CSS only, keyed on the classes BOOT sets; backwards fill, so the rest pose is the real layout ---------- */
+/* ---------- intro (every load): CSS only, keyed on the class BOOT sets; backwards fill, so the rest pose is the real layout ---------- */
 @keyframes i-led { from { transform: scaleY(0); } }
 @keyframes i-wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
-@keyframes i-word { from { transform: translateY(130%) rotate(5deg); } }   /* 130 %: the rotated corner of a long word stays below its mask while it waits */
-@keyframes i-hair { 0% { opacity: 1; transform: translateY(-50%); } 78% { opacity: 1; } 100% { opacity: 0; transform: translateY(50%); } }
-@keyframes i-pill { from { transform: translateX(12px); opacity: .001; } }
-@keyframes i-up10 { from { transform: translateY(10px); opacity: .001; } }
-@keyframes i-up12 { from { transform: translateY(12px); } }
-@keyframes i-cta { from { transform: translateY(18px) rotate(-2deg) scale(.96); opacity: .001; } }
+/* each word rises out of its mask on a hinge (3D), with a little lean that settles */
+@keyframes i-word { from { transform: perspective(640px) translateY(118%) rotateX(-84deg) rotate(6deg); } to { transform: perspective(640px) translateY(0) rotateX(0) rotate(0); } }
+@keyframes i-hair { 0% { opacity: 1; transform: translateY(-50%); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(50%); } }
+@keyframes i-pill { from { transform: translateX(16px); opacity: .001; } }
+@keyframes i-up10 { from { transform: translateY(28px); opacity: .001; } }
+@keyframes i-up12 { from { transform: translateY(14px); } }
+@keyframes i-cta { from { transform: translateY(34px) rotate(-3deg) scale(.88); opacity: .001; } }
 @keyframes i-fade { from { opacity: .001; } }
 @keyframes i-reel { from { transform: translateY(0); } }
-@keyframes i-deal { from { transform: translateY(70px) rotateX(16deg) scale(.92); } }
-@keyframes i-ghost { from { transform: translate(0, 4%) rotate(0) translateZ(-120px); opacity: 0; } }
-@keyframes i-punch { from { transform: translateZ(26px) scale(1.1); } }
-@keyframes i-ring { from { opacity: .8; transform: scale(.9); } to { opacity: 0; transform: scale(1.25); } }
+/* the slab drops from above the screen and bounces twice; every key has the same function list (no matrix fallback) */
+@keyframes i-deal {
+  0%   { transform: translateY(var(--drop, -760px)) rotateX(-28deg) rotate(-7deg) scale(1, 1); opacity: 0; animation-timing-function: cubic-bezier(.5, 0, .9, .45); }
+  7%   { opacity: 1; }
+  46%  { transform: translateY(0) rotateX(0) rotate(0) scale(1.03, .95); animation-timing-function: cubic-bezier(.1, .6, .4, 1); }
+  63%  { transform: translateY(-58px) rotateX(4deg) rotate(1.6deg) scale(1, 1); animation-timing-function: cubic-bezier(.5, 0, .9, .45); }
+  77%  { transform: translateY(0) rotateX(0) rotate(0) scale(1.015, .975); animation-timing-function: cubic-bezier(.1, .6, .4, 1); }
+  88%  { transform: translateY(-14px) rotateX(1deg) rotate(-.4deg) scale(1, 1); animation-timing-function: cubic-bezier(.5, 0, .9, .45); }
+  96%, 100% { transform: translateY(0) rotateX(0) rotate(0) scale(1, 1); }
+}
+/* the two ghost cards fly in from off the right edge, stack behind the slab, then fan out past their rest angle and settle */
+@keyframes i-ghost-a {
+  0%   { transform: translate(330%, -70%) rotate(68deg) translateZ(-120px); opacity: 0; animation-timing-function: cubic-bezier(.25, .7, .35, 1); }
+  10%  { opacity: .55; }
+  55%  { transform: translate(-4%, 3%) rotate(-2deg) translateZ(-120px); animation-timing-function: cubic-bezier(.3, 1.7, .5, 1); }
+  100% { transform: translate(-46%, 6%) rotate(-13deg) translateZ(-120px); }
+}
+@keyframes i-ghost-b {
+  0%   { transform: translate(380%, 60%) rotate(96deg) translateZ(-120px); opacity: 0; animation-timing-function: cubic-bezier(.25, .7, .35, 1); }
+  10%  { opacity: .55; }
+  55%  { transform: translate(4%, 4%) rotate(2deg) translateZ(-120px); animation-timing-function: cubic-bezier(.3, 1.7, .5, 1); }
+  100% { transform: translate(46%, 8%) rotate(12deg) translateZ(-120px); }
+}
+@keyframes i-punch { from { transform: translateZ(26px) scale(1.14); } }
+@keyframes i-ring { from { opacity: .8; transform: scale(.9); } to { opacity: 0; transform: scale(1.3); } }
 @keyframes i-holo { from { background-position: calc(var(--h) * 33% + 100%) 0; } }
 @keyframes i-band { from { transform: translateX(-25%); } }
 @keyframes i-spot { from { transform: translate(-60%, -30%); } }
-html.m-intro .logo-mark i { animation: i-led .22s var(--e-out) backwards; }
-html.m-intro .eyebrow { animation: i-wipe .3s steps(36) backwards; }
-html.m-intro h1.display .w > i { animation: i-word .46s var(--e-out) backwards; animation-delay: var(--rd, 40ms); }
-html.m-intro h1.display::after { animation: i-hair .48s linear backwards; }
-html.m-intro .holo > i { animation: i-holo .9s var(--e-precise) .7s backwards; }
-html.m-intro .mode { animation: i-pill .24s var(--e-out) .12s backwards; }
-html.m-intro .lede { animation: i-up10 .32s var(--e-out) .16s backwards; }
-html.m-intro .cta-row .btn { animation: i-cta .32s var(--spring-snap) .22s backwards; }
-html.m-intro .cta-row .btn + .btn { animation-delay: .28s; }
-html.m-intro .stats, html.m-intro .source { animation: i-fade .32s var(--e-out) .28s backwards; }
-html.m-intro .reel > span { animation: i-reel .9s var(--e-out) backwards; animation-delay: calc(.3s + var(--r, 0) * 60ms); }
-html.m-intro .tilt-hint { animation: i-fade .3s var(--e-out) .95s backwards; }
+html.m-intro .logo-mark i { animation: i-led .3s var(--e-out) .05s backwards; }
+html.m-intro .eyebrow { animation: i-wipe .5s steps(36) .05s backwards; }
+html.m-intro h1.display .w > i { transform-origin: 50% 100%; animation: i-word .85s cubic-bezier(.2, 1.15, .35, 1) backwards; animation-delay: calc(.12s + var(--i) * 85ms); }
+html.m-intro h1.display::after { animation: i-hair 1s linear .1s backwards; }
+html.m-intro .holo > i { animation: i-holo 1.1s var(--e-precise) 1.1s backwards; }
+html.m-intro .mode { animation: i-pill .4s var(--e-out) .2s backwards; }
+html.m-intro .lede { animation: i-up10 .6s var(--e-out) .55s backwards; }
+html.m-intro .cta-row .btn { animation: i-cta .6s var(--spring-snap) .72s backwards; }
+html.m-intro .cta-row .btn + .btn { animation-delay: .8s; }
+html.m-intro .stats, html.m-intro .source { animation: i-fade .5s var(--e-out) .9s backwards; }
+html.m-intro .reel > span { animation: i-reel 1.5s var(--e-out) backwards; animation-delay: calc(.95s + var(--r, 0) * 90ms); }
+html.m-intro .tilt-hint { animation: i-fade .4s var(--e-out) 1.6s backwards; }
+/* the slab falls out of a slot just above its own place: it never crosses the nav, the headline or the copy */
+html.m-intro .hero .stage { clip-path: inset(-64px -60vw -260px -60vw); }
 @media (min-width: 881px) {   /* the slab is in the first viewport */
-  html.m-intro .deal { animation: i-deal .7s var(--spring-bouncy) .08s backwards, i-fade .16s linear .08s backwards; }
-  html.m-intro .ghost-card { animation: i-ghost .6s var(--e-roll) .26s backwards; }
-  html.m-intro .ghost-card.b { animation-delay: .34s; }
-  html.m-intro #hero-stage .label { animation: i-punch .4s var(--spring-punchy) .78s backwards; }
-  html.m-intro #hero-stage .label::after { animation: i-ring .4s var(--e-out) .78s; }
-  html.m-intro #hero-stage .foil-band { animation: i-band .6s var(--e-precise) 1s backwards; }
-  html.m-intro #hero-stage .glare-spot { animation: i-spot .6s var(--e-precise) 1s backwards; }
-  html.m-intro-short .deal { animation: i-deal .5s var(--spring-bouncy) backwards; }
-  html.m-intro-short .ghost-card { animation: i-ghost .5s var(--e-roll) .1s backwards; }
+  html.m-intro .deal { animation: i-deal 1.3s linear .3s backwards; }
+  html.m-intro .ghost-card.a { animation: i-ghost-a 1.05s linear .62s backwards; }
+  html.m-intro .ghost-card.b { animation: i-ghost-b 1.05s linear .7s backwards; }
+  html.m-intro #hero-stage .label { animation: i-punch .45s var(--spring-punchy) .92s backwards; }
+  html.m-intro #hero-stage .label::after { animation: i-ring .5s var(--e-out) .92s; }
+  html.m-intro #hero-stage .foil-band { animation: i-band .7s var(--e-precise) 1.2s backwards; }
+  html.m-intro #hero-stage .glare-spot { animation: i-spot .7s var(--e-precise) 1.2s backwards; }
 }
-@media (max-width: 880px) {   /* phones: the first viewport is text; the slab gets its own entry when it is scrolled to */
-  html.m-intro h1.display .w > i { animation-duration: .4s; animation-delay: calc(20ms + var(--i) * 30ms); }
-  html.m-intro .lede { animation-duration: .28s; }
-  html.m-intro .cta-row .btn { animation-delay: .24s; }
-  html.m-intro .cta-row .btn + .btn { animation-delay: .3s; }
-  html.m-intro .stats { animation: i-up12 .32s var(--e-out) .28s backwards; }
-  html.m-intro .reel > span { animation-duration: .62s; animation-delay: calc(.3s + var(--r, 0) * 50ms); }
+@media (max-width: 880px) {   /* phones: a little quicker */
+  html.m-intro h1.display .w > i { animation-duration: .75s; animation-delay: calc(.1s + var(--i) * 70ms); }
+  html.m-intro .lede { animation-delay: .45s; }
+  html.m-intro .cta-row .btn { animation-delay: .6s; }
+  html.m-intro .cta-row .btn + .btn { animation-delay: .68s; }
+  html.m-intro .stats { animation: i-up12 .5s var(--e-out) .9s backwards; }
 }
-@media (max-width: 640px) {   /* phones: the slab is in the first screen again (between the CTAs and the stats) */
-  html.m-intro .deal { animation: i-deal .7s var(--spring-bouncy) .2s backwards, i-fade .16s linear .2s backwards; }
-  html.m-intro .ghost-card { animation: i-ghost .6s var(--e-roll) .38s backwards; }
-  html.m-intro .ghost-card.b { animation-delay: .46s; }
+@media (max-width: 640px) {   /* phones: the slab is in the first screen (between the CTAs and the stats) */
+  .hero .stage { --drop: -440px; }
+  html.m-intro .hero .stage { clip-path: inset(-2px -60vw -200px -60vw); }
+  html.m-intro .deal { animation: i-deal 1.25s linear .4s backwards; }
+  html.m-intro .ghost-card.a { animation: i-ghost-a 1s linear .78s backwards; }
+  html.m-intro .ghost-card.b { animation: i-ghost-b 1s linear .86s backwards; }
+  html.m-intro #hero-stage .label { animation: i-punch .45s var(--spring-punchy) 1s backwards; }
 }
-html.m-intro-short h1.display .w > i { animation: i-word .3s var(--e-out) backwards; animation-delay: calc(var(--i) * 20ms); }
 
 /* reduced motion: m-calm (the boot script sets it from the OS setting unless the footer toggle says "off") is the one switch */
 .m-calm .fieldbox.bad::after, .m-calm .count.pulse, .m-calm .status.err.kick::after, .m-calm .bob.float, .m-calm .scanning .scanline, .m-calm ul.flags li, .m-calm .mode.beat::after, .m-calm [data-save][aria-disabled="true"]::after, .m-calm h1.display.sweep .holo > i, .m-calm .thumb.t-in { animation: none; }
@@ -671,14 +696,162 @@ html.m-intro-short h1.display .w > i { animation: i-word .3s var(--e-out) backwa
 @media (pointer: coarse) { .btn-sm, .logo { min-height: 44px; } }
 /* "Check another deal": stacked layouts only (on desk the form stays beside the result) */
 @media (min-width: 921px) and (min-height: 760px) { .share .again { display: none; } }
+
+/* =================== TURN-UP: always-on motion (CSS / WAAPI / vanilla JS; none of it needs GSAP) =================== */
+/* ambient aurora + desk lamp: drawn small (1/8 scale) into one fixed canvas and stretched by the compositor, which blurs it for free
+   (no filter, no backdrop-filter; transform-animated glow layers under the page cost a third of the scroll frame rate here) */
+.ambient { position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+html.amb-on body::before { display: none; }   /* its two glows sat under the opaque canvas; the aurora replaces them (the grid, body::after, still paints above it) */
+
+/* kinetic ticker: two rows of outlined scam lines, opposite directions, CSS loops (JS only nudges the speed) */
+.ticker { position: relative; z-index: 1; overflow: hidden; overflow: clip; padding-block: clamp(10px, 2vw, 22px); margin-block: clamp(4px, 1vw, 12px) 0; }
+.tk-inner { width: 112%; margin-left: -6%; rotate: -2.2deg; }
+.tk-row + .tk-row { margin-top: 2px; }
+.tk-row { overflow: hidden; overflow: clip; }
+.tk-track { display: flex; width: max-content; animation: tk-l var(--tk-d, 46s) linear infinite; }
+.tk-row.rev .tk-track { animation-name: tk-r; animation-duration: var(--tk-d2, 52s); }
+@keyframes tk-l { from { transform: translate3d(0, 0, 0); } to { transform: translate3d(-50%, 0, 0); } }
+@keyframes tk-r { from { transform: translate3d(-50%, 0, 0); } to { transform: translate3d(0, 0, 0); } }
+.tk-set { display: flex; align-items: center; flex: none; }
+.tk-p { font-family: var(--f-display); font-stretch: 68%; font-weight: 900; text-transform: uppercase; font-size: clamp(42px, 7.4vw, 104px); line-height: 1.04; letter-spacing: .005em; white-space: nowrap; color: transparent; -webkit-text-stroke: 1.5px rgb(238 241 248 / .42); padding-inline: .28em; }
+.tk-row.rev .tk-p { -webkit-text-stroke-color: rgb(255 107 116 / .55); }
+.tk-row .tk-p:nth-child(4n+1) { color: rgb(238 241 248 / .9); -webkit-text-stroke-color: transparent; }
+.tk-row.rev .tk-p:nth-child(4n+1) { color: transparent; -webkit-text-stroke-color: rgb(255 107 116 / .55); }
+.tk-row.rev .tk-p:nth-child(4n+3) { color: #ff4a55; -webkit-text-stroke-color: transparent; }
+.tk-dot { flex: none; width: .26em; height: .26em; font-size: clamp(42px, 7.4vw, 104px); border-radius: 50%; background: #ff4a55; box-shadow: 0 0 18px rgb(255 74 85 / .6); }
+.m-calm .tk-row .tk-track, .m-calm .tk-row.rev .tk-track { animation: none; }
+@media (max-width: 640px) { .tk-p { -webkit-text-stroke-width: 1.2px; } }
+
+/* CTA shine: a sweep across the primary buttons every 4 s */
+.btn-primary.shine { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary.shine::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: linear-gradient(105deg, transparent 32%, rgb(255 255 255 / .5) 48%, rgb(255 236 200 / .25) 54%, transparent 68%); transform: translateX(-130%); animation: cta-shine 4s cubic-bezier(.45, 0, .2, 1) 2.2s infinite; }
+@keyframes cta-shine { 0% { transform: translateX(-130%); } 26%, 100% { transform: translateX(130%); } }
+#check-btn.busy::after, .m-calm .btn-primary.shine::after { animation: none; opacity: 0; }
+
+/* ---------- hero LIVE DEMO: the slab cycles SAFE -> CAUTION -> SCAM; marks hidden at rest (calm / no JS: the safe slab) ---------- */
+#hero-stage .demo-stamp { top: 60%; z-index: 9; transform: translateZ(40px); opacity: 0; }
+#hero-stage .demo-stamp .stamp { font-size: 30px; }
+/* the demo stamp keeps scam colours whatever state the label is in (it fades out after the label has moved on) */
+#hero-stage .demo-stamp { --v: #ff4a55; }
+#hero-stage .demo-stamp .stamp { background: #ff4a55; color: #16060a; border-color: #16060a; outline: 2px solid #ff4a55; outline-offset: 2px; }
+#hero-stage .demo-tape { opacity: 0; }
+#hero-stage .demo-cracks { opacity: 0; transition: opacity .3s; }
+#hero-stage .label .verdict { display: inline-block; justify-self: start; transform-origin: 0 60%; }
+#hero-stage .label .brand { transition: color .15s; }
+#hero-stage[data-v=scam] .label .brand { color: #c8202a; }
+.demo-aura { position: absolute; left: 50%; top: 46%; width: 560px; height: 560px; margin: -280px 0 0 -280px; border-radius: 50%; pointer-events: none; background: radial-gradient(closest-side, var(--va, rgb(79 220 154 / .4)), transparent); opacity: 0; }
+@media (max-width: 640px) { .demo-aura { width: 340px; height: 340px; margin: -170px 0 0 -170px; top: 48%; } }
+#hero-stage[data-demo] .demo-aura { animation: d-aura 1.4s var(--e-out); }
+@keyframes d-aura { 0% { opacity: 0; transform: scale(.6); } 18% { opacity: .85; } 100% { opacity: 0; transform: scale(1.25); } }
+/* safe: lift, seal pop, ring */
+#hero-stage[data-demo=caution] .seal, #hero-stage[data-demo=scam] .seal { opacity: 0; }
+#hero-stage[data-demo=safe] .seal { animation: d-seal .7s var(--spring-punchy) .18s backwards; }
+@keyframes d-seal { 0% { transform: scale(.2) rotate(-90deg); opacity: 0; } 20% { opacity: 1; } 55% { transform: scale(1.35) rotate(8deg); } 100% { transform: none; } }
+#hero-stage[data-demo=safe] .slab { animation: d-lift 1s var(--e-out); }
+@keyframes d-lift { 0% { translate: 0 0; } 30% { translate: 0 -22px; } 100% { translate: 0 0; } }
+/* caution: the hazard tape slides in and brakes; the slab jolts sideways */
+#hero-stage[data-demo=caution] .demo-tape { opacity: 1; }
+#hero-stage[data-demo=caution] .demo-tape .tape { animation: d-tape .8s linear backwards; }
+#hero-stage[data-demo=caution] .demo-tape .tape-crawl { animation: d-crawl .9s linear infinite; }
+@keyframes d-tape { 0% { transform: translateX(-120%); animation-timing-function: cubic-bezier(.3, .6, .4, 1); } 45% { transform: translateX(7%); animation-timing-function: cubic-bezier(.4, 0, .5, 1); } 70% { transform: translateX(-2.5%); } 100% { transform: translateX(0); } }
+@keyframes d-crawl { to { transform: translateX(-50.9px); } }
+#hero-stage[data-demo=caution] .slab { animation: d-brake .8s linear; }
+@keyframes d-brake { 0% { translate: 0 0; } 38% { translate: -12px 0; animation-timing-function: cubic-bezier(.3, 1.5, .5, 1); } 100% { translate: 0 0; } }
+/* scam: the stamp slams, short shake, crack, shards (JS) */
+#hero-stage[data-demo=scam] .demo-stamp { opacity: 1; }
+#hero-stage[data-demo=scam] .demo-stamp .stamp { animation: d-slam .46s linear backwards; }
+@keyframes d-slam { 0% { transform: translateY(-60px) scale(2.3) rotate(-10deg); opacity: 0; animation-timing-function: ease-out; } 15% { opacity: 1; } 55% { transform: translateY(-74px) scale(2.4) rotate(-10deg); animation-timing-function: cubic-bezier(.6, 0, 1, .5); } 74% { transform: translateY(0) scale(1.06, .9) rotate(0); animation-timing-function: var(--e-out); } 100% { transform: none; } }
+#hero-stage[data-demo=scam] .demo-stamp .ink { animation: d-ink .7s var(--e-out) .34s backwards; }
+@keyframes d-ink { from { transform: scale(.2); opacity: .7; } to { transform: scale(1.2); opacity: 0; } }
+#hero-stage[data-demo=scam] .demo-cracks { opacity: 1; }
+#hero-stage[data-demo=scam] .demo-cracks polyline { animation: draw .26s var(--e-out) .34s backwards; }
+#hero-stage[data-demo=scam] .deal { animation: d-shake .42s linear .34s; }
+@keyframes d-shake { 0% { translate: 9px 0; } 15% { translate: -8px 3px; } 30% { translate: 6px -3px; } 45% { translate: -5px 2px; } 60% { translate: 3px -1px; } 80% { translate: -1px 0; } 100% { translate: 0 0; } }
+/* exits: the previous state's mark leaves while the next one comes in */
+#hero-stage[data-out=caution] .demo-tape { opacity: 1; animation: d-out-x .4s var(--e-precise) forwards; }
+@keyframes d-out-x { to { opacity: 0; transform: translateX(30%); } }
+#hero-stage[data-out=scam] .demo-stamp { opacity: 1; animation: d-out-s .4s ease-in forwards; }
+@keyframes d-out-s { to { opacity: 0; scale: .7; } }
+/* label beats */
+#hero-stage .label.d-punch { animation: i-punch .45s var(--spring-punchy); }
+#hero-stage .label .verdict.d-flip { animation: d-flip .42s var(--e-out); }
+@keyframes d-flip { from { transform: perspective(300px) rotateX(-95deg); opacity: 0; } }
+/* the LIVE DEMO tag: rec dot, current verdict, a bar that fills over each beat (pauses with the loop) */
+.tilt-hint { display: inline-flex; align-items: center; gap: 12px; }
+.demo-tag { display: none; align-items: center; gap: 7px; font: 700 11px/1 var(--f-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); background: rgb(255 255 255 / .06); border: 1px solid rgb(255 255 255 / .16); border-radius: 999px; padding: 6px 10px 6px 9px; }
+html:not(.m-calm) .demo-tag { display: inline-flex; }
+.demo-tag .rec { width: 7px; height: 7px; border-radius: 50%; background: #ff4a55; box-shadow: 0 0 10px #ff4a55; animation: rec 1.2s steps(2, jump-none) infinite; }
+@keyframes rec { 50% { opacity: .25; } }
+.demo-v { color: var(--v, var(--ok)); min-width: 7ch; }
+.demo-bar { position: relative; width: 34px; height: 3px; border-radius: 2px; background: rgb(255 255 255 / .14); overflow: hidden; }
+.demo-bar > i { position: absolute; inset: 0; background: var(--v, var(--ok)); transform-origin: 0 50%; transform: scaleX(0); }
+#hero-stage.d-run .demo-bar > i { animation: d-bar var(--d-step, 3.4s) linear forwards; }
+#hero-stage.d-hold .demo-bar > i, #hero-stage.d-hold .demo-tag .rec { animation-play-state: paused; }
+#hero-stage.off .tape-crawl, #hero-stage.off .demo-tag .rec { animation-play-state: paused; }
+@keyframes d-bar { to { transform: scaleX(1); } }
+@media (max-width: 640px), (orientation: landscape) and (max-height: 540px) { .tilt-hint { gap: 8px; } .hint-t { display: none; } }
+@media (min-width: 881px) and (min-height: 541px) { .hero .tilt-hint { bottom: auto; top: -38px; } }   /* desktop: the demo tag sits above the slab, in the first screen even on a 768 px laptop */
+/* phones and portrait tablets: the tag sits on the slab's top edge, so it is always on the same screen as the label it explains */
+@media (max-width: 880px) and (min-width: 641px) { .hero .tilt-hint { bottom: auto; top: -26px; } }
+@media (max-width: 640px) { .hero .tilt-hint { bottom: auto; top: 0; } .hero .stage .deal { margin-top: 34px; } }
+.m-calm #hero-stage [class*=demo-], .m-calm #hero-stage .demo-cracks { animation: none !important; }
+
+/* ---------- scroll entrances: from-states only exist while JS has armed an element (tu-arm), so nothing stays hidden without JS ---------- */
+.tu-arm.tu-up, .tu-arm.tu-field, .tu-arm.tu-post, .tu-arm.tu-flip { opacity: 0; }
+.tu-arm.tu-rise, .tu-arm.tu-rise2 { opacity: .3; transform: translateY(56px) scale(.97); }   /* a big panel is never absent, only waiting */
+.tu-arm.tu-wipe, .tu-arm.tu-note { opacity: 0; }   /* never a zero-area clip here: IntersectionObserver reports a fully clipped target as not intersecting */
+.tu-arm.tu-title .w > i { transform: translateY(118%) rotate(7deg); }
+.tu-arm.tu-tk { opacity: 0; }
+.tu-arm.tu-rail > i { transform: scaleX(0); } .tu-arm.tu-rail b { scale: 0; }
+.tu-go.tu-up { animation: tu-up .8s var(--e-out) var(--d, 0ms) backwards; }
+.tu-go.tu-rise { animation: tu-rise .7s var(--e-out) var(--d, 0ms) backwards; }
+.tu-go.tu-rise2 { animation: tu-rise .7s var(--e-out) calc(var(--d, 0ms) + 120ms) backwards; }
+.tu-go.tu-field { animation: tu-up .6s var(--e-out) calc(var(--d, 0ms) + 160ms) backwards; }
+/* the form gets one confident beat: a cyan scan line runs down the panel as it rises (the instrument, not a verdict) */
+#form.tu-go::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px; z-index: 3; pointer-events: none; border-radius: 2px; background: linear-gradient(90deg, transparent, #6fd8ff 20%, #fff 50%, #6fd8ff 80%, transparent); box-shadow: 0 0 14px 2px rgb(111 216 255 / .55); opacity: 0; animation: tu-laser 1.1s var(--e-precise) .25s; }
+@keyframes tu-laser { 0% { opacity: 0; transform: translateY(0); } 12% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: translateY(var(--fh, 400px)); } }
+.tu-go.tu-post { animation: tu-post 1.1s cubic-bezier(.2, 1.1, .35, 1) var(--d, 0ms) backwards; }
+.tu-go.tu-flip { transform-origin: 50% 100%; animation: tu-flip .95s cubic-bezier(.2, 1.2, .4, 1) var(--d, 0ms) backwards; }
+.tu-go.tu-wipe { animation: i-wipe .6s steps(30) var(--d, 0ms) backwards; }
+.tu-go.tu-note { animation: tu-note .7s var(--e-out) var(--d, 0ms) backwards; }
+.tu-go.tu-title .w > i { animation: tu-word .85s cubic-bezier(.2, 1.15, .35, 1) calc(var(--d, 0ms) + var(--wi, 0) * 90ms) backwards; transform-origin: 50% 100%; }
+.tu-go.tu-tk { animation: tu-tk 1.2s var(--e-out) var(--d, 0ms) backwards; }
+.tu-go.tu-tk.rev { animation-name: tu-tk2; }
+.tu-go.tu-rail > i { animation: tu-rail .9s var(--e-precise) .55s backwards; }
+.tu-go.tu-rail b { animation: tu-dot .35s var(--e-roll) backwards; } .tu-go.tu-rail b:nth-of-type(1) { animation-delay: .6s; } .tu-go.tu-rail b:nth-of-type(2) { animation-delay: .95s; } .tu-go.tu-rail b:nth-of-type(3) { animation-delay: 1.3s; }
+@keyframes tu-up { from { transform: translateY(30px); opacity: 0; } }
+@keyframes tu-rise { from { transform: translateY(56px) scale(.97); opacity: .3; } }
+@keyframes tu-post { from { transform: translate(-90px, 40px) rotate(-8deg); opacity: 0; } }
+/* on landing, each rarity badge glows and the rare card catches one glint */
+.tu-go.tu-flip .badge-glow { animation: tu-glow .55s ease-out calc(var(--d, 0ms) + .55s) both; }
+.tu-go.tu-flip .step-sheen { animation: tu-sheen .65s var(--e-precise) calc(var(--d, 0ms) + .6s) both; }
+@keyframes tu-glow { 0% { opacity: .35; } 35% { opacity: 1; } 100% { opacity: .35; } }
+@keyframes tu-sheen { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+@keyframes tu-flip { from { transform: perspective(900px) translateY(40px) rotateX(-82deg); opacity: 0; } 30% { opacity: 1; } to { transform: perspective(900px) translateY(0) rotateX(0); } }
+@keyframes tu-note { from { transform: translateX(70px); clip-path: inset(0 0 0 100% round 12px); } to { transform: none; clip-path: inset(0 0 0 0 round 12px); } }
+@keyframes tu-word { from { transform: perspective(600px) translateY(118%) rotateX(-80deg) rotate(7deg); } to { transform: perspective(600px) translateY(0) rotateX(0) rotate(0); } }
+@keyframes tu-tk { from { translate: -40% 0; opacity: 0; } }
+@keyframes tu-tk2 { from { translate: 40% 0; opacity: 0; } }
+@keyframes tu-rail { from { transform: scaleX(0); } }
+@keyframes tu-dot { from { scale: 0; } }
+.m-calm .tu-arm { opacity: 1 !important; clip-path: none !important; transform: none !important; }
+
+/* example result: Replay (only while the example is shown, never in calm) */
+.example-row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; }
+.replay { font-family: var(--f-mono); font-size: 12px; letter-spacing: .04em; text-transform: uppercase; color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.replay:hover { border-color: rgb(255 255 255 / .35); }
+.replay svg { width: 13px; height: 13px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: rotate .4s var(--e-out); }
+.replay:hover svg { rotate: -200deg; }
+@media (pointer: coarse) { .replay { min-height: 40px; } }
+.m-calm .replay { display: none; }
 </style>
-<script>(()=>{const d=document.documentElement,mq=q=>matchMedia(q).matches;let calm=false,seen=false,st="";
-try{st=localStorage.getItem("tc-motion");calm=st==="calm";seen=sessionStorage.getItem("tc-intro")==="1";sessionStorage.setItem("tc-intro","1")}catch(e){}
+<script>(()=>{const d=document.documentElement,mq=q=>matchMedia(q).matches;let calm=false,st="";
+try{st=localStorage.getItem("tc-motion");calm=st==="calm"}catch(e){}
 const rm=calm||(st!=="full"&&mq("(prefers-reduced-motion: reduce)"));if(rm)d.classList.add("m-calm");
 if(mq("(hover: hover) and (pointer: fine)"))d.classList.add("m-fine");
-const n=navigator;if((n.connection&&n.connection.saveData)||(n.deviceMemory||8)<=2||(n.hardwareConcurrency||8)<=2)d.classList.add("m-lite");
-if(!rm){d.classList.add(seen?"m-intro-short":"m-intro");if(!seen)d.classList.add("m-boot");
-const end=()=>d.classList.remove("m-intro","m-intro-short");setTimeout(end,1800);
+const n=navigator;if((n.connection&&n.connection.saveData)||(n.deviceMemory||8)<=2)d.classList.add("m-lite");
+if(!rm){d.classList.add("m-intro","m-boot");
+const end=()=>d.classList.remove("m-intro");setTimeout(end,3300);
 setTimeout(()=>d.classList.remove("m-boot"),1400);
 ["pointerdown","keydown","wheel","touchstart"].forEach(t=>addEventListener(t,end,{once:true,passive:true}));}})();</script>
 
@@ -689,7 +862,7 @@ setTimeout(()=>d.classList.remove("m-boot"),1400);
   </div>
 </header>
 <nav class="band compact" id="compact" aria-label="Quick links" inert>
-  <div class="wrap"><a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"><i></i></span>Trade Check</a><a class="btn btn-primary btn-sm" href="#check">Check a deal</a></div>
+  <div class="wrap"><a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"><i></i></span>Trade Check</a><a class="btn btn-primary btn-sm shine" href="#check">Check a deal</a></div>
 </nav>
 
 <main>
@@ -702,7 +875,7 @@ setTimeout(()=>d.classList.remove("m-boot"),1400);
         <span class="ln"><span class="w holo"><i style="--i:3;--h:0">before</i></span> <span class="w holo"><i style="--i:4;--h:1">you</i></span> <span class="w holo"><i style="--i:5;--h:2">pay.</i></span></span></span></h1>
       <p class="lede">Paste a listing, a seller chat or photos of the card. Trade Check spots the scam playbook, checks what's visible for fakes, and compares the price with recent sales.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="#check" data-magnet>Check a deal</a>
+        <a class="btn btn-primary shine" href="#check" data-magnet>Check a deal</a>
         <a class="btn btn-ghost" href="#result" id="see-example">See an example</a>
       </div>
       <div class="stats">
@@ -714,15 +887,17 @@ setTimeout(()=>d.classList.remove("m-boot"),1400);
     </div>
 
     <div class="stage" id="hero-stage">
+      <i class="demo-aura" aria-hidden="true"></i>
       <div class="ghost-slot a"><div class="ghost-card a" aria-hidden="true"></div></div>
       <div class="ghost-slot b"><div class="ghost-card b" aria-hidden="true"></div></div>
       <div class="deal"><div class="bob">
-        <div class="tilt" id="hero-tilt" role="img" aria-label="Example slab: Looks safe, risk 12, cert TC-261020-EMBR">
+        <div class="tilt" id="hero-tilt" role="img" aria-label="Example slab. A demo loop cycles through the three verdicts: looks safe, be careful, likely scam.">
           <div class="slab">
             <div class="label">
               <div><div class="brand">Trade Check</div><div class="cert">TC-261020-EMBR</div></div>
-              <div class="score"><small>RISK</small><b class="t-safe" id="hero-score">12</b></div>
-              <div class="verdict t-safe">Looks safe</div>
+              <div class="score"><small>RISK</small><b class="t-safe" id="hero-score" aria-hidden="true">12</b></div>
+              <div class="verdict t-safe" id="hero-verdict" aria-hidden="true">Looks safe</div>
+              <div class="tape-pos demo-tape" aria-hidden="true"><div class="tape"><i class="tape-crawl"></i><span>CHECK BEFORE YOU PAY</span></div></div>
               <svg class="seal deco" viewBox="0 0 56 56" aria-hidden="true"><g class="seal-g"><path class="rosette" pathLength="1" d="M28.00 2.00L33.85 6.17L41.00 5.48L43.98 12.02L50.52 15.00L49.83 22.15L54.00 28.00L49.83 33.85L50.52 41.00L43.98 43.98L41.00 50.52L33.85 49.83L28.00 54.00L22.15 49.83L15.00 50.52L12.02 43.98L5.48 41.00L6.17 33.85L2.00 28.00L6.17 22.15L5.48 15.00L12.02 12.02L15.00 5.48L22.15 6.17Z"/><circle class="seal-ring" cx="28" cy="28" r="17" pathLength="1"/><path class="seal-check" pathLength="1" d="M19.5 28.5l6 6L37 22.5"/></g></svg>
             </div>
             <div class="card">
@@ -732,19 +907,29 @@ setTimeout(()=>d.classList.remove("m-boot"),1400);
               <div class="footplate"><b>Cinder Leap</b> 90<br>Flip a coin. If heads, this attack does 30 more.<span class="num">042/198 ★</span></div>
               <div class="foil"><i class="foil-band"></i></div>
               <div class="glare"><i class="glare-spot"></i></div>
+              <svg class="cracks demo-cracks" viewBox="0 0 100 140" preserveAspectRatio="none" aria-hidden="true"><polyline class="ck-u" points="50,90 45,80 46,72 39,63 37,52 31,44" pathLength="1"/><polyline class="ck" points="50,90 45,80 46,72 39,63 37,52 31,44" pathLength="1"/><polyline class="ck-u" points="50,90 47,101 52,110 48,121 51,131" pathLength="1"/><polyline class="ck" points="50,90 47,101 52,110 48,121 51,131" pathLength="1"/><polyline class="ck-u" points="50,90 60,82 64,75 73,71 78,62" pathLength="1"/><polyline class="ck" points="50,90 60,82 64,75 73,71 78,62" pathLength="1"/><polyline class="ck-u" points="50,90 36,86 27,89 18,84 9,86" pathLength="1"/><polyline class="ck" points="50,90 36,86 27,89 18,84 9,86" pathLength="1"/><polyline class="ck-u" points="50,90 64,97 75,95 84,101 93,100" pathLength="1"/><polyline class="ck" points="50,90 64,97 75,95 84,101 93,100" pathLength="1"/><polyline class="ck-u" points="45,80 37,77 31,79" pathLength="1"/><polyline class="ck" points="45,80 37,77 31,79" pathLength="1"/></svg>
               <div class="scanline"></div>
               <div class="uv deco" aria-hidden="true"><i class="uv-pat"></i><span class="uv-tag">UV 365nm</span></div>
             </div>
             <div class="reticle deco" aria-hidden="true"><i class="rc"></i><i class="rc"></i><i class="rc"></i><i class="rc"></i></div>
             <svg class="callouts deco" aria-hidden="true"></svg>
+            <div class="stamp-pos demo-stamp" aria-hidden="true"><i class="ink"></i><span class="stamp">Likely scam</span></div>
           </div>
           <div class="shadow"></div>
         </div>
       </div></div>
-      <span class="tilt-hint" aria-hidden="true">Hover to tilt</span>
+      <span class="tilt-hint" aria-hidden="true"><b class="demo-tag"><i class="rec"></i>Demo loop <span class="demo-v">Safe</span><i class="demo-bar"><i></i></i></b><span class="hint-t">Hover to tilt</span></span>
     </div>
   </div>
 </section>
+
+<div class="ticker" id="ticker">
+  <p class="sr-only">Lines scammers use, which Trade Check flags: bank transfer only, price is firm, DM me on WhatsApp, friends and family only, 3 people already asking, no video call, crypto only, pay first and ship later.</p>
+  <div class="tk-inner" aria-hidden="true">
+    <div class="tk-row"><div class="tk-track"><div class="tk-set"><span class="tk-p">Bank transfer only</span><i class="tk-dot"></i><span class="tk-p">Price is firm</span><i class="tk-dot"></i><span class="tk-p">DM me on WhatsApp</span><i class="tk-dot"></i><span class="tk-p">Friends &amp; family only</span><i class="tk-dot"></i><span class="tk-p">3 people already asking</span><i class="tk-dot"></i><span class="tk-p">No video call</span><i class="tk-dot"></i><span class="tk-p">Crypto only</span><i class="tk-dot"></i><span class="tk-p">Pay first, ship later</span><i class="tk-dot"></i></div><div class="tk-set"><span class="tk-p">Bank transfer only</span><i class="tk-dot"></i><span class="tk-p">Price is firm</span><i class="tk-dot"></i><span class="tk-p">DM me on WhatsApp</span><i class="tk-dot"></i><span class="tk-p">Friends &amp; family only</span><i class="tk-dot"></i><span class="tk-p">3 people already asking</span><i class="tk-dot"></i><span class="tk-p">No video call</span><i class="tk-dot"></i><span class="tk-p">Crypto only</span><i class="tk-dot"></i><span class="tk-p">Pay first, ship later</span><i class="tk-dot"></i></div></div></div>
+    <div class="tk-row rev"><div class="tk-track"><div class="tk-set"><span class="tk-p">3 people already asking</span><i class="tk-dot"></i><span class="tk-p">Crypto only</span><i class="tk-dot"></i><span class="tk-p">Price is firm</span><i class="tk-dot"></i><span class="tk-p">Pay first, ship later</span><i class="tk-dot"></i><span class="tk-p">Friends &amp; family only</span><i class="tk-dot"></i><span class="tk-p">Bank transfer only</span><i class="tk-dot"></i><span class="tk-p">No video call</span><i class="tk-dot"></i><span class="tk-p">DM me on WhatsApp</span><i class="tk-dot"></i></div><div class="tk-set"><span class="tk-p">3 people already asking</span><i class="tk-dot"></i><span class="tk-p">Crypto only</span><i class="tk-dot"></i><span class="tk-p">Price is firm</span><i class="tk-dot"></i><span class="tk-p">Pay first, ship later</span><i class="tk-dot"></i><span class="tk-p">Friends &amp; family only</span><i class="tk-dot"></i><span class="tk-p">Bank transfer only</span><i class="tk-dot"></i><span class="tk-p">No video call</span><i class="tk-dot"></i><span class="tk-p">DM me on WhatsApp</span><i class="tk-dot"></i></div></div></div>
+  </div>
+</div>
 
 <section class="band steps" aria-labelledby="steps-title">
   <div class="wrap steps-deck">
@@ -808,7 +993,7 @@ setTimeout(()=>d.classList.remove("m-boot"),1400);
           </label>
         </div>
         <div class="actions">
-          <button class="btn btn-primary" type="submit" id="check-btn" data-magnet>Check this deal<i class="btn-progress" aria-hidden="true"></i></button>
+          <button class="btn btn-primary shine" type="submit" id="check-btn" data-magnet>Check this deal<i class="btn-progress" aria-hidden="true"></i></button>
           <button class="btn btn-ghost" type="button" id="clear">Clear</button>
         </div>
         <p class="status" id="status"></p>
@@ -1153,7 +1338,7 @@ Reply with ONLY one JSON object in this shape:
     if (calm() || mode === "quiet") { panel.classList.add(calm() ? "rv-calm" : "rv-quiet"); end(400); return; }
     const v = normVerdict(r.verdict), risk = clampRisk(r.risk);
     panel.classList.add("rv", "rv-" + v);
-    if (mode === "example") panel.classList.add("rv-ex");   // muted: no shake
+    if (mode === "example") panel.classList.add("rv-ex");   // the example: full reveal (its shake included), no announcement
     const b = panel.querySelector(".result-stage .score b"), dot = panel.querySelector(".meter i");
     if (b) b.textContent = mode === "example" ? "··" : "0";   // armed example: no red verdict next to a 0
     if (dot) dot.style.setProperty("--p", "0");
@@ -1578,7 +1763,12 @@ Reply with ONLY one JSON object in this shape:
     const { bob, tilt } = slab({ verdict: v, risk, cert: r.cert, photoUrl: r.photoUrl, high, fakeFail, example: !!r.example, subj: c0 ? [c0.name, c0.grade, c0.number].filter(Boolean).join(" · ") : "" });   // the grade before the number: an ellipsis never eats it
     const meterDot = el("i", { style: `--p:${risk}` });
     const verdictBlock = el("div", { class: "verdict-block" }), hlText = String(r.headline || VERDICT_WORD[v]);
-    if (r.example) verdictBlock.append(el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }));
+    if (r.example) {   // Replay: the example's full reveal again (hidden in calm)
+      const rp = el("button", { class: "replay", type: "button", "aria-label": "Replay the example reveal" });
+      rp.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 1 0 1.7-4"/><path d="M2.2 1.8v3.4h3.4"/></svg>Replay';
+      rp.onclick = () => { if (calm() || !current || !current.example) return; disarm(); call("reveal", $("result"), current, { mode: "example" }); };
+      verdictBlock.append(el("div", { class: "example-row" }, el("div", { class: "example-tag", text: "Example result. Paste your own listing to run a real check." }), rp));
+    }
     verdictBlock.append(
       el("span", { class: `pill p-${v}`, "data-text": `${VERDICT_WORD[v]} · risk ${risk}`, text: `${VERDICT_WORD[v]} · risk ${risk}` }),
       // one sentence for screen readers; the per-word spans (they animate) are hidden from them
@@ -1594,7 +1784,7 @@ Reply with ONLY one JSON object in this shape:
     }
 
     const stage = el("div", { class: "result-stage", "data-v": v }, el("i", { class: "fx-aura", "aria-hidden": "true" }),
-      el("div", { class: "fx-rings", "aria-hidden": "true" }, ...Array.from({ length: v === "safe" ? 0 : v === "scam" && !r.example ? 3 : 1 }, () => el("i"))), bob);
+      el("div", { class: "fx-rings", "aria-hidden": "true" }, ...Array.from({ length: v === "safe" ? 0 : v === "scam" ? 3 : 1 }, () => el("i"))), bob);
     const sect = (ev, title, ...kids) => el("div", { class: "section", "data-ev": ev }, el("h3", {}, title, el("i", { class: "rule", "aria-hidden": "true" })), ...kids);
     const out = [el("div", { class: "result-top" }, stage, verdictBlock)];
 
@@ -2132,6 +2322,327 @@ Reply with ONLY one JSON object in this shape:
     document.documentElement.addEventListener("pointerleave", () => { mx = my = -1e4; if (!raf) raf = requestAnimationFrame(loop); });
   })();
 
+  // =================== TURN-UP: always-on motion, vanilla (CSS keyframes + rAF + IntersectionObserver); none of it needs GSAP ===================
+  // Everything here stops in calm, sleeps while the tab is hidden, and is rebuilt by TU.setCalm(false) from the footer toggle.
+  const TU = (() => {
+    const lite = () => root.classList.contains("m-lite");
+    const phoneW = () => innerWidth < 640;
+    const tabOn = () => !document.hidden;
+    const hooks = [];   // fn(on: boolean) for calm on/off and tab visibility
+
+    // ---------- ambient layer: ONE fixed canvas (each full-screen layer costs scroll frames in software compositing) ----------
+    // aurora: 2-3 holo glows drifting (pre-blurred sprites, moved, never filtered); desk lamp: a pool of light under the mouse;
+    // dust: ~40 holo motes (20 on phones) drifting up, with pointer parallax on desktop. Desktop draws at half size: the stretch only softens glows.
+    const amb = (() => {
+      const cv = el("canvas", { class: "ambient", "aria-hidden": "true" }), x = cv.getContext && cv.getContext("2d", { alpha: false });   // opaque: it IS the page background, so the compositor culls what lies under it
+      if (!x) return { start() {}, stop() {} };
+      document.body.prepend(cv); root.classList.add("amb-on");
+      const fine = root.classList.contains("m-fine");
+      const glow = (stops, n = 64) => { const g = el("canvas", { width: n, height: n }), c = g.getContext("2d"), r = c.createRadialGradient(n / 2, n / 2, 0, n / 2, n / 2, n / 2); stops.forEach(([o, col]) => r.addColorStop(o, col)); c.fillStyle = r; c.fillRect(0, 0, n, n); return g; };
+      // [sprite, size (x vmax), home x/y (x viewport), drift x/y (x viewport), speed, phase]
+      const B = [[glow([[0, "rgba(111,216,255,.30)"], [.5, "rgba(111,216,255,.10)"], [1, "rgba(111,216,255,0)"]]), .7, .12, .1, .3, .22, .21, 0],
+        [glow([[0, "rgba(255,98,170,.24)"], [.5, "rgba(169,139,255,.10)"], [1, "rgba(169,139,255,0)"]]), .7, .86, .42, .3, .26, .17, 2.1],
+        [glow([[0, "rgba(85,255,160,.16)"], [.55, "rgba(111,216,255,.05)"], [1, "rgba(111,216,255,0)"]]), .8, .45, .95, .32, .2, .13, 4.2]];
+      const LAMP = glow([[0, "rgba(111,216,255,.30)"], [.45, "rgba(169,139,255,.13)"], [.75, "rgba(255,122,182,.04)"], [1, "rgba(255,122,182,0)"]]);
+      const HOLO = ["#ff7ab6", "#ffd36e", "#7dffb2", "#6fd8ff", "#a98bff", "#ffffff"];
+      const sprite = (c, star) => {   // 48 px sprites: a soft glow, or a four-point glint
+        const s = el("canvas", { width: 48, height: 48 }), g = s.getContext("2d"), r = g.createRadialGradient(24, 24, 0, 24, 24, 24);
+        r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(.18, c); r.addColorStop(.45, c + "55"); r.addColorStop(1, c + "00");
+        g.fillStyle = r; g.beginPath(); g.arc(24, 24, star ? 9 : 24, 0, 6.3); g.fill();
+        if (star) { g.fillStyle = c; g.globalAlpha = .9; g.beginPath(); g.moveTo(24, 0); g.lineTo(27, 21); g.lineTo(48, 24); g.lineTo(27, 27); g.lineTo(24, 48); g.lineTo(21, 27); g.lineTo(0, 24); g.lineTo(21, 21); g.closePath(); g.fill(); g.globalAlpha = 1; g.fillStyle = "#fff"; g.beginPath(); g.arc(24, 24, 3, 0, 6.3); g.fill(); }
+        return s;
+      };
+      const SPR = HOLO.map((c) => [sprite(c, false), sprite(c, true)]);
+      const L = { x: 0, y: 0, tx: 0, ty: 0, a: 0, ta: 0 };
+      let W = 0, H = 0, k = 1, ps = [], raf = 0, last = 0, run = false, mx = .5, my = .5, ox = 0, oy = 0, t0 = performance.now(), lastScroll = -1e4;
+      let slow = false, fT = [], fPrev = 0, dC = [];   // adaptive: a device that cannot hold ~45 fps at idle gets the lite trims (fewer motes, two glows, a slower draw)
+      const trim = () => lite() || slow;
+      addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true });
+      // background + aurora + lamp are drawn at 1/8 scale into a small buffer, then stretched over the canvas in one blit (the stretch is the blur)
+      const lo = el("canvas"), lx = lo.getContext("2d", { alpha: false }), LS = 1 / 8;
+      // the bitmap is only reallocated when its size really changes (a reallocation blanks this opaque canvas until the next draw),
+      // and a phone's URL bar showing or hiding (a small height-only change) keeps the old bitmap: CSS stretches it by a few percent
+      const size = (force) => {
+        const nW = innerWidth, nH = Math.min(innerHeight, Math.max(900, (screen.height || 900) * 1.5)), nk = slow && phoneW() ? .5 : 1;   // 1 bitmap px per CSS px (a slow phone: half, an integer stretch): a non-integer stretch of this full-screen layer costs the compositor more than the raster saves
+        if (!force && W && nW === W && nk === k && (nH === H || (phoneW() && Math.abs(nH - H) < 150))) return false;
+        W = nW; H = nH; k = nk;
+        const cw = Math.round(W * k), ch = Math.round(H * k);
+        if (cv.width !== cw) cv.width = cw; if (cv.height !== ch) cv.height = ch;
+        cv.style.height = H < innerHeight - 150 ? H + "px" : "";   // an auto-height frame (the page as tall as the frame): only a screen-sized top layer
+        const lw = Math.max(8, Math.ceil(W * LS)), lh = Math.max(8, Math.ceil(H * LS));
+        if (lo.width !== lw) lo.width = lw; if (lo.height !== lh) lo.height = lh;
+        return true;
+      };
+      const count = () => (phoneW() ? (trim() ? 12 : 20) : (trim() ? 24 : 40));
+      const spawn = (p, anyY) => {
+        p.z = .25 + Math.random() * .75; p.x = Math.random() * W; p.y = anyY ? Math.random() * H : H + 30;
+        p.vy = -(10 + 26 * p.z); p.vx = (Math.random() - .5) * 8; p.s = (4 + p.z * (phoneW() ? 9 : 12)) * (phoneW() ? 1 : 1.25); p.c = (Math.random() * HOLO.length) | 0;
+        p.ph = Math.random() * 6.3; p.tw = 1.2 + Math.random() * 2.2; p.star = Math.random() < .4; return p;
+      };
+      const fill = () => { const n = count(); ps = ps.slice(0, n); while (ps.length < n) ps.push(spawn({}, true)); };
+      const draw = (t, dt) => {
+        const sec = (t - t0) / 1000, vm = Math.max(W, H), n = trim() ? 2 : 3;
+        lx.setTransform(LS, 0, 0, LS, 0, 0); lx.fillStyle = "#090c15"; lx.fillRect(0, 0, W, H);
+        for (let i = 0; i < n; i++) {
+          const [g, sz, hx, hy, dx, dy, sp, ph] = B[i], r = sz * vm * (1 + .18 * Math.sin(sec * sp * .7 + ph * 1.7));
+          lx.drawImage(g, (hx + dx * Math.sin(sec * sp + ph)) * W - r / 2, (hy + dy * Math.cos(sec * sp * .83 + ph)) * H - r / 2, r, r);
+        }
+        if (L.a > .01) { lx.globalAlpha = L.a; lx.drawImage(LAMP, L.x - 340, L.y - 340, 680, 680); lx.globalAlpha = 1; }
+        x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingQuality = "low"; x.drawImage(lo, 0, 0, lo.width, lo.height, 0, 0, lo.width / LS * k, lo.height / LS * k);
+        x.setTransform(k, 0, 0, k, 0, 0);
+        ox += ((mx - .5) * -46 - ox) * .06; oy += ((my - .5) * -30 - oy) * .06;
+        const cx0 = phoneW() ? -1 : W * .06, cx1 = phoneW() ? W + 1 : W * .56;   // the copy column: glints there are dimmed (reading comes first)
+        for (const p of ps) {
+          p.x += p.vx * dt; p.y += p.vy * dt;
+          if (p.y < -40) spawn(p, false);
+          if (p.x < -40) p.x += W + 80; else if (p.x > W + 40) p.x -= W + 80;
+          const tw = .5 + .5 * Math.sin(t / 1000 * p.tw + p.ph), a = (.25 + .75 * tw) * (.35 + .65 * p.z);
+          const yy = p.y, px = p.x + ox * p.z, s = p.s * (p.star ? .8 + .5 * tw : 1);
+          x.globalAlpha = p.star && px > cx0 && px < cx1 ? a * .35 : a; x.drawImage(SPR[p.c][p.star ? 1 : 0], px - s / 2, yy + oy * p.z - s / 2, s, s);
+        }
+        x.globalAlpha = 1;
+      };
+      const loop = (t) => {
+        raf = 0; if (!run) return;
+        // measured once, 2.6-4.6 s after boot (after the intro): slow idle frame pacing, or a draw that costs a slow CPU several ms,
+        // switches on the trims (fewer motes, two glows, a 20 fps draw)
+        if (!slow && fT && t - t0 > 2600) { if (fPrev && t - lastScroll > 300) fT.push(t - fPrev); if (t - t0 > 4600) { fT.sort((a, b) => a - b); dC.sort((a, b) => a - b); const mc = dC.length ? dC[dC.length >> 1] : 0; cv.dataset.cost = mc.toFixed(1); const mean = fT.length ? fT.reduce((a, b) => a + b, 0) / fT.length : 0; cv.dataset.pace = mean.toFixed(1);
+            if ((fT.length > 20 && mean > 22) || mc > 2) { slow = true; size(true); fill(); draw(t, 0); cv.dataset.trim = "1"; } fT = null; dC = null; } }
+        fPrev = t;
+        // ~30 fps is plenty for drifting light (20 when trimmed); frozen while the page scrolls (the eye is on the content, the frame budget on the scroll)
+        if (t - lastScroll >= 180 && t - last >= (trim() ? 48 : 31)) {
+          const dt = Math.min(.05, (t - last) / 1000); last = t;
+          L.x += (L.tx - L.x) * .45; L.y += (L.ty - L.y) * .45; L.a += (L.ta - L.a) * .25;
+          const c0 = dC ? performance.now() : 0;
+          draw(t, dt);
+          if (dC && t - t0 > 2600) dC.push(performance.now() - c0);
+        }
+        raf = requestAnimationFrame(loop);
+      };
+      const start = () => { if (run) return; run = true; size(true); fill(); last = performance.now(); draw(last, 0); if (!raf) raf = requestAnimationFrame(loop); };
+      const stop = (still) => { run = false; cancelAnimationFrame(raf); raf = 0; L.a = L.ta = 0; if (still) { size(true); fill(); draw(t0 + 4000, 0); } };
+      // a real resize redraws at once, in the same task, so the reallocated bitmap is never shown blank
+      addEventListener("resize", () => { if (!(run || calm())) return; if (size(false)) { fill(); draw(run ? performance.now() : t0 + 4000, 0); } }, { passive: true });
+      if (fine) {
+        let sT = 0, scrolling = false, inside = false;
+        addEventListener("pointermove", (e) => { if (e.pointerType !== "mouse") return; mx = e.clientX / (W || 1); my = e.clientY / (H || 1); if (calm()) return; L.tx = e.clientX; L.ty = e.clientY; if (!inside) { inside = true; L.x = L.tx; L.y = L.ty; } L.ta = scrolling ? .55 : 1; }, { passive: true });
+        addEventListener("scroll", () => { if (!inside) return; scrolling = true; L.ta = .55; clearTimeout(sT); sT = setTimeout(() => { scrolling = false; if (inside) L.ta = 1; }, 450); }, { passive: true });
+        root.addEventListener("pointerleave", () => { inside = false; L.ta = 0; });
+      }
+      hooks.push((on) => (on ? start() : stop(calm())));
+      return { start, stop };
+    })();
+
+    // ---------- kinetic ticker: CSS loops; scroll velocity boosts their playbackRate for a moment ----------
+    (() => {
+      const tk = $("ticker"); if (!tk) return;
+      const tracks = [...tk.querySelectorAll(".tk-track")];
+      // constant speed whatever the width: about 70 px/s (phones 45)
+      const tune = () => tracks.forEach((t, i) => { const w = t.scrollWidth / 2; if (w) t.style.setProperty(i ? "--tk-d2" : "--tk-d", (w / (phoneW() ? 45 : 70) * (i ? 1.12 : 1)).toFixed(1) + "s"); });
+      tune(); if (document.fonts && document.fonts.ready) document.fonts.ready.then(tune);
+      let lastY = scrollY, lastT = performance.now(), rate = 1, boost = 1, raf = 0, seen = true;
+      const anims = () => tracks.flatMap((t) => (t.getAnimations ? t.getAnimations() : []));
+      const setRate = (r) => anims().forEach((a) => { if (a.updatePlaybackRate) a.updatePlaybackRate(r); else a.playbackRate = r; });
+      const loop = () => {
+        raf = 0; boost += (1 - boost) * .05; rate += (boost - rate) * .18;
+        if (Math.abs(rate - 1) < .02 && Math.abs(boost - 1) < .02) { rate = boost = 1; setRate(1); return; }
+        setRate(rate); raf = requestAnimationFrame(loop);
+      };
+      if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => { seen = e.isIntersecting; }).observe(tk);
+      addEventListener("scroll", () => {
+        const t = performance.now(), y = scrollY, v = Math.abs(y - lastY) / Math.max(16, t - lastT) * 1000; lastY = y; lastT = t;
+        if (!seen || calm()) return;
+        boost = Math.max(boost, 1 + Math.min(4, v / 350));
+        if (!raf) raf = requestAnimationFrame(loop);
+      }, { passive: true });
+    })();
+
+    // ---------- hero LIVE DEMO: SAFE -> CAUTION -> SCAM every 3.4 s while seen, visible, not hovered, not calm ----------
+    const demo = (() => {
+      const stg = $("hero-stage"), slabN = stg.querySelector(".slab"), label = slabN.querySelector(".label"), score = $("hero-score"), verdict = $("hero-verdict"), tilt = $("hero-tilt");
+      const tagV = stg.querySelector(".demo-v"), bar = stg.querySelector(".demo-bar > i");
+      const STEP = 3400, S = [{ v: "safe", risk: 12, w: "Looks safe", t: "Safe" }, { v: "caution", risk: 54, w: "Be careful", t: "Caution" }, { v: "scam", risk: 91, w: "Likely scam", t: "Scam" }];
+      let i = 0, timer = 0, due = 0, left = STEP, on = false, hover = false, seen = true, outT = 0, cRaf = 0, fxT = [], quietUntil = 0, quietT = 0;
+      // a real check outranks the demo: it holds from submit until a few seconds after the real reveal has settled
+      const res = $("result"), FLOOR = { safe: 0, caution: 34, scam: 67 };   // each count runs inside its own band, so a number never contradicts its verdict
+      const quiet = () => res.hasAttribute("aria-busy") || performance.now() < quietUntil;
+      if ("MutationObserver" in window) new MutationObserver(() => { if (!res.hasAttribute("aria-busy") && res.dataset.shows && res.dataset.shows !== "example") quietUntil = performance.now() + 6500; sync(); }).observe(res, { attributes: true, attributeFilter: ["aria-busy", "data-shows"] });
+      const ok = () => on && !hover && seen && tabOn() && !calm() && !quiet();
+      const restartBar = () => { stg.classList.remove("d-run"); void bar.offsetWidth; stg.style.setProperty("--d-step", STEP + "ms"); stg.classList.add("d-run"); };
+      const count = (from, to) => {
+        cancelAnimationFrame(cRaf); const t0 = performance.now();
+        const f = (t) => { const k = Math.min(1, (t - t0) / 560), e = 1 - Math.pow(1 - k, 3); score.textContent = String(Math.round(from + (to - from) * e)); if (k < 1) cRaf = requestAnimationFrame(f); };
+        cRaf = requestAnimationFrame(f);
+      };
+      const paint = (s) => { score.className = "t-" + s.v; verdict.className = "verdict t-" + s.v; verdict.textContent = s.w; tagV.textContent = s.t; };
+      const apply = (n) => {
+        const prev = S[i], s = S[n]; i = n;
+        fxT.forEach(clearTimeout); fxT = [];
+        stg.dataset.out = prev.v; stg.dataset.demo = s.v; stg.dataset.v = s.v;
+        clearTimeout(outT); outT = setTimeout(() => { delete stg.dataset.out; }, 600);
+        paint(s); kick(verdict, "d-flip"); kick(label, "d-punch"); count(FLOOR[s.v], s.risk);
+        if (s.v === "safe") fxT.push(setTimeout(() => heroBurst("motes"), 260));
+        if (s.v === "scam") fxT.push(setTimeout(() => heroBurst("shards"), 340));
+        restartBar();
+      };
+      const tick = () => { timer = 0; if (!ok()) return sync(); apply((i + 1) % S.length); arm(STEP); };
+      const arm = (ms) => { clearTimeout(timer); due = performance.now() + ms; timer = setTimeout(tick, ms); };
+      // pause keeps the time left in this beat (the bar pauses with it); resume finishes the beat
+      const sync = () => {
+        const go = ok();
+        stg.classList.toggle("d-hold", !go && on);
+        clearTimeout(quietT); if (on && quiet() && !res.hasAttribute("aria-busy")) quietT = setTimeout(sync, quietUntil - performance.now() + 50);
+        if (go && !timer) arm(Math.max(600, left));
+        else if (!go && timer) { left = Math.max(0, due - performance.now()); clearTimeout(timer); timer = 0; }
+      };
+      const reset = () => {   // calm: the static safe slab, no marks
+        clearTimeout(timer); timer = 0; clearTimeout(outT); fxT.forEach(clearTimeout); fxT = []; cancelAnimationFrame(cRaf);
+        i = 0; left = STEP; ["demo", "out", "v"].forEach((k) => delete stg.dataset[k]); stg.classList.remove("d-run", "d-hold");
+        paint(S[0]); score.textContent = "12"; verdict.classList.remove("d-flip"); label.classList.remove("d-punch");
+        stg.querySelectorAll(".demo-burst").forEach((c) => c.remove());
+      };
+      const start = (delay) => { if (on) return; on = true; left = delay; restartBar(); stg.style.setProperty("--d-step", delay + "ms"); sync(); };
+      stg.addEventListener("pointerenter", () => { hover = true; sync(); });
+      stg.addEventListener("pointerleave", () => { hover = false; left = Math.max(left, 900); sync(); });
+      stg.addEventListener("pointerdown", () => { hover = true; sync(); });
+      stg.addEventListener("pointercancel", () => { hover = false; sync(); });
+      if ("IntersectionObserver" in window) new IntersectionObserver(([e]) => { seen = e.isIntersecting; sync(); }).observe(stg);
+      // the first beat waits for the intro to land (the slab hits the mat at ~0.9 s, the seal pops ~1.7 s); the landing itself is the
+      // SAFE beat: holo motes burst off the card as the seal pops, then CAUTION at ~2.9 s and SCAM at ~6.3 s
+      const first = () => Math.max(1200, 2900 - performance.now());
+      const NAME = { demo: tilt.getAttribute("aria-label"), still: "Example slab: Looks safe, risk 12, cert TC-261020-EMBR" };
+      hooks.push((m, boot) => {
+        tilt.setAttribute("aria-label", m ? NAME.demo : NAME.still);
+        if (m) { if (!on) { if (boot && performance.now() < 1700) fxT.push(setTimeout(() => { if (!calm() && i === 0) heroBurst("motes"); }, 1800 - performance.now())); start(first()); } else sync(); } else { on = false; reset(); }
+      });
+      return { sync };
+    })();
+    // hero particles: holo motes rise (safe) or acrylic shards fly and fall (scam), from the card's real on-screen box
+    function heroBurst(kind) {
+      const stg = $("hero-stage"), card = stg.querySelector(".card");
+      if (calm() || !card || document.hidden) return;
+      const sr = stg.getBoundingClientRect(), cr = card.getBoundingClientRect(); if (!cr.width) return;
+      const pad = 90, W = sr.width + pad * 2, H = sr.height + pad * 2, dpr = Math.min(devicePixelRatio || 1, 1.5);
+      const c = el("canvas", { class: "fx-burst demo-burst", "aria-hidden": "true", width: Math.round(W * dpr), height: Math.round(H * dpr), style: `left:${-pad}px;top:${-pad}px;width:${W}px;height:${H}px;z-index:4` });
+      const x = c.getContext("2d"); if (!x) return;
+      stg.append(c);
+      const R = (a, b) => a + Math.random() * (b - a), HOLO = ["#ff7ab6", "#ffd36e", "#7dffb2", "#6fd8ff", "#a98bff"], motes = kind === "motes";
+      const cx = cr.left - sr.left + pad, cy = cr.top - sr.top + pad, cw = cr.width, ch = cr.height, sc = cw / 300;
+      const n = motes ? (lite() ? 8 : phoneW() ? 12 : 20) : (lite() ? 8 : phoneW() ? 10 : 16);
+      const ps = Array.from({ length: n }, (_, i) => {
+        if (motes) { const a = R(-120, -60) * Math.PI / 180, v = R(90, 240) * Math.max(.6, sc); return { x: cx + R(.1, .9) * cw, y: cy + R(.05, .7) * ch, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: R(4, 8) * Math.max(.7, sc), r: R(0, 6.3), vr: R(-6, 6), c: HOLO[i % 5], life: R(.9, 1.2) }; }
+        const a = R(0, 6.3), v = R(140, 320) * Math.max(.6, sc);
+        return { x: cx + cw * .5, y: cy + ch * .62, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, s: R(9, 20) * Math.max(.7, sc), w: R(2, 4.5), r: a, vr: R(-4, 4), c: i % 4 ? "rgba(230,240,255,.85)" : "#ff4a55", life: R(.75, 1) };
+      });
+      const g = motes ? -140 : 820, t0 = performance.now(); let last = t0;
+      const f = (t) => {
+        const dt = Math.min(.033, (t - last) / 1000), age = (t - t0) / 1000; let alive = 0; last = t;
+        x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, c.width, c.height);
+        for (const p of ps) {
+          const k = age / p.life; if (k >= 1) continue; alive++;
+          p.vy += g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+          x.setTransform(dpr, 0, 0, dpr, p.x * dpr, p.y * dpr); x.rotate(p.r); x.globalAlpha = motes ? 1 - k * k : k < .6 ? 1 : 1 - (k - .6) / .4; x.fillStyle = p.c; x.beginPath();
+          if (motes) { x.moveTo(0, -p.s); x.lineTo(p.s * .35, 0); x.lineTo(0, p.s); x.lineTo(-p.s * .35, 0); } else { x.moveTo(-p.s / 2, -p.w / 2); x.lineTo(p.s / 2, 0); x.lineTo(-p.s / 2, p.w / 2); }
+          x.fill();
+        }
+        if (alive && c.isConnected) requestAnimationFrame(f); else c.remove();
+      };
+      requestAnimationFrame(f);
+    }
+
+    // ---------- scroll entrances on every section (IntersectionObserver; from-states set here, at arm time, only) ----------
+    // section titles split into masked words (the sentence stays whole for screen readers)
+    document.querySelectorAll(".section-title").forEach((h) => {
+      const txt = h.textContent.replace(/\s+/g, " ").trim(); if (!txt || h.querySelector(".sr-only")) return;
+      h.replaceChildren(el("span", { class: "sr-only", text: txt }), el("span", { "aria-hidden": "true" }, ...txt.split(" ").flatMap((w, k) => [k ? " " : null, el("span", { class: "w" }, el("i", { style: `--wi:${k}`, text: w }))])));
+    });
+    const SPEC = [[".tk-row", "tk", 140], [".steps li", "flip", 140], [".steps-rail", "rail", 0],
+      [".exhibit .eyebrow", "wipe", 0], [".exhibit .section-title", "title", 0], [".exhibit .section-sub", "up", 0], [".exhibit .post", "post", 0], [".exhibit .notes li", "note", 90],
+      ["#check .section-title", "title", 0], ["#mode-note", "up", 0], ["#form", "rise", 0], ["#form > .field, #form > .actions", "field", 110], ["#result", "rise2", 0], ["footer .wrap > *", "up", 110]];
+    const reveals = (() => {
+      let io = null; const kinds = new Map(), groups = new Map(), done = new Set();
+      const go = (n, d) => {
+        if (n.id === "form") n.style.setProperty("--fh", n.offsetHeight + "px");
+        n.style.setProperty("--d", d + "ms"); n.classList.remove("tu-arm"); n.classList.add("tu-go");
+        setTimeout(() => { n.classList.remove("tu-go", "tu-" + kinds.get(n)); n.style.removeProperty("--d"); n.style.removeProperty("--fh"); }, 2100 + d);
+      };
+      const onIO = (es) => {
+        const hits = es.filter((e) => e.isIntersecting && e.intersectionRect.height >= Math.min(24, e.boundingClientRect.height * .1)).map((e) => e.target).filter((n) => n.classList.contains("tu-arm"));   // as soon as a sliver is on screen, whatever the height
+        const byG = new Map(); hits.forEach((n) => { const g = groups.get(n); if (!byG.has(g)) byG.set(g, []); byG.get(g).push(n); });
+        byG.forEach((ns, g) => { ns.sort((a, b) => (a.compareDocumentPosition(b) & 4 ? -1 : 1)); ns.forEach((n, j) => { io.unobserve(n); go(n, j * SPEC[g][2]); }); });
+      };
+      const arm = (skipInView) => {   // boot: everything below the hero is armed and IO plays what is (or comes) on screen; toggle: only what is off screen
+        if (calm() || !("IntersectionObserver" in window)) return;
+        io = io || new IntersectionObserver(onIO, { threshold: [0, .02, .05, .1], rootMargin: "0px 0px -4% 0px" });
+        const vh = innerHeight, now = [], todo = [];
+        // all reads first, then all writes (one layout, not one per element)
+        SPEC.forEach(([sel, kind], g) => document.querySelectorAll(sel).forEach((n) => {
+          if (done.has(n) || !n.isConnected || n.closest(".hero")) return;
+          const r = n.getBoundingClientRect(); if (!r.width && !r.height) return;
+          const inView = r.top < vh && r.bottom > 0;
+          if (inView && skipInView) return;
+          todo.push([n, kind, g, inView]);
+        }));
+        todo.forEach(([n, kind, g, inView]) => {
+          done.add(n); kinds.set(n, kind); groups.set(n, g);
+          n.classList.add("tu-" + kind, "tu-arm");
+          if (inView && skipInView === "now") now.push(n); else io.observe(n);
+        });
+        if (now.length) requestAnimationFrame(() => now.forEach((n, j) => { if (n.classList.contains("tu-arm")) go(n, j * 90); }));
+      };
+      const disarm = () => {
+        if (io) { io.disconnect(); io = null; }
+        document.querySelectorAll(".tu-arm, .tu-go").forEach((n) => { n.classList.remove("tu-arm", "tu-go", "tu-" + kinds.get(n)); n.style.removeProperty("--d"); });
+        done.clear();
+      };
+      // keyboard focus never lands on something still waiting or half faded: its entrance (and its parents') finishes at once
+      document.addEventListener("focusin", (e) => {
+        for (let n = e.target; n && n !== document.body; n = n.parentElement) {
+          if (!n.classList.contains("tu-arm") && !n.classList.contains("tu-go")) continue;
+          if (io) io.unobserve(n); n.classList.remove("tu-arm", "tu-go", "tu-" + kinds.get(n)); n.style.removeProperty("--d");
+        }
+      });
+      hooks.push((on, boot) => (on ? arm(!boot) : disarm()));
+      return { arm };
+    })();
+
+    // ---------- hero parallax as it scrolls out (transform only, one rAF per scroll burst, passive) ----------
+    (() => {
+      const hero = document.querySelector(".hero"), stg = $("hero-stage"), deal = stg.querySelector(".deal");
+      const h1 = hero.querySelector("h1.display"), eb = hero.querySelector(".eyebrow"), lede = hero.querySelector(".lede");
+      let raf = 0, live = false, hh = hero.offsetHeight;
+      const clear = () => { live = false; [stg, h1, eb, lede].forEach((n) => { n.style.transform = ""; }); deal.style.rotate = ""; };
+      const frame = () => {
+        raf = 0;
+        if (calm()) { if (live) clear(); return; }
+        const y = scrollY;
+        if (y <= 0 || y > hh + 100) { if (live) clear(); return; }
+        live = true;
+        // the headline lifts away faster than the page, the lede a little less; the slab lags behind (it sinks under the ticker band),
+        // so nothing collides with text. Small layers, axis-aligned, transform only: each scroll frame costs the compositor almost nothing.
+        const wide = innerWidth > 640;
+        [eb, h1].forEach((n) => { n.style.transform = `translate3d(0,${(-y * (wide ? .22 : .18)).toFixed(1)}px,0)`; });
+        lede.style.transform = `translate3d(0,${(-y * (wide ? .11 : .08)).toFixed(1)}px,0)`;
+        if (wide) stg.style.transform = `translate3d(0,${(y * .16).toFixed(1)}px,0)`;
+        else deal.style.rotate = `x ${Math.min(26, y * .07).toFixed(2)}deg`;   // phones: the slab tips back as the page scrolls
+      };
+      addEventListener("scroll", () => { if (!raf) raf = requestAnimationFrame(frame); }, { passive: true });
+      addEventListener("resize", () => { hh = hero.offsetHeight; if (!raf) raf = requestAnimationFrame(frame); }, { passive: true });
+      hooks.push((on) => { if (!on) clear(); else if (!raf) raf = requestAnimationFrame(frame); });
+    })();
+
+    // tab hidden: everything sleeps (CSS loops pause with it)
+    document.addEventListener("visibilitychange", () => {
+      root.classList.toggle("tab-off", document.hidden);
+      if (calm()) return;
+      if (document.hidden) amb.stop(false); else amb.start();
+      demo.sync();
+    });
+    const setCalm = (on, boot = false) => hooks.forEach((f) => { try { f(!on, boot); } catch (e) {} });
+    setCalm(calm(), true);
+    return { setCalm };
+  })();
+
   // ---------- hero callouts (>= 1340 px): drawn from the real element boxes, in the slab's own coordinates ----------
   const CALLOUTS = [[".cert", .45, .5, -1, "CERT TC-261020-EMBR"], [".nameplate", .3, .5, -1, "NAME/HP · MATCH"], [".card", .55, .48, 1, "HOLO SHIFT · OK"], [".num", .35, .5, 1, "SET No. 042/198"]];
   function drawCallouts() {   // updates the same nodes in place (a running intro keeps its targets when fonts arrive)
@@ -2157,6 +2668,7 @@ Reply with ONLY one JSON object in this shape:
     if (on) { root.classList.remove("m-intro", "m-intro-short", "m-boot"); disarm(); $("result").classList.remove(...RV); document.querySelector(".hero .stats").classList.remove("armed"); }
     paintToggle();
     call("setCalm", on);
+    TU.setCalm(on);
   };
   const rmq = matchMedia("(prefers-reduced-motion: reduce)");
   // stored: "calm" (always calm), "full" (only kept while the OS asks for less motion: an explicit override), nothing (follow the OS)
@@ -2198,15 +2710,8 @@ Reply with ONLY one JSON object in this shape:
     };
     gate(); if (document.fonts) document.fonts.ready.then(gate);
   }
-  // intro: the words rise row by row as the laser hairline crosses each line (rows depend on the wrap at this width)
-  // each row starts 110 ms before the .48 s hairline reaches its baseline (four rows: the old 40/150/260/370 ms), so a two-row wrap
-  // never shows the line striking glyphs that rose long before it
-  if (root.classList.contains("m-intro")) {
-    let row = -1, top = -1e4; const ws = [...document.querySelectorAll("h1.display .w")], rs = ws.map((w) => { if (w.offsetTop > top + 4) { row++; top = w.offsetTop; } return row; });
-    ws.forEach((w, i) => { w.firstElementChild.style.setProperty("--rd", Math.max(40, Math.round(480 * (rs[i] + 1) / (row + 1) - 110)) + "ms"); });
-  }
   const fine = root.classList.contains("m-fine") || matchMedia("(hover: hover) and (pointer: fine)").matches;
-  document.querySelector(".tilt-hint").textContent = fine ? "Hover to tilt · real holo shifts colour" : "Drag sideways to tilt";
+  document.querySelector(".tilt-hint .hint-t").textContent = fine ? "Hover to pause and tilt" : "Drag sideways to tilt";
   call("tilt", $("hero-tilt"), { hero: true });
   if ("IntersectionObserver" in window) {   // CSS-lite: pause the hero float off screen
     new IntersectionObserver(([e]) => $("hero-stage").classList.toggle("off", !e.isIntersecting)).observe($("hero-stage"));
@@ -2443,39 +2948,7 @@ Reply with ONLY one JSON object in this shape:
       tl.add(() => glint(surface(heroCard)), .6).to({}, { duration: .6 }, .6);
     };
 
-    // ================= page sections: steps deal, title words, Exhibit A scrub, desk lamp, UV loupe =================
-    const stepsDeal = () => {
-      const ol = document.querySelector(".steps ol");
-      if (!ol || played.steps) return;
-      played.steps = true;
-      const lis = [...ol.children], rail = document.querySelector(".steps-rail"), FROM = { y: 24, rotationX: -50, transformOrigin: "50% 100%", transformPerspective: 900, opacity: .001 };
-      const railOn = () => rail && rail.offsetWidth;
-      const deal = (items, withRail) => {
-        const t = G.timeline();
-        t.fromTo(items, FROM, { y: 0, rotationX: 0, opacity: 1, duration: .48, ease: E("tc.deal"), stagger: .11, clearProps: "all" }, 0);
-        items.forEach((li, k) => {   // on landing: the rarity badge glows, the rare card catches one glint
-          const at = .34 + k * .11, g = li.querySelector(".badge-glow"), sh = li.querySelector(".step-sheen");
-          if (g) t.fromTo(g, { opacity: 0 }, { opacity: 1, duration: .18, ease: "power2.out" }, at).to(g, { opacity: .35, duration: .32, ease: "power2.inOut" }, at + .18);
-          if (sh) t.fromTo(sh, { x: 0, xPercent: -120 }, { xPercent: 120, duration: .6, ease: E("tc.precise"), immediateRender: false, clearProps: "transform" }, at + .06);
-        });
-        if (withRail && railOn()) {
-          const at = .48 + (items.length - 1) * .11 + .2, line = rail.firstElementChild, dots = [...rail.querySelectorAll("b")];
-          t.fromTo(line, { scaleX: 0 }, { scaleX: 1, duration: .6, ease: "power2.inOut" }, at);
-          dots.forEach((d, k) => t.fromTo(d, { scale: 0 }, { scale: 1, duration: .2, ease: "back.out(3)" }, at + k * .27));
-        }
-        return t;
-      };
-      if (innerWidth >= 761) enter(ol, () => deal(lis, true), () => { G.set(lis, FROM); if (railOn()) { G.set(rail.firstElementChild, { scaleX: 0 }); G.set(rail.querySelectorAll("b"), { scale: 0 }); } });
-      else lis.forEach((li) => enter(li, () => deal([li], false), () => G.set(li, FROM)));
-    };
-    const titleWords = () => {
-      document.querySelectorAll(".section-title.split").forEach((h, k) => {
-        if (played["t" + k]) return;
-        played["t" + k] = true;
-        const ws = h.querySelectorAll(".w > i");
-        enter(h, () => G.fromTo(ws, { yPercent: 105, rotation: 5 }, { yPercent: 0, rotation: 0, duration: .42, ease: E("tc.snap"), stagger: .05, clearProps: "transform" }), () => G.set(ws, { yPercent: 105, rotation: 5 }));
-      });
-    };
+    // ================= page sections: Exhibit A scrub, UV loupe (steps, titles and the lamp are TU, vanilla) =================
     // Exhibit A: one paused timeline (1 unit), scrubbed by scroll; dim at arm, never hidden. Auto-height frame (re-checked on every
     // intersection and resize, since the host can grow the frame later): plays once when enough of it is on screen.
     const exhibit = () => {
@@ -2542,28 +3015,6 @@ Reply with ONLY one JSON object in this shape:
       addEventListener("scroll", kick, { passive: true });
       addEventListener("resize", onRz, { passive: true });
       cleanups.push(() => { io.disconnect(); removeEventListener("scroll", kick); removeEventListener("resize", onRz); cancelAnimationFrame(raf); clearTimeout(rz); clearTimeout(fb); laserN.classList.remove("idle"); if (tl) { tl.revert(); tl = null; } });
-    };
-    // desk lamp: a faint pool of light follows the pointer; it dims while the page scrolls
-    const deskLamp = () => {
-      if (!fine || lite()) return;
-      const n = el("div", { class: "lamp", "aria-hidden": "true" });
-      document.body.prepend(n);
-      const qx = qt(n, "x", .6), qy = qt(n, "y", .6);
-      let shown = false, scrolling = false, sT = 0;
-      const show = (o, d) => G.to(n, { opacity: o, duration: d, ease: "power2.out", overwrite: "auto" });
-      const move = (e) => {
-        if (e.pointerType !== "mouse") return;
-        const x = e.clientX - 260, y = e.clientY - 260;
-        if (!shown) { shown = true; G.set(n, { x, y }); if (!scrolling) show(1, .3); }
-        qx(x); qy(y);
-      };
-      // a notched wheel fires every 200-400 ms: dim (never off) while scrolling, and come back only once the page has been still for a while
-      const scroll = () => { if (!shown) return; if (!scrolling) { scrolling = true; show(.5, .25); } clearTimeout(sT); sT = setTimeout(() => { scrolling = false; if (shown) show(1, .6); }, 450); };
-      const out = () => { shown = false; show(0, .2); };
-      addEventListener("pointermove", move, { passive: true });
-      addEventListener("scroll", scroll, { passive: true });
-      root.addEventListener("pointerleave", out);
-      cleanups.push(() => { removeEventListener("pointermove", move); removeEventListener("scroll", scroll); root.removeEventListener("pointerleave", out); clearTimeout(sT); G.killTweensOf(n); n.remove(); });
     };
     // UV loupe (hero card, fine pointer): the lens moves, its pattern moves the other way, so the microtext stays printed on the card
     const uvLoupe = () => {
@@ -2737,7 +3188,7 @@ Reply with ONLY one JSON object in this shape:
       if (mode === "quiet") { revealCtx = G.context(() => { G.fromTo(q(".result-top"), { opacity: .001 }, { opacity: 1, duration: .2, ease: "none", clearProps: "opacity" }); }, panel); return; }
       // a fault: the scan slab already turned into this slab in place, so it stays; only the text block comes in
       if (mode === "fault") { revealCtx = G.context(() => { G.fromTo(q(".verdict-block"), { opacity: .45, y: 4 }, { opacity: 1, y: 0, duration: .2, ease: E("tc.out"), clearProps: "all" }); }, panel); return; }
-      const ex = mode === "example", fx = !ex, v = normVerdict(r.verdict), risk = clampRisk(r.risk), phone = innerWidth < 640, lt = lite();
+      const ex = mode === "example", fx = true, v = normVerdict(r.verdict), risk = clampRisk(r.risk), phone = innerWidth < 640, lt = lite();
       const high = topFlags(r).filter((f) => f.severity === "high").length, fakeFail = (r.fake_checks || []).some((c) => c && c.result === "fail");
       const stageN = q(".result-stage"), bobN = q(".bob", stageN), sl = q(".slab", stageN), label = q(".label", sl), card = q(".card", sl);
       const score = q(".score b", sl), sfx = q(".cert-sfx", sl), rcs = qa(".reticle .rc", sl), laserN = q(".scanline", card), aura = q(".fx-aura", stageN), rings = qa(".fx-rings i", stageN);
@@ -2875,29 +3326,29 @@ Reply with ONLY one JSON object in this shape:
         gTilt(heroTilt, { hero: true });
         if (lamp) lamp.observe(heroCard);
         document.querySelectorAll("#result .tilt").forEach((t) => { if (t._tiltStop) t._tiltStop(); gTilt(t); if (lamp) lamp.observe(t.querySelector(".card")); });
-        stepsDeal(); titleWords(); exhibit(); deskLamp(); uvLoupe();
+        exhibit(); uvLoupe();   // steps, titles and the desk lamp are TU (vanilla) now
         const phoneLayout = innerWidth < 881;
         if (first && introWindow && !phoneLayout && root.classList.contains("m-intro")) {
           const t0 = performance.now() / 1000, A = (ms) => Math.max(0, ms / 1000 - t0), b = slabBox();
           introTl = G.timeline();
-          snap(introTl, A(600), b);
-          laser(introTl, A(640), heroCard);
-          sealIn(introTl, A(1180));
+          snap(introTl, A(1250), b);
+          laser(introTl, A(1290), heroCard);
+          sealIn(introTl, A(1720));
           [...heroSlab.querySelectorAll(".callouts .co")].forEach((g, k) => {   // >= 1340 px: the four callout lines draw, then their labels decode
-            const [pth, dot, txt] = g.children, at = A(760) + k * .09;
+            const [pth, dot, txt] = g.children, at = A(1350) + k * .09;
             if (!pth) return;
             introTl.fromTo(pth, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: .32, ease: "power3.out" }, at)
               .fromTo(dot, { scale: 0, transformOrigin: "50% 50%" }, { scale: 1, duration: .16, ease: "back.out(3)" }, at)
               .fromTo(txt, { opacity: 0 }, { opacity: 1, duration: .06, ease: "none" }, at + .24)
               .add(() => decode(txt, CALLOUTS[k][4], 360), at + .24);
           });
-          release(introTl, A(1250), b);
+          release(introTl, A(1850), b);
           const skip = () => { if (introTl) introTl.progress(1); };
           ["pointerdown", "keydown", "wheel", "touchstart"].forEach((t) => addEventListener(t, skip, { once: true, passive: true }));
-          startBob(1, A(1500));
+          startBob(1, A(2100));
         } else if (phoneLayout && !heroEntered && "IntersectionObserver" in window) {
           // phones see the slab at load now: the instrument pass waits for the CSS deal-in (about .9 s after navigation)
-          const wait = () => (root.classList.contains("m-intro") ? Math.max(0, .9 - performance.now() / 1000) : 0);
+          const wait = () => (root.classList.contains("m-intro") ? Math.max(0, 1.5 - performance.now() / 1000) : 0);
           const io = new IntersectionObserver(([e]) => { if (e.isIntersecting && e.intersectionRatio >= .35) { io.disconnect(); heroCtx && heroCtx.add(() => heroEntry(wait())); } }, { threshold: [0, .35, .6] });
           io.observe(stage); cleanups.push(() => io.disconnect());
         } else startBob(innerWidth < 640 ? .5 : 1);
@@ -2984,7 +3435,7 @@ Reply with ONLY one JSON object in this shape:
       if (window.CustomEase) { G.registerPlugin(window.CustomEase); for (const k in EASES) window.CustomEase.create(k, EASES[k]); }
       G.defaults({ ease: E("tc.out"), duration: 0.42 });
       G.config({ force3D: "auto" });
-      Object.assign(M, gsapMotion({ introWindow: performance.now() < 900, late: performance.now() > 1500 }));   // performance.now() ~ time since navigation start
+      Object.assign(M, gsapMotion({ introWindow: performance.now() < 1100, late: performance.now() > 1500 }));   // performance.now() ~ time since navigation start
       root.classList.add("gsap-on");
     } catch (e) {   // stay on CSS-lite; never console.error (the harness counts console errors)
       Object.assign(M, CSS_M);
