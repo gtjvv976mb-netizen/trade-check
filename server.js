@@ -6,6 +6,7 @@ import path from "node:path";
 import zlib from "node:zlib";
 import crypto from "node:crypto";
 import v8 from "node:v8";
+import os from "node:os";
 import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
 
@@ -14,9 +15,12 @@ const PORT = Number(process.env.PORT || 8787);
 const MODEL = process.env.TRADE_CHECK_MODEL || "claude-opus-5-5";
 const CHECKS_PER_HOUR = Number(process.env.CHECKS_PER_HOUR || 10); // per visitor IP, protects your credits
 const CHECKS_PER_HOUR_TOTAL = Number(process.env.CHECKS_PER_HOUR_TOTAL || 200); // all visitors together, a backstop for your credits
-// checks running at once, all visitors. Each holds its photos several times over (about 6x the body, up to about 60 MB), so the
-// default follows the heap: 5 on a normal instance, fewer when Node runs with a small heap (a 256 MB instance gets about 1-2).
-const CHECKS_IN_FLIGHT = Number(process.env.CHECKS_IN_FLIGHT) || Math.max(1, Math.min(5, Math.floor(v8.getHeapStatistics().heap_size_limit / (48 << 20)) - 1));
+// checks running at once, all visitors. Each holds its photos several times over (about 6x the body, up to about 60 MB of RSS),
+// so the default follows the instance's memory (the container limit when there is one; V8's heap limit ignores it): about
+// 160 MB for Node itself plus 70 MB a check gives 1 on a 256 MB instance, 3 on 384 MB and 5 on 512 MB or more.
+const MEM_MB = (() => { const t = os.totalmem(), c = process.constrainedMemory?.() || 0; return (c > 0 && c < t ? c : t) / 2 ** 20; })();
+const CHECKS_IN_FLIGHT = Number(process.env.CHECKS_IN_FLIGHT) || Math.max(1, Math.min(5, Math.floor((MEM_MB - 160) / 70), Math.floor(v8.getHeapStatistics().heap_size_limit / (48 << 20)) - 1));
+const PER_VISITOR = 2;   // checks at once from one address: two people on the same Wi-Fi or carrier address can both check
 const MAX_BODY_BYTES = 9 * 1024 * 1024; // the page sends at most about 7.6 MB (four large photos)
 const MAX_IMAGES = 4;
 const MAX_PAUSE_CONTINUATIONS = 3;
@@ -102,33 +106,42 @@ setInterval(() => {
 }, 600_000).unref();
 // Each check holds its photos several times over (request, parsed JSON, the SDK's request body), so only a few run at once,
 // and one per visitor: a burst of big requests can't run the server out of memory (a crash would also reset the limits).
-const inFlight = new Set();
+// A check takes its slot only once its upload is in and valid, so slow or stalled uploads never hold one; the uploads themselves
+// are bounded by bytes buffered (a stalled one holds almost nothing) and by an idle timeout.
+let inFlight = 0;
+const visiting = new Map();   // address -> requests open (uploading or checking)
+const BUSY = "Trade Check is busy. Try again in a minute.";
 
 // A long chat keeps its start and its latest messages (the payment demand is usually last), like the page does.
 const TEXT_MAX = 8000;
 const fitText = (t) => (t.length <= TEXT_MAX ? t : `${t.slice(0, 2000)}\n[… ${t.length - (TEXT_MAX - 100)} characters cut …]\n${t.slice(-(TEXT_MAX - 2100))}`);
 
-const tooLarge = () => Object.assign(new Error("Photos are too large. Use smaller images."), { status: 413 });
-// The upload has its own deadline: the page sends at most about 2 MB, so 40 s allows a slow phone connection, while a
-// stalled or trickled upload can't hold a check slot (and lock other visitors out) for Node's default 5 minutes.
-const BODY_TIMEOUT_MS = 40_000;
+const tooLarge = () => Object.assign(fail(413, "Photos are too large. Use smaller images.", true), { close: true });
+// The upload is bounded three ways: no bytes for 15 s ends it (a stalled upload), a deadline that grows with its size (20 s plus
+// 20 KB/s, at most 120 s, so four photos still go up on a weak phone signal), and the bytes all uploads may buffer at once.
+const IDLE_MS = 15_000, UPLOAD_BUDGET = (CHECKS_IN_FLIGHT + 1) * MAX_BODY_BYTES;
+let buffered = 0;
 function readBody(req, signal) {
   return new Promise((resolve, reject) => {
-    let size = 0, chunks = [];
-    const stop = (err) => {
-      clearTimeout(timer); signal.removeEventListener("abort", onAbort); req.off("data", onData);
-      chunks = []; req.resume(); reject(err);
-    };
+    let size = 0, held = 0, chunks = [], idle = 0;
+    const len = Number(req.headers["content-length"]) || MAX_BODY_BYTES;
+    const end = () => { clearTimeout(idle); clearTimeout(deadline); signal.removeEventListener("abort", onAbort); req.off("data", onData); buffered -= held; held = 0; };
+    const stop = (err) => { end(); chunks = []; req.resume(); reject(Object.assign(err, { close: err.status !== 499 })); };
+    const slow = () => stop(fail(408, "The upload took too long. Try again on a faster connection, or with fewer photos."));
     const onData = (c) => {
       size += c.length;
-      if (size <= MAX_BODY_BYTES) return void chunks.push(c);
-      stop(tooLarge());   // stop buffering, drop the rest; the caller answers 413 (connection: close) before the socket goes
+      if (size > MAX_BODY_BYTES) return stop(tooLarge());   // stop buffering, drop the rest; the caller answers 413 and closes
+      buffered += c.length; held += c.length;
+      if (buffered > UPLOAD_BUDGET) return stop(fail(503, BUSY));
+      chunks.push(c);
+      clearTimeout(idle); idle = setTimeout(slow, IDLE_MS);
     };
     const onAbort = () => stop(fail(499, "Stopped."));
-    const timer = setTimeout(() => stop(fail(408, "The upload took too long. Try again on a faster connection, or with fewer photos.")), BODY_TIMEOUT_MS);
+    const deadline = setTimeout(slow, Math.min(120_000, 20_000 + len / 20));
+    idle = setTimeout(slow, IDLE_MS);
     signal.addEventListener("abort", onAbort);
     req.on("data", onData);
-    req.on("end", () => { clearTimeout(timer); signal.removeEventListener("abort", onAbort); const buf = Buffer.concat(chunks); chunks = []; resolve(buf.toString("utf8")); });
+    req.on("end", () => { end(); const buf = Buffer.concat(chunks); chunks = []; resolve(buf.toString("utf8")); });
     req.on("error", stop);
   });
 }
@@ -138,7 +151,8 @@ function send(res, status, body, type = "application/json", extra = {}) {
   res.writeHead(status, { "content-type": type, "cache-control": "no-store", "x-content-type-options": "nosniff", ...extra });
   res.end(type === "application/json" ? JSON.stringify(body) : body);
 }
-const fail = (status, message) => Object.assign(new Error(message), { status });
+// final: trying the same request again can't work (a bad request, the hourly limit, the server's key), so the page offers no Try again
+const fail = (status, message, final = false) => Object.assign(new Error(message), { status, final });
 
 // Parses "data:image/jpeg;base64,..." into an image content block.
 function imageBlock(dataUrl) {
@@ -161,7 +175,7 @@ function extractJson(text) {
 
 // The user turn for Claude, or a 400 when the body holds nothing to check (validated before any hourly check is spent).
 function buildContent(body) {
-  if (!body || typeof body !== "object" || Array.isArray(body)) throw fail(400, "The request couldn't be read.");
+  if (!body || typeof body !== "object" || Array.isArray(body)) throw fail(400, "The request couldn't be read.", true);
   const { text, askingPrice, images } = body;
   const content = [];
   for (const img of (Array.isArray(images) ? images : []).slice(0, MAX_IMAGES)) {
@@ -173,7 +187,7 @@ function buildContent(body) {
   if (typeof text === "string" && text.trim()) parts.push(`Listing or chat (JSON string): ${JSON.stringify(fitText(text.trim()))}`);
   if (typeof askingPrice === "string" && askingPrice.trim()) parts.push(`Asking price (JSON string): ${JSON.stringify(askingPrice.trim().slice(0, 100))}`);
   if (content.length) parts.push(`${content.length} photo(s) attached above.`);
-  if (!parts.length) throw fail(400, "Add listing text, a chat, or a photo first.");
+  if (!parts.length) throw fail(400, "Add listing text, a chat, or a photo first.", true);
   content.push({ type: "text", text: parts.join("\n\n") + "\n\nCheck this deal." });
   return content;
 }
@@ -221,7 +235,7 @@ const BASE = String(process.env.PUBLIC_URL || process.env.RENDER_EXTERNAL_URL ||
 const OG_FILE = path.join(here, "og.png");
 const OG = fs.existsSync(OG_FILE) ? (() => { const buf = fs.readFileSync(OG_FILE); return { buf, etag: `"${crypto.createHash("sha1").update(buf).digest("base64url").slice(0, 16)}"` }; })() : null;
 const OG_URL = BASE && OG ? `${BASE}/og.png?v=${OG.etag.slice(1, 11)}` : "";
-const OG_ALT = "Trade Check: a graded-card slab labelled Likely scam, risk 88, beside the line Know it's legit before you pay.";
+const OG_ALT = "Trade Check: a graded-card slab labelled Likely scam, risk 88, beside the question Is that card deal a scam?";
 const DESC = "Paste a Pokémon card listing, seller chat or photos. Trade Check spots the scam playbook, checks what's visible for fakes and compares the price with recent sales.";
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 const HEAD = [
@@ -277,17 +291,18 @@ const server = http.createServer(async (req, res) => {
       // Another website can make its visitors' browsers post here. JSON only: a cross-site JSON post needs a CORS preflight,
       // which fails (this server sends no CORS headers); and a browser that says the request is cross-site is turned away.
       const h = req.headers;
-      if (!/^application\/json\b/i.test(h["content-type"] || "")) throw fail(415, "The request couldn't be read.");
+      if (!/^application\/json\b/i.test(h["content-type"] || "")) throw fail(415, "The request couldn't be read.", true);
       const origin = h.origin && h.origin !== "null" ? (() => { try { return new URL(h.origin).host; } catch { return "?"; } })() : "";
-      if (h["sec-fetch-site"] === "cross-site" || h.origin === "null" || (origin && origin !== h.host && origin !== h["x-forwarded-host"])) throw fail(403, "Checks only run from the Trade Check page.");
+      if (h["sec-fetch-site"] === "cross-site" || h.origin === "null" || (origin && origin !== h.host && origin !== h["x-forwarded-host"])) throw fail(403, "Checks only run from the Trade Check page.", true);
       if (Number(h["content-length"]) > MAX_BODY_BYTES) throw tooLarge();
       key = clientIp(req);
-      if (inFlight.has(key)) { key = null; throw fail(429, "A check is already running. Wait for it to finish."); }
-      if (inFlight.size >= CHECKS_IN_FLIGHT) { key = null; throw fail(503, "Trade Check is busy. Try again in a minute."); }
-      inFlight.add(key);
+      // (two people behind one address share it, so the message can't say "your check")
+      if ((visiting.get(key) || 0) >= PER_VISITOR) { key = null; throw fail(429, "Another check from your network is still running. Try again in a minute."); }
+      if (inFlight >= CHECKS_IN_FLIGHT) { key = null; throw fail(503, BUSY); }   // busy now: say so before the upload, not after
+      visiting.set(key, (visiting.get(key) || 0) + 1);
       // Stop, Clear, a closed tab or the time limit end the Claude call too: nobody pays for an answer no one reads
       const ctl = new AbortController();
-      let timedOut = false;
+      let timedOut = false, slot = false;
       const limit = setTimeout(() => { timedOut = true; ctl.abort(); }, CHECK_TIMEOUT_MS);
       res.on("close", () => { if (!res.writableFinished) ctl.abort(); });
       try {
@@ -296,13 +311,15 @@ const server = http.createServer(async (req, res) => {
         raw = null;
         const content = buildContent(body);
         body = null;
+        if (inFlight >= CHECKS_IN_FLIGHT) throw fail(503, BUSY);
         const why = allow(key);
-        if (why) throw fail(429, why);
+        if (why) throw fail(429, why, true);
+        inFlight++; slot = true;
         let result;
         try { result = await runCheck(content, ctl.signal); }
         catch (err) {
-          // no answer and nothing billed (an upstream 5xx/529/429 or a dropped connection): the hit is given back
-          if (err instanceof Anthropic.APIError && !err.spent && !ctl.signal.aborted && (!err.status || err.status >= 500 || err.status === 429)) refund(key);
+          // no answer and nothing billed (an upstream 5xx/529/429, a dropped connection, or the server's own key refused): the hit is given back
+          if (err instanceof Anthropic.APIError && !err.spent && !ctl.signal.aborted && (!err.status || err.status >= 500 || [401, 403, 429].includes(err.status))) refund(key);
           throw err;
         }
         return send(res, 200, result);
@@ -310,26 +327,27 @@ const server = http.createServer(async (req, res) => {
         if (timedOut) throw fail(504, "This is taking too long. Try again.");
         if (ctl.signal.aborted) return;   // the visitor left: nothing to answer
         throw err;
-      } finally { clearTimeout(limit); }
+      } finally { clearTimeout(limit); if (slot) inFlight--; }
     }
     send(res, 404, { error: "Not found" });
   } catch (err) {
     // The visitor sees a short sentence, never an upstream error body (the raw detail goes to the log).
-    let status = 502, message = "The check failed. Try again.";
+    let status = 502, message = "The check failed. Try again.", final = !!err.final;
     if (err instanceof Anthropic.APIError) {
-      if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) message = "The server's API key is missing or invalid.";
+      if (err instanceof Anthropic.AuthenticationError || err instanceof Anthropic.PermissionDeniedError) { message = "The server's API key is missing or invalid."; final = true; }
       else if (err instanceof Anthropic.RateLimitError) { status = 429; message = "Too many checks right now. Try again in a minute."; }
       else if (!err.status || err.status >= 500) message = "Claude is busy right now. Try again in a minute.";
     } else if (err.status >= 400 && err.status < 600) { status = err.status; message = err.message; }   // this server's own answers
     if (!err.status || err.status >= 500 || err instanceof Anthropic.APIError) console.error(err);
-    // an oversize body: answer, then close (the rest of the upload is dropped, not read)
-    if (status === 413 || status === 408) { send(res, status, { error: message }, "application/json", { connection: "close" }); res.on("finish", () => setTimeout(() => req.destroy(), 1000).unref()); return; }
-    send(res, status, { error: message });
+    const out = final ? { error: message, retry: false } : { error: message };
+    // an upload cut short (too large, too slow, no room): answer, then close (the rest of the upload is dropped, not read)
+    if (err.close) { send(res, status, out, "application/json", { connection: "close" }); res.on("finish", () => setTimeout(() => req.destroy(), 1000).unref()); return; }
+    send(res, status, out);
   } finally {
-    if (key) inFlight.delete(key);   // the Claude call is over (answered, failed or aborted)
+    if (key) { const n = (visiting.get(key) || 1) - 1; if (n > 0) visiting.set(key, n); else visiting.delete(key); }   // this request is over (answered, failed or aborted)
   }
 });
-// backstops for slow clients (the upload itself has the 40 s deadline above)
+// backstops for slow clients (the upload itself has the idle timeout and the size-scaled deadline above)
 server.headersTimeout = 20_000;
-server.requestTimeout = 60_000;
+server.requestTimeout = 130_000;
 server.listen(PORT, () => console.log(`Trade Check running on http://localhost:${PORT} (model ${MODEL})`));

@@ -183,7 +183,7 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .label .cert { font-family: var(--f-mono); font-size: 10.5px; color: #5a6378; font-variant-numeric: tabular-nums; }
 .label .subj { font-family: var(--f-mono); font-size: 10.5px; color: #5a6378; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (min-width: 921px) { .label .subj { font-size: 11.5px; } }
-.standin { position: absolute; left: 9px; right: 9px; bottom: 9px; z-index: 4; padding: 3px 6px; text-align: center; font: 700 9.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #e9dfc8; background: rgb(14 18 30 / .72); border-radius: 0 0 6px 6px; pointer-events: none; }
+.standin { position: absolute; left: 9px; right: 9px; bottom: 9px; z-index: 4; padding: 3px 6px; text-align: center; font: 700 11px/1.2 var(--f-mono); letter-spacing: .05em; text-transform: uppercase; color: #e9dfc8; background: rgb(14 18 30 / .72); border-radius: 0 0 6px 6px; pointer-events: none; }
 .label .verdict { font-family: var(--f-display); font-stretch: 78%; font-weight: 900; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
 .label .score { grid-column: 2; grid-row: 1 / span 3; text-align: center; line-height: 1; }
 .label .score small { display: block; font-family: var(--f-display); font-weight: 800; font-size: 9.5px; letter-spacing: .16em; color: #5a6378; }
@@ -217,7 +217,7 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
   background: #1a2034; box-shadow: 0 14px 28px -10px rgb(0 0 0 / .7);
 }
 .card .art { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.card .art > .art-in { position: absolute; inset: 0; background: center / cover; animation: art-in .4s var(--e-out) both; }
+.card .art > .art-in { position: absolute; inset: 0; animation: art-in .4s var(--e-out) both; }
 @keyframes art-in { from { opacity: 0; } }
 .card .art.fallback {
   background:
@@ -351,12 +351,11 @@ ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15p
 .loading { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: center; }
 .loading > :not(.ring) { grid-column: 2; }
 .loading strong { font-family: var(--f-display); font-stretch: 80%; font-size: 24px; }
-.loading .steps-live { font-family: var(--f-mono); font-size: 13px; color: #6fd8ff; }
+.loading .steps-live { font-family: var(--f-mono); font-size: 13px; line-height: 1.55; color: #6fd8ff; }
 #result[data-v="fault"] .loading .steps-live { color: var(--fault); }   /* a fault is not "still working" */
 .loading .subline, .loading .steps-live { min-height: 3.1em; }   /* the text changes while scanning; two lines reserved, so nothing shifts */
-.loading .steps-live { line-height: 1.55; }
 .loading .stop { justify-self: start; margin-top: 4px; }
-.result-top > .stop.dock { position: sticky; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9; justify-self: center; min-width: 160px; margin-block: -14px -8px; background: #1b2131; box-shadow: 0 10px 24px -8px rgb(0 0 0 / .8); }
+.result-top > .stop.dock { grid-column: 1 / -1; position: sticky; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 9; justify-self: center; min-width: 160px; margin-block: -14px -8px; background: #1b2131; box-shadow: 0 10px 24px -8px rgb(0 0 0 / .8); }
 .loading .reading { position: relative; display: block; overflow: hidden; white-space: nowrap; font: 12.5px/1.7 var(--f-mono); color: var(--muted); -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .loading .reading > span { display: inline-block; animation: reading-tape var(--tape-d, 20s) linear infinite; }
 .loading .reading::after { content: ""; position: absolute; top: 0; bottom: 0; left: 28%; width: 56px; background: rgb(111 216 255 / .16); border-left: 1px solid #6fd8ff; mix-blend-mode: screen; }
@@ -943,7 +942,7 @@ Reply with ONLY one JSON object in this shape:
   // ---------- motion helpers (hand-written; every one returns a stop()) ----------
   const CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ0123456789";
   // Scramble for machine text only (cert suffix, readouts, phase names). Writes textContent, never innerHTML.
-  function decode(node, text, ms = 400, keep = 0, set = CHARSET) {   // keep: leading characters that never scramble
+  function decode(node, text, ms = 400) {
     if (node._dec) node._dec();   // one scramble per node
     let raf = 0, done = false;
     const stop = () => { if (done) return; done = true; cancelAnimationFrame(raf); node.textContent = text; node._dec = null; const i = stopFx.indexOf(stop); if (i >= 0) stopFx.splice(i, 1); };
@@ -954,8 +953,8 @@ Reply with ONLY one JSON object in this shape:
       const k = (t - t0) / ms;
       if (k >= 1) return stop();
       if (fr++ % 2 === 0) {
-        const n = keep + Math.floor(Math.max(0, k) * (len - keep)); let s = text.slice(0, n);
-        for (let i = n; i < len; i++) s += text[i] === " " ? " " : set[(Math.random() * set.length) | 0];
+        const n = Math.floor(Math.max(0, k) * len); let s = text.slice(0, n);
+        for (let i = n; i < len; i++) s += text[i] === " " ? " " : CHARSET[(Math.random() * CHARSET.length) | 0];
         node.textContent = s;
       }
       raf = requestAnimationFrame(step);
@@ -1059,8 +1058,13 @@ Reply with ONLY one JSON object in this shape:
     const swap = () => { artOk = true; document.querySelectorAll("[data-art=creature]").forEach((n) => {
       if (calm() || !n.classList.contains("fallback") || !n.isConnected) return artNode(n);
       // the faded-in layer stays as the art (swapping it for a background repaints, and showed a dark gap when the image wasn't cached)
-      const lay = el("i", { class: "art-in", style: `background-image:url("${ART_URL}")` }), done = () => n.classList.remove("fallback");
-      lay.addEventListener("animationend", done, { once: true }); lay.addEventListener("animationcancel", done, { once: true }); n.append(lay);
+      // a decoded <img> per slab, appended only once it can paint: the fade never runs over an empty layer
+      const lay = new Image(), done = () => n.classList.remove("fallback");
+      lay.className = "art-in"; lay.alt = ""; lay.src = ART_URL;
+      (lay.decode ? lay.decode() : Promise.resolve()).catch(() => {}).then(() => {
+        if (!n.isConnected || !n.classList.contains("fallback")) return;
+        lay.addEventListener("animationend", done, { once: true }); lay.addEventListener("animationcancel", done, { once: true }); n.append(lay);
+      });
     }); };
     img.onload = () => (img.decode ? img.decode().then(swap, swap) : swap());
     img.onerror = () => { artOk = false; };
@@ -1072,7 +1076,8 @@ Reply with ONLY one JSON object in this shape:
     if (calm()) { node.textContent = String(to); return; }
     const t0 = performance.now() + delay, dur = 900;
     let raf = 0;
-    const step = (t) => { const k = Math.max(0, Math.min(1, (t - t0) / dur)); node.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
+    const step = (t) => { if (t < t0) { raf = requestAnimationFrame(step); return; }   // the placeholder stays until the count starts
+      const k = Math.min(1, (t - t0) / dur); node.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3)))); if (k < 1) raf = requestAnimationFrame(step); };
     raf = requestAnimationFrame(step);
     stopFx.push(() => { cancelAnimationFrame(raf); node.textContent = String(to); });
   }
@@ -1086,8 +1091,9 @@ Reply with ONLY one JSON object in this shape:
     const art = el("div", { class: "art fallback" });
     const card = el("div", { class: "card" + (photoUrl ? " photo" : "") + ((done && fakeFail) || fault ? " dead" : "") }, art, el("div", { class: photoUrl ? "frame plain" : "frame" }));
     const box = el("div", { class: "cardbox" }, card);   // the stamp sits here, beside the card: the card clips, the stamp's wind-up must not
-    if (!photoUrl) card.append(el("div", { class: "nameplate" }, "Emberkit ", el("small", {}, "HP ", el("em", { text: "120" }))));
-    if (!photoUrl && done && !example) card.append(el("span", { class: "standin", text: "Stand-in art · no photo" }));   // never read as the checked card
+    // no photo (a text-only check): the card window says it is stand-in art and never names a card, like the saved image
+    if (!photoUrl) card.append(example ? el("div", { class: "nameplate" }, "Emberkit ", el("small", {}, "HP ", el("em", { text: "120" }))) : el("div", { class: "nameplate", text: "STAND-IN ART" }));
+    if (!photoUrl && !example) card.append(el("span", { class: "standin", text: "No photo was shared" }));
     card.append(el("div", { class: "foil" }, el("i", { class: "foil-band" })), el("div", { class: "glare" }, el("i", { class: "glare-spot" })));
     if (fault) card.append(el("i", { class: "foil-dead" }));
     if (done) {   // verdict marks, all at their final pose at rest (motion only decorates)
@@ -1155,7 +1161,7 @@ Reply with ONLY one JSON object in this shape:
     panel.classList.add("rv", "rv-" + v);
     if (mode === "example") panel.classList.add("rv-ex");   // muted: no shake
     const b = panel.querySelector(".result-stage .score b"), dot = panel.querySelector(".meter i");
-    if (b) b.textContent = mode === "example" ? "··" : "0";   // armed example: no red verdict next to a 0
+    if (b) b.textContent = "··";   // never a 0 next to the verdict: the placeholder holds until the count starts
     if (dot) dot.style.setProperty("--p", "0");
     const play = () => {
       if (!panel.classList.contains("rv")) return;
@@ -2758,8 +2764,8 @@ Reply with ONLY one JSON object in this shape:
         // on caution and scam, never across a band edge into a worse band); then one punch
         const cAt = { safe: .12, caution: .1, scam: ex ? .36 : .45 }[v], cDur = { safe: .5, caution: .6, scam: .42 }[v];
         const cap = risk < 34 ? 33.9 : risk < 67 ? 66.9 : 100, mp = { p: 0 };
-        let shown = 0;
-        score.textContent = ex ? "··" : "0"; dot.style.setProperty("--p", "0");   // armed example: no red verdict next to a 0
+        let shown = -1;
+        score.textContent = "··"; dot.style.setProperty("--p", "0");   // never a 0 next to the verdict: the placeholder holds until the count starts
         tl.to(mp, { p: risk, duration: cDur + .15, ease: v === "safe" ? E("tc.out") : v === "caution" ? E(risk * 1.04 >= 67 ? "tc.out" : "tc.hunt") : E("tc.stamp"),
           onUpdate: () => { const p = Math.min(cap, mp.p), n = Math.min(risk, Math.round(p)); dot.style.setProperty("--p", p.toFixed(2)); if (n > shown) { shown = n; score.textContent = String(n); } } }, cAt)
           .fromTo(score, { scale: 1.18 }, { scale: 1, duration: .22, ease: "back.out(3)", immediateRender: false }, cAt + cDur + .15);
