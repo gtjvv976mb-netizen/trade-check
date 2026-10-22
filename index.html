@@ -184,13 +184,14 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .acry.af { transform: translateZ(calc(var(--T) / 2)); }
 .acry.ab { transform: rotateY(180deg) translateZ(calc(var(--T) / 2)); }
 .acry .gz { --lb: 30%; position: absolute; inset: 0; }
-.acry.af .gz { -webkit-mask: linear-gradient(#000 0 0) 0 var(--lb) / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0);
-  mask: linear-gradient(#000 0 0) 0 var(--lb) / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0); }
+.acry.af .gz { -webkit-mask: linear-gradient(#000 0 0) 0 var(--lb) / 100% calc(var(--ft, 9999px) - var(--lb)) no-repeat, linear-gradient(#000 0 0) 0 var(--fb, 9999px) / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0);
+  mask: linear-gradient(#000 0 0) 0 var(--lb) / 100% calc(var(--ft, 9999px) - var(--lb)) no-repeat, linear-gradient(#000 0 0) 0 var(--fb, 9999px) / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0); }
 /* a caution slab hangs hazard tape under the label (tilted 3 deg): the calm zone then runs down to the tape's lower edge, on the same tilt
-   (--lt: that edge's stop on a 177 deg gradient, set with --lb), so the tape's print keeps its contrast under the streak too */
+   (--lt: that edge's stop on a 177 deg gradient, set with --lb), so the tape's print keeps its contrast under the streak too.
+   On every face the footplate is a calm band as well (--ft to --fb): the stand-in's "Drawn art, not the checked card" must stay readable */
 :is(#hero-stage:is([data-demo=caution], [data-out=caution]), .result-stage[data-v=caution]) .acry.af .gz {
-  -webkit-mask: linear-gradient(177deg, transparent var(--lt), #000 calc(var(--lt) + 2px)), linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0);
-  mask: linear-gradient(177deg, transparent var(--lt), #000 calc(var(--lt) + 2px)), linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0); }
+  -webkit-mask: linear-gradient(177deg, transparent var(--lt), #000 calc(var(--lt) + 2px)) 0 0 / 100% var(--ft, 100%) no-repeat, linear-gradient(#000 0 0) 0 var(--fb, 9999px) / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0);
+  mask: linear-gradient(177deg, transparent var(--lt), #000 calc(var(--lt) + 2px)) 0 0 / 100% var(--ft, 100%) no-repeat, linear-gradient(#000 0 0) 0 var(--fb, 9999px) / 100% 100% no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0); }
 /* the back's calm zone is the insert's own box, with its 14 px rounded corners (a square zone left dark notches past them) */
 .acry.ab .gz { -webkit-mask: linear-gradient(#000 0 0) 0 var(--lb) / 100% 12px no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 100% / 100% 17px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, radial-gradient(circle at 100% 0, #0000 13.5px, #000 14.5px) 13px calc(100% - 17px) / 14px 14px no-repeat, radial-gradient(circle at 0 0, #0000 13.5px, #000 14.5px) calc(100% - 13px) calc(100% - 17px) / 14px 14px no-repeat, radial-gradient(circle at 100% 100%, #0000 13.5px, #000 14.5px) 13px calc(var(--lb) + 12px) / 14px 14px no-repeat, radial-gradient(circle at 0 100%, #0000 13.5px, #000 14.5px) calc(100% - 13px) calc(var(--lb) + 12px) / 14px 14px no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0);
   mask: linear-gradient(#000 0 0) 0 var(--lb) / 100% 12px no-repeat, linear-gradient(#000 0 0) 0 0 / 100% 13px no-repeat, linear-gradient(#000 0 0) 0 100% / 100% 17px no-repeat, linear-gradient(#000 0 0) 0 0 / 13px 100% no-repeat, linear-gradient(#000 0 0) 100% 0 / 13px 100% no-repeat, radial-gradient(circle at 100% 0, #0000 13.5px, #000 14.5px) 13px calc(100% - 17px) / 14px 14px no-repeat, radial-gradient(circle at 0 0, #0000 13.5px, #000 14.5px) calc(100% - 13px) calc(100% - 17px) / 14px 14px no-repeat, radial-gradient(circle at 100% 100%, #0000 13.5px, #000 14.5px) 13px calc(var(--lb) + 12px) / 14px 14px no-repeat, radial-gradient(circle at 0 100%, #0000 13.5px, #000 14.5px) calc(100% - 13px) calc(var(--lb) + 12px) / 14px 14px no-repeat, linear-gradient(rgb(0 0 0 / .14) 0 0); }
@@ -231,7 +232,6 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .label .subj .sn:not(:last-child)::after { content: " ·"; }   /* the dot stays with the name: a line never starts with it */
 .label .subj .sm { min-width: 0; overflow-wrap: break-word; }
 @media (min-width: 921px) { .label .subj { font-size: 11.5px; } }
-.standin { position: relative; z-index: 4; flex: none; padding: 3px 6px; text-align: center; font: 700 10.5px/1.2 var(--f-mono); letter-spacing: .06em; text-transform: uppercase; color: #e9dfc8; background: rgb(14 18 30 / .72); border-radius: 0 0 6px 6px; pointer-events: none; }
 .label .verdict { font-family: var(--f-display); font-stretch: 78%; font-weight: 900; font-size: 15px; letter-spacing: .05em; text-transform: uppercase; }
 .label .score { grid-column: 2; grid-row: 1 / span 3; text-align: center; line-height: 1; }
 .label .score small { display: block; font-family: var(--f-display); font-weight: 800; font-size: 10.5px; letter-spacing: .16em; color: #4f586b; }
@@ -279,9 +279,10 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .card .art > .art-in { position: absolute; inset: 0; background: center / cover; animation: art-in .4s var(--e-out) both; }
 @keyframes art-in { from { opacity: 0; } }
 :root {   /* the stand-in art: an original flat illustration for the made-up card Emberkit (attack Cinder Leap): a dusk volcanic ridge, a low
-  sun, the ember arc of the leap and drifting sparks. Card coordinates (63:88, the frame included); the sun, the crater and the arc sit
+  sun, the ember arc of the leap and drifting sparks; the lava leaves the crater unevenly (one long flow down the cone's front-right face,
+  widening to a pool at its foot, one short flow on the left), a bright core in a darker body that dims away from the crater. Card coordinates (63:88, the frame included); the sun, the crater and the arc sit
   in the band every art window shows (the narrowest slab shows y 170-500 of 880). Warm dusk inks only: no verdict red, no creature */
-  --standin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='630' height='880' viewBox='0 0 630 880'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231a0f26'/%3E%3Cstop offset='.26' stop-color='%232f1736'/%3E%3Cstop offset='.42' stop-color='%2355223f'/%3E%3Cstop offset='.5' stop-color='%23a2452f'/%3E%3Cstop offset='.545' stop-color='%23ec8a3c'/%3E%3Cstop offset='.58' stop-color='%23f9c46c'/%3E%3C/linearGradient%3E%3CradialGradient id='g'%3E%3Cstop offset='.35' stop-color='%23f9c46c' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%23ec8a3c' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='c'%3E%3Cstop offset='0' stop-color='%23ffb347' stop-opacity='.9'/%3E%3Cstop offset='1' stop-color='%23ff8a2a' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='630' height='880' fill='url(%23s)'/%3E%3Cg fill='%23fff2d2' opacity='.7'%3E%3Ccircle cx='211.1' cy='79.2' r='1.4'/%3E%3Ccircle cx='62.7' cy='179.3' r='2.2'/%3E%3Ccircle cx='363.8' cy='276.5' r='1.8'/%3E%3Ccircle cx='42.1' cy='152.7' r='1.4'/%3E%3Ccircle cx='162' cy='183.3' r='1.4'/%3E%3Ccircle cx='507.8' cy='72.2' r='1.8'/%3E%3Ccircle cx='392.1' cy='191.6' r='1.4'/%3E%3Ccircle cx='360.5' cy='143.1' r='1.8'/%3E%3Ccircle cx='47.5' cy='263.2' r='2.2'/%3E%3Ccircle cx='267.3' cy='180.6' r='2.2'/%3E%3Ccircle cx='350.6' cy='217.3' r='1.4'/%3E%3Ccircle cx='363.1' cy='206.1' r='2.2'/%3E%3Ccircle cx='77.5' cy='225.1' r='1.4'/%3E%3Ccircle cx='385.2' cy='169.1' r='2.8'/%3E%3Ccircle cx='478.6' cy='161.1' r='2.8'/%3E%3Ccircle cx='233.3' cy='104.6' r='1.8'/%3E%3Ccircle cx='432.4' cy='103.5' r='2.2'/%3E%3Ccircle cx='329.9' cy='267.5' r='2.8'/%3E%3Ccircle cx='189.9' cy='294.8' r='1.4'/%3E%3Ccircle cx='322' cy='82.9' r='2.2'/%3E%3Ccircle cx='109.7' cy='167.1' r='1.4'/%3E%3Ccircle cx='587.6' cy='60.2' r='2.2'/%3E%3Ccircle cx='220.7' cy='131' r='2.8'/%3E%3Ccircle cx='362.1' cy='158.6' r='1.4'/%3E%3Ccircle cx='577.4' cy='163.3' r='1.4'/%3E%3Ccircle cx='55.8' cy='222.4' r='2.8'/%3E%3C/g%3E%3Ccircle cx='396' cy='404' r='176' fill='url(%23g)'/%3E%3Ccircle cx='396' cy='404' r='80' fill='%23ffe2a0'/%3E%3Cpath fill='%235c2a49' d='M300 452Q430 444 600 452Q430 455 300 452ZM-30 346Q87.6 328 250 346Q87.6 352.3 -30 346ZM40 318Q149.2 308 300 318Q149.2 321.5 40 318ZM430 214Q518.2 204 640 214Q518.2 217.5 430 214Z'/%3E%3Cpath fill='%23c8673e' opacity='.8' d='M-10 340Q86.6 332 220 340Q86.6 338.4 -10 340Z'/%3E%3Cpath fill='%2374384f' d='M-10 890 -10 486 40 462 88 478 140 446 190 470 236 452 282 474 330 458 372 480 420 456 470 472 520 440 566 462 640 448 640 890Z'/%3E%3Cpath fill='%238d4650' d='M40 462 88 478 56.8 546ZM140 446 190 470 157.5 538ZM236 452 282 474 252.1 534ZM330 458 372 480 344.7 540ZM420 456 372 480 403.2 540ZM520 440 470 472 502.5 532Z'/%3E%3Cpath fill='none' stroke='%23ffb347' stroke-opacity='.55' stroke-width='2' stroke-linejoin='round' d='M236 452 282 474 330 458 372 480 420 456 470 472'/%3E%3Cpath fill='%2345203d' d='M-10 890 -10 548 60 520 120 538 330 534 392 506 446 522 500 496 548 516 600 500 640 512 640 890Z'/%3E%3Cpath fill='%235a2942' d='M60 520 120 538 81 608ZM392 506 446 522 410.9 594ZM500 496 446 522 481.1 582Z'/%3E%3Cpath fill='%232a1230' d='M-10 890 -10 628 40 588 96 534 138 490 160 476 174 484 190 478 206 484 222 474 246 496 300 546 370 602 440 644 520 684 640 714 640 890Z'/%3E%3Cpath fill='%235e2436' d='M222 474 246 496 300 546 370 602 440 644 520 684 640 714 640 742 500 712 380 648 300 586 250 530Z'/%3E%3Cellipse cx='191' cy='478' rx='58' ry='36' fill='url(%23c)'/%3E%3Cpath fill='%23ff8a2a' d='M160 476L174 484L190 478L206 484L222 474L214 488L198 493L180 492L166 487Z'/%3E%3Cpath fill='%23ff8a2a' d='M168 486C160 512 140 538 108 570C146 546 172 518 186 488ZM204 488C214 516 238 544 272 576C250 542 232 512 220 486Z'/%3E%3Cpath fill='%23ffd98a' d='M176 489C170 510 154 532 128 556C158 534 174 512 182 490ZM208 490C216 512 232 534 256 558C240 532 226 510 215 489Z'/%3E%3Cpath fill='%231a0c18' d='M-10 890 -10 702 50 672 110 694 170 664 230 688 300 658 350 680 430 650 500 676 560 654 640 672 640 890Z'/%3E%3Cpath fill='none' stroke='%236a2a35' stroke-width='2.5' stroke-linejoin='round' d='M-10 702 50 672 110 694 170 664 230 688 300 658 350 680 430 650 500 676 560 654 640 672'/%3E%3Cpath fill='%23120811' d='M-10 890 -10 790 80 760 160 782 260 748 340 774 420 744 520 770 640 750 640 890Z'/%3E%3Cpath fill='none' stroke='%234a1f2c' stroke-width='2' stroke-linejoin='round' d='M-10 790 80 760 160 782 260 748 340 774 420 744 520 770 640 750'/%3E%3Cpath fill='none' stroke='%23ffb347' stroke-opacity='.45' stroke-width='3' stroke-dasharray='2 12' stroke-linecap='round' d='M192 470Q300 92 488 288'/%3E%3Ccircle cx='219.1' cy='387.5' r='2.2' fill='%23ff8a2a'/%3E%3Ccircle cx='238.4' cy='341.8' r='2.3' fill='%23ff8a2a'/%3E%3Ccircle cx='258.8' cy='303.3' r='2.6' fill='%23ff8a2a'/%3E%3Ccircle cx='280.1' cy='272.2' r='3' fill='%23ff8a2a'/%3E%3Ccircle cx='302.5' cy='248.5' r='3.4' fill='%23ffb347'/%3E%3Ccircle cx='326' cy='232.1' r='3.9' fill='%23ffb347'/%3E%3Ccircle cx='350.4' cy='223' r='4.5' fill='%23ffb347'/%3E%3Ccircle cx='375.9' cy='221.3' r='5.1' fill='%23ffb347'/%3E%3Ccircle cx='402.4' cy='227' r='5.8' fill='%23ffd98a'/%3E%3Ccircle cx='429.9' cy='240' r='6.6' fill='%23ffd98a'/%3E%3Ccircle cx='458.4' cy='260.3' r='7.4' fill='%23ffd98a'/%3E%3Cg transform='translate(482.4 282.2) rotate(41.6)'%3E%3Cpath fill='%23ff8a2a' d='M14 0C14 11 2 14 -10 9L-46 0L-10 -9C2 -14 14 -11 14 0Z'/%3E%3Cpath fill='%23ffd98a' d='M10 0C10 7 2 9 -6 6L-26 0L-6 -6C2 -9 10 -7 10 0Z'/%3E%3Ccircle cx='3' r='4.5' fill='%23fff2d2'/%3E%3C/g%3E%3Cpath fill='%23ffd98a' d='M118 395L120.3 401.7L127 404L120.3 406.3L118 413L115.7 406.3L109 404L115.7 401.7Z'/%3E%3Cpath fill='%23fff2d2' d='M252 385L253.8 390.2L259 392L253.8 393.8L252 399L250.2 393.8L245 392L250.2 390.2Z'/%3E%3Cpath fill='%23ffb347' d='M92 280L93.6 284.4L98 286L93.6 287.6L92 292L90.4 287.6L86 286L90.4 284.4Z'/%3E%3Cpath fill='%23ffd98a' d='M556 228L558.1 233.9L564 236L558.1 238.1L556 244L553.9 238.1L548 236L553.9 233.9Z'/%3E%3Cpath fill='%23fff2d2' d='M300 226L301.6 230.4L306 232L301.6 233.6L300 238L298.4 233.6L294 232L298.4 230.4Z'/%3E%3Cpath fill='%23ffb347' d='M548 366L549.6 370.4L554 372L549.6 373.6L548 378L546.4 373.6L542 372L546.4 370.4Z'/%3E%3Cpath fill='%23fff2d2' d='M444 209L445.3 212.7L449 214L445.3 215.3L444 219L442.7 215.3L439 214L442.7 212.7Z'/%3E%3Cpath fill='%23ffd98a' d='M580 604L581.6 608.4L586 610L581.6 611.6L580 616L578.4 611.6L574 610L578.4 608.4Z'/%3E%3Cpath fill='%23ffb347' d='M64 591L65.3 594.7L69 596L65.3 597.3L64 601L62.7 597.3L59 596L62.7 594.7Z'/%3E%3Ccircle cx='142' cy='442' r='3' fill='%23ffb347'/%3E%3Ccircle cx='234' cy='430' r='2.5' fill='%23ff8a2a'/%3E%3Ccircle cx='262' cy='452' r='2' fill='%23ffd98a'/%3E%3Ccircle cx='120' cy='458' r='2.2' fill='%23ff8a2a'/%3E%3Ccircle cx='214' cy='402' r='2.4' fill='%23ffd98a'/%3E%3Ccircle cx='160' cy='364' r='2' fill='%23ffb347'/%3E%3Ccircle cx='586' cy='318' r='2.5' fill='%23ffb347'/%3E%3Ccircle cx='60' cy='396' r='2.2' fill='%23ffd98a'/%3E%3Ccircle cx='300' cy='640' r='2.4' fill='%23ffb347'/%3E%3Ccircle cx='470' cy='620' r='2' fill='%23ffd98a'/%3E%3Ccircle cx='520' cy='730' r='2.4' fill='%23ff8a2a'/%3E%3C/svg%3E");
+  --standin: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='630' height='880' viewBox='0 0 630 880'%3E%3Cdefs%3E%3ClinearGradient id='s' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%231a0f26'/%3E%3Cstop offset='.26' stop-color='%232f1736'/%3E%3Cstop offset='.42' stop-color='%2355223f'/%3E%3Cstop offset='.5' stop-color='%23a2452f'/%3E%3Cstop offset='.545' stop-color='%23ec8a3c'/%3E%3Cstop offset='.58' stop-color='%23f9c46c'/%3E%3C/linearGradient%3E%3CradialGradient id='g'%3E%3Cstop offset='.35' stop-color='%23f9c46c' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%23ec8a3c' stop-opacity='0'/%3E%3C/radialGradient%3E%3CradialGradient id='c'%3E%3Cstop offset='0' stop-color='%23ffb347' stop-opacity='.9'/%3E%3Cstop offset='1' stop-color='%23ff8a2a' stop-opacity='0'/%3E%3C/radialGradient%3E%3ClinearGradient id='lb' gradientUnits='userSpaceOnUse' x1='205' y1='488' x2='282' y2='652'%3E%3Cstop offset='0' stop-color='%23ff7a24'/%3E%3Cstop offset='.3' stop-color='%23e2571e'/%3E%3Cstop offset='1' stop-color='%23b8401a' stop-opacity='.8'/%3E%3C/linearGradient%3E%3ClinearGradient id='lk' gradientUnits='userSpaceOnUse' x1='205' y1='488' x2='282' y2='652'%3E%3Cstop offset='0' stop-color='%23ffe39a'/%3E%3Cstop offset='.55' stop-color='%23ffe39a' stop-opacity='.75'/%3E%3Cstop offset='.92' stop-color='%23ffb347' stop-opacity='0'/%3E%3C/linearGradient%3E%3ClinearGradient id='sb' gradientUnits='userSpaceOnUse' x1='171' y1='489' x2='155' y2='528'%3E%3Cstop offset='0' stop-color='%23ff7a24'/%3E%3Cstop offset='1' stop-color='%23b8401a' stop-opacity='.7'/%3E%3C/linearGradient%3E%3ClinearGradient id='sk' gradientUnits='userSpaceOnUse' x1='171' y1='489' x2='155' y2='528'%3E%3Cstop offset='0' stop-color='%23ffe39a'/%3E%3Cstop offset='.7' stop-color='%23ffe39a' stop-opacity='0'/%3E%3C/linearGradient%3E%3CradialGradient id='lp'%3E%3Cstop offset='0' stop-color='%23ffb347' stop-opacity='.85'/%3E%3Cstop offset='.45' stop-color='%23e2571e' stop-opacity='.55'/%3E%3Cstop offset='1' stop-color='%23b8401a' stop-opacity='0'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='630' height='880' fill='url(%23s)'/%3E%3Cg fill='%23fff2d2' opacity='.7'%3E%3Ccircle cx='211.1' cy='79.2' r='1.4'/%3E%3Ccircle cx='62.7' cy='179.3' r='2.2'/%3E%3Ccircle cx='363.8' cy='276.5' r='1.8'/%3E%3Ccircle cx='42.1' cy='152.7' r='1.4'/%3E%3Ccircle cx='162' cy='183.3' r='1.4'/%3E%3Ccircle cx='507.8' cy='72.2' r='1.8'/%3E%3Ccircle cx='392.1' cy='191.6' r='1.4'/%3E%3Ccircle cx='360.5' cy='143.1' r='1.8'/%3E%3Ccircle cx='47.5' cy='263.2' r='2.2'/%3E%3Ccircle cx='267.3' cy='180.6' r='2.2'/%3E%3Ccircle cx='350.6' cy='217.3' r='1.4'/%3E%3Ccircle cx='363.1' cy='206.1' r='2.2'/%3E%3Ccircle cx='77.5' cy='225.1' r='1.4'/%3E%3Ccircle cx='385.2' cy='169.1' r='2.8'/%3E%3Ccircle cx='478.6' cy='161.1' r='2.8'/%3E%3Ccircle cx='233.3' cy='104.6' r='1.8'/%3E%3Ccircle cx='432.4' cy='103.5' r='2.2'/%3E%3Ccircle cx='329.9' cy='267.5' r='2.8'/%3E%3Ccircle cx='189.9' cy='294.8' r='1.4'/%3E%3Ccircle cx='322' cy='82.9' r='2.2'/%3E%3Ccircle cx='109.7' cy='167.1' r='1.4'/%3E%3Ccircle cx='587.6' cy='60.2' r='2.2'/%3E%3Ccircle cx='220.7' cy='131' r='2.8'/%3E%3Ccircle cx='362.1' cy='158.6' r='1.4'/%3E%3Ccircle cx='577.4' cy='163.3' r='1.4'/%3E%3Ccircle cx='55.8' cy='222.4' r='2.8'/%3E%3C/g%3E%3Ccircle cx='396' cy='404' r='176' fill='url(%23g)'/%3E%3Ccircle cx='396' cy='404' r='80' fill='%23ffe2a0'/%3E%3Cpath fill='%235c2a49' d='M300 452Q430 444 600 452Q430 455 300 452ZM-30 346Q87.6 328 250 346Q87.6 352.3 -30 346ZM40 318Q149.2 308 300 318Q149.2 321.5 40 318ZM430 214Q518.2 204 640 214Q518.2 217.5 430 214Z'/%3E%3Cpath fill='%23c8673e' opacity='.8' d='M-10 340Q86.6 332 220 340Q86.6 338.4 -10 340Z'/%3E%3Cpath fill='%2374384f' d='M-10 890 -10 486 40 462 88 478 140 446 190 470 236 452 282 474 330 458 372 480 420 456 470 472 520 440 566 462 640 448 640 890Z'/%3E%3Cpath fill='%238d4650' d='M40 462 88 478 56.8 546ZM140 446 190 470 157.5 538ZM236 452 282 474 252.1 534ZM330 458 372 480 344.7 540ZM420 456 372 480 403.2 540ZM520 440 470 472 502.5 532Z'/%3E%3Cpath fill='none' stroke='%23ffb347' stroke-opacity='.55' stroke-width='2' stroke-linejoin='round' d='M236 452 282 474 330 458 372 480 420 456 470 472'/%3E%3Cpath fill='%2345203d' d='M-10 890 -10 548 60 520 120 538 330 534 392 506 446 522 500 496 548 516 600 500 640 512 640 890Z'/%3E%3Cpath fill='%235a2942' d='M60 520 120 538 81 608ZM392 506 446 522 410.9 594ZM500 496 446 522 481.1 582Z'/%3E%3Cpath fill='%232a1230' d='M-10 890 -10 628 40 588 96 534 138 490 160 476 174 484 190 478 206 484 222 474 246 496 300 546 370 602 440 644 520 684 640 714 640 890Z'/%3E%3Cpath fill='%235e2436' d='M222 474 246 496 300 546 370 602 440 644 520 684 640 714 640 742 500 712 380 648 300 586 250 530Z'/%3E%3Cellipse cx='191' cy='478' rx='58' ry='36' fill='url(%23c)'/%3E%3Cellipse cx='281' cy='654' rx='34' ry='12' fill='url(%23lp)'/%3E%3Cpath fill='url(%23lb)' d='M201.9 488.9C202.9 493 204.6 504.7 207.7 513.7C210.8 522.7 216.1 533.3 220.5 542.9C224.9 552.4 230.3 561.6 234.1 571.1C237.8 580.6 239.1 590.4 242.8 599.8C246.6 609.1 252.5 618.5 256.8 627.2C261 635.8 266.5 647.6 268.4 651.7Q283.6 654.4 289.6 640.3C287.2 636.4 280.3 624.8 275.2 616.8C270.2 608.8 263.7 600.9 259.2 592.2C254.6 583.6 252.6 574.1 247.9 564.9C243.3 555.7 236.8 546.3 231.5 537.1C226.2 528 220.2 518.6 216.3 510.3C212.4 501.9 209.4 491 208.1 487.1Z'/%3E%3Cellipse cx='281' cy='655' rx='15' ry='4.6' fill='%23e2571e' opacity='.9'/%3E%3Cellipse cx='280' cy='654.4' rx='7' ry='2' fill='%23ffd98a' opacity='.8'/%3E%3Cpath fill='url(%23lk)' d='M204.1 488.3C205.2 492.3 207.3 503.8 210.7 512.5C214.1 521.3 219.6 531.5 224.3 540.9C229 550.3 234.9 559.5 238.9 568.9C243 578.3 244.5 588 248.5 597.1C252.6 606.2 258.7 615.1 263.2 623.6C267.8 632 273.7 643.7 275.8 647.7Q280.4 648.5 282.2 644.3C279.9 640.3 273.6 628.7 268.8 620.4C264 612.2 257.7 603.8 253.5 594.9C249.2 586 247.4 576.4 243.1 567.1C238.8 557.8 232.6 548.4 227.7 539.1C222.7 529.9 216.9 520.1 213.3 511.5C209.7 502.9 207.1 491.7 205.9 487.7Z'/%3E%3Cpath fill='url(%23sb)' d='M168.6 488C167.6 489.9 164.7 495.8 162.9 499.7C161 503.6 158.9 507.7 157.3 511.5C155.6 515.4 153.8 520.7 153.1 522.6Q155.9 527.2 160.9 525.4C161.6 523.6 163.4 518.3 164.7 514.5C166.1 510.6 167.7 506.4 169.1 502.3C170.6 498.2 172.7 492.1 173.4 490Z'/%3E%3Cpath fill='url(%23sk)' d='M170.2 488.7C169.3 490.6 166.7 496.6 165 500.6C163.3 504.6 161.4 508.7 159.8 512.5C158.3 516.4 156.4 521.7 155.7 523.5Q156.6 525 158.3 524.5C158.9 522.6 160.7 517.3 162.2 513.5C163.6 509.6 165.4 505.4 167 501.4C168.6 497.4 171 491.4 171.8 489.3Z'/%3E%3Cpath fill='%23ff8a2a' d='M160 476L174 484L190 478L206 484L222 474L214 488L198 493L180 492L166 487Z'/%3E%3Cpath fill='%231a0c18' d='M-10 890 -10 702 50 672 110 694 170 664 230 688 300 658 350 680 430 650 500 676 560 654 640 672 640 890Z'/%3E%3Cpath fill='none' stroke='%236a2a35' stroke-width='2.5' stroke-linejoin='round' d='M-10 702 50 672 110 694 170 664 230 688 300 658 350 680 430 650 500 676 560 654 640 672'/%3E%3Cpath fill='%23120811' d='M-10 890 -10 790 80 760 160 782 260 748 340 774 420 744 520 770 640 750 640 890Z'/%3E%3Cpath fill='none' stroke='%234a1f2c' stroke-width='2' stroke-linejoin='round' d='M-10 790 80 760 160 782 260 748 340 774 420 744 520 770 640 750'/%3E%3Cpath fill='none' stroke='%23ffb347' stroke-opacity='.45' stroke-width='3' stroke-dasharray='2 12' stroke-linecap='round' d='M192 470Q300 92 488 288'/%3E%3Ccircle cx='219.1' cy='387.5' r='2.2' fill='%23ff8a2a'/%3E%3Ccircle cx='238.4' cy='341.8' r='2.3' fill='%23ff8a2a'/%3E%3Ccircle cx='258.8' cy='303.3' r='2.6' fill='%23ff8a2a'/%3E%3Ccircle cx='280.1' cy='272.2' r='3' fill='%23ff8a2a'/%3E%3Ccircle cx='302.5' cy='248.5' r='3.4' fill='%23ffb347'/%3E%3Ccircle cx='326' cy='232.1' r='3.9' fill='%23ffb347'/%3E%3Ccircle cx='350.4' cy='223' r='4.5' fill='%23ffb347'/%3E%3Ccircle cx='375.9' cy='221.3' r='5.1' fill='%23ffb347'/%3E%3Ccircle cx='402.4' cy='227' r='5.8' fill='%23ffd98a'/%3E%3Ccircle cx='429.9' cy='240' r='6.6' fill='%23ffd98a'/%3E%3Ccircle cx='458.4' cy='260.3' r='7.4' fill='%23ffd98a'/%3E%3Cg transform='translate(482.4 282.2) rotate(41.6)'%3E%3Cpath fill='%23ff8a2a' d='M14 0C14 11 2 14 -10 9L-46 0L-10 -9C2 -14 14 -11 14 0Z'/%3E%3Cpath fill='%23ffd98a' d='M10 0C10 7 2 9 -6 6L-26 0L-6 -6C2 -9 10 -7 10 0Z'/%3E%3Ccircle cx='3' r='4.5' fill='%23fff2d2'/%3E%3C/g%3E%3Cpath fill='%23ffd98a' d='M118 395L120.3 401.7L127 404L120.3 406.3L118 413L115.7 406.3L109 404L115.7 401.7Z'/%3E%3Cpath fill='%23fff2d2' d='M252 385L253.8 390.2L259 392L253.8 393.8L252 399L250.2 393.8L245 392L250.2 390.2Z'/%3E%3Cpath fill='%23ffb347' d='M92 280L93.6 284.4L98 286L93.6 287.6L92 292L90.4 287.6L86 286L90.4 284.4Z'/%3E%3Cpath fill='%23ffd98a' d='M556 228L558.1 233.9L564 236L558.1 238.1L556 244L553.9 238.1L548 236L553.9 233.9Z'/%3E%3Cpath fill='%23fff2d2' d='M300 226L301.6 230.4L306 232L301.6 233.6L300 238L298.4 233.6L294 232L298.4 230.4Z'/%3E%3Cpath fill='%23ffb347' d='M548 366L549.6 370.4L554 372L549.6 373.6L548 378L546.4 373.6L542 372L546.4 370.4Z'/%3E%3Cpath fill='%23fff2d2' d='M444 209L445.3 212.7L449 214L445.3 215.3L444 219L442.7 215.3L439 214L442.7 212.7Z'/%3E%3Cpath fill='%23ffd98a' d='M580 604L581.6 608.4L586 610L581.6 611.6L580 616L578.4 611.6L574 610L578.4 608.4Z'/%3E%3Cpath fill='%23ffb347' d='M64 591L65.3 594.7L69 596L65.3 597.3L64 601L62.7 597.3L59 596L62.7 594.7Z'/%3E%3Ccircle cx='142' cy='442' r='3' fill='%23ffb347'/%3E%3Ccircle cx='234' cy='430' r='2.5' fill='%23ff8a2a'/%3E%3Ccircle cx='262' cy='452' r='2' fill='%23ffd98a'/%3E%3Ccircle cx='120' cy='458' r='2.2' fill='%23ff8a2a'/%3E%3Ccircle cx='214' cy='402' r='2.4' fill='%23ffd98a'/%3E%3Ccircle cx='160' cy='364' r='2' fill='%23ffb347'/%3E%3Ccircle cx='586' cy='318' r='2.5' fill='%23ffb347'/%3E%3Ccircle cx='60' cy='396' r='2.2' fill='%23ffd98a'/%3E%3Ccircle cx='300' cy='640' r='2.4' fill='%23ffb347'/%3E%3Ccircle cx='470' cy='620' r='2' fill='%23ffd98a'/%3E%3Ccircle cx='520' cy='730' r='2.4' fill='%23ff8a2a'/%3E%3C/svg%3E");
 }
 .card .art.fallback, .pp-art { background: var(--standin) 50% 50% / cover no-repeat; }
 /* the foil over the stand-in's dark dusk sky prints at half strength: full strength the rainbow outshone the picture */
@@ -297,6 +298,9 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .win { position: relative; flex: 1 1 auto; min-height: 0; }   /* no z-index: the foil blends with the art painted under it */
 .footplate { position: relative; flex: none; padding: 8px 10px; background: rgb(255 244 214 / .93); color: #3b2a10; font-size: 11px; line-height: 1.35; }
 .footplate b { font-family: var(--f-display); font-stretch: 85%; font-size: 13px; }
+/* a stand-in's footplate says what the art is: the drawn art, not the checked card (the share image prints the same two lines) */
+.fp-standin { z-index: 8; }   /* above the scam cracks (z 7): the disclosure is never cut */
+.fp-standin b { font-weight: 900; }
 .footplate .num { display: block; text-align: right; margin-top: 2px; font-family: var(--f-mono); font-size: 11px; color: #6f5b38; }
 /* holo foil: ONE soft pastel band per period (564 px along 115deg = 622.3 px along x, about twice the art window), so one band crosses
    at a time; SLAB slides it by its phase without an end. Overlay keeps the art's darks dark (color-dodge split them into RGB stripes) */
@@ -397,6 +401,16 @@ h1.display.sweep .holo > i { animation: i-holo .9s var(--e-precise); }
 .st-ico { position: absolute; left: 0; top: 0; width: 36px; height: 36px; fill: none; stroke: rgb(238 241 248 / .9); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .st-slab { position: absolute; left: 0; top: 0; width: 36px; height: 36px; overflow: hidden; border-radius: 4px; }
 .st-slab .st-ico { position: static; display: block; }
+.st-mini { display: none; }
+.st-mini .stm-case { fill: rgb(214 226 246 / .1); stroke: rgb(238 244 255 / .62); stroke-width: 1.5; }
+.st-mini text { font-family: var(--f-display); font-stretch: 70%; font-weight: 900; font-size: 10.5px; fill: #0a6439; }
+/* desk: the line carries the deal along the bench and ends in the thing it makes. The first two stations are dots on the ruler (no
+   glyph: the words say what happens there); the last is a small slab standing on the ruler, its label printing a risk number */
+@media (min-width: 761px) {
+  .steps li:not(:last-child) .st-ico, .steps li:last-child::before, .st-slab .st-ico { display: none; }
+  .steps li:last-child .st-slab { top: -17px; width: 48px; height: 66px; border-radius: 5px; }   /* its foot on the ruler (y 49) */
+  .st-mini { display: block; width: 48px; height: 66px; }
+}
 .steps h3 { margin: 0 0 4px; font-family: var(--f-display); font-stretch: 85%; font-weight: 800; font-size: 18px; }
 .steps p { margin: 0; color: var(--muted); font-size: 15px; max-width: 34ch; text-wrap: pretty; }   /* no one-word last line */
 @media (max-width: 760px) {
@@ -526,7 +540,7 @@ ol.next { margin: 0; padding-left: 22px; display: grid; gap: 4px; font-size: 15p
 [data-v=caution]:where(:not(#hero-stage)) { --v: #ffc15e; --va: rgb(255 193 94 / .42); --scan-rgb: 255 193 94; }
 [data-v=scam]:where(:not(#hero-stage)) { --v: #ff4a55; --va: rgb(255 74 85 / .45); --scan-rgb: 255 74 85; }
 [data-v=fault]:where(:not(#hero-stage)) { --v: #9aa4bb; --va: rgb(154 164 187 / .3); --scan-rgb: 154 164 187; }
-.result-stage[data-v=fault] .label { border-color: var(--v); }
+.result-stage[data-v=fault] :is(.label, .blabel) { border-color: var(--v); }
 .result-stage[data-v=fault] .foil-dead { background: rgb(120 126 140 / .75); }
 #check-btn { position: relative; overflow: hidden; }
 .btn-progress { position: absolute; left: 0; right: 0; bottom: 0; height: 2px; background: var(--hud); transform-origin: 0 50%; transform: scaleX(var(--prog, 0)); transition: transform 1s linear, opacity .3s; opacity: 0; pointer-events: none; }
@@ -1120,7 +1134,7 @@ setTimeout(()=>d.classList.remove("m-boot"),1400);
     <ol>
       <li><svg class="st-ico" viewBox="0 0 36 36" aria-hidden="true"><path pathLength="1" d="M6 7h24a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H15l-6 5v-5H6a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3z"/><path pathLength="1" d="M9 13h17M9 18.5h11"/></svg><h3>Paste the deal</h3><p>The listing text, the seller's messages, or screenshots of either.</p></li>
       <li><svg class="st-ico" viewBox="0 0 36 36" aria-hidden="true"><path pathLength="1" d="M3 10V5.5A2.5 2.5 0 0 1 5.5 3H10M26 3h4.5A2.5 2.5 0 0 1 33 5.5V10M33 26v4.5a2.5 2.5 0 0 1-2.5 2.5H26M10 33H5.5A2.5 2.5 0 0 1 3 30.5V26"/><path pathLength="1" d="M14 9h8a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-8a2 2 0 0 1-2-2V11a2 2 0 0 1 2-2z"/><path pathLength="1" d="M15.5 21.5l2.6-3.2 2 2.2 1.4-1.6"/></svg><h3>Add card photos</h3><p>Front and back help the fake-card checks. Up to 4 photos.</p></li>
-      <li><span class="st-slab"><svg class="st-ico" viewBox="0 0 36 36" aria-hidden="true"><path pathLength="1" d="M11 2h14a3 3 0 0 1 3 3v26a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z"/><path pathLength="1" d="M12.5 5.5h11a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zM12.5 14.5h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1z"/></svg><i class="step-sheen deco" aria-hidden="true"></i></span><h3>Get your slab</h3><p>A risk score, red flags, a price check, and an image you can post.</p></li>
+      <li><span class="st-slab"><svg class="st-ico" viewBox="0 0 36 36" aria-hidden="true"><path pathLength="1" d="M11 2h14a3 3 0 0 1 3 3v26a3 3 0 0 1-3 3H11a3 3 0 0 1-3-3V5a3 3 0 0 1 3-3z"/><path pathLength="1" d="M12.5 5.5h11a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1zM12.5 14.5h11a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1v-14a1 1 0 0 1 1-1z"/></svg><svg class="st-mini" viewBox="0 0 42 58" aria-hidden="true"><defs><linearGradient id="stm-sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f1736"/><stop offset=".45" stop-color="#55223f"/><stop offset=".64" stop-color="#ec8a3c"/><stop offset=".74" stop-color="#f9c46c"/></linearGradient></defs><rect class="stm-case" x=".75" y=".75" width="40.5" height="56.5" rx="4"/><rect x="4.5" y="4.5" width="33" height="13.5" rx="2" fill="#f6f7fb" stroke="#138a52" stroke-width="1.5"/><rect x="7.5" y="7.6" width="12" height="2.2" rx=".6" fill="#141a2b"/><rect x="7.5" y="11.9" width="9" height="1.6" rx=".5" fill="#8a93a6"/><text x="34.6" y="15.4" text-anchor="end">12</text><rect x="7" y="21" width="28" height="32" rx="2.5" fill="#b9c0cc"/><rect x="9" y="23" width="24" height="28" rx="1.5" fill="url(#stm-sky)"/><circle cx="25" cy="38.5" r="4" fill="#ffe2a0"/><path d="M9 51v-8l5-3.5 3.5 2 5-4.5 4 3.5 6.5-3.5V51z" fill="#2a1230"/><path d="M14.5 39.6l2.4 1.7-1.6 3.4z" fill="#ff8a2a"/><path d="M4 56L29 1h5L9 56z" fill="#fff" opacity=".14"/></svg><i class="step-sheen deco" aria-hidden="true"></i></span><h3>Get your slab</h3><p>A risk score, red flags, a price check, and an image you can post.</p></li>
     </ol>
   </div>
 </section>
@@ -1400,8 +1414,11 @@ Reply with ONLY one JSON object in this shape:
     // the gloss mask's paper zone ends at the label's foot (--lb, on the two masked layers only; layout reads on a size change, never per frame)
     // the gloss zones follow the label's bottom edge (--lb); --lt is the lower edge of the hazard tape a caution label hangs (22 px from
     // the label's edge, tilted 3 deg about its middle) as a stop on the 177 deg gradient that keeps the tape in the calm zone
-    const lbSet = (s) => { if (!s.lab || !s.lab.isConnected) return; const lb = s.lab.offsetTop + s.lab.offsetHeight - 1, g = s.gz[0], k = lb + "/" + (g ? g.offsetWidth : 0);
-      if (lb > 0 && k !== s.lbK) { s.lbK = k; s.gz.forEach((z) => z && z.style.setProperty("--lb", lb + "px")); if (g) g.style.setProperty("--lt", (.99863 * (lb + 24) + .02617 * g.offsetWidth).toFixed(1) + "px"); } };
+    const lbSet = (s) => { if (!s.lab || !s.lab.isConnected) return; const lb = s.lab.offsetTop + s.lab.offsetHeight - 1, g = s.gz[0];
+      let ft = 0, fb = 0;   // the footplate's band in the same frame (offsets up to the label's offsetParent, the slab)
+      if (s.fp && s.fp.isConnected) { let t = 0, n = s.fp; while (n && n !== s.lab.offsetParent) { t += n.offsetTop; n = n.offsetParent; } if (n) { ft = t - 3; fb = t + s.fp.offsetHeight + 2; } }
+      const k = lb + "/" + (g ? g.offsetWidth : 0) + "/" + ft + "/" + fb;
+      if (lb > 0 && k !== s.lbK) { s.lbK = k; s.gz.forEach((z) => z && z.style.setProperty("--lb", lb + "px")); if (g) { g.style.setProperty("--lt", (.99863 * (lb + 24) + .02617 * g.offsetWidth).toFixed(1) + "px"); if (fb > ft && ft > lb) { g.style.setProperty("--ft", ft + "px"); g.style.setProperty("--fb", fb + "px"); } else { g.style.removeProperty("--ft"); g.style.removeProperty("--fb"); } } } };
     const lbRO = "ResizeObserver" in window ? new ResizeObserver((es) => es.forEach((e) => { const s = e.target._lbS; if (s) lbSet(s); })) : null;
 
     // the hero floats while it is idle (lift, a slow yaw and pitch); its rotations are part of the same rotation state, so the light follows
@@ -1712,15 +1729,20 @@ Reply with ONLY one JSON object in this shape:
         fa: 0, fr: 0, tip: 0, lp: 0, ly: 0, gy: 0, g0: 0, face: "front", user: false, cb: null, last: -1e9, dirty: true, lt: 0, slow: 0, cf: 0, cfA: null, uT: 0,
         key: null, held: null, wake: hero ? 2400 : 0, visT: 0, visTm: 0, vf: "", vw: false, va: false, far: false,   // the hero's intro drop tilts it until ~2.2 s
         fw: hero && node.parentNode.classList.contains("fl") && node.parentNode.animate ? node.parentNode : null,
-        sk: [q(".acry.af .sk"), q(".acry.ab .sk")], sn: [q(".acry.af .sn"), q(".acry.ab .sn")], ra: [q(".acry.af .ra"), q(".acry.ab .ra")], rb: [q(".acry.af .rb"), q(".acry.ab .rb")], gz: [q(".acry.af .gz"), q(".acry.ab .gz")], lab: q(".label"), edges: [...sl.querySelectorAll(".edge")].map((n) => { const p = +n.dataset.phi * D; return [n, Math.cos(p), Math.sin(p)]; }),
+        sk: [q(".acry.af .sk"), q(".acry.ab .sk")], sn: [q(".acry.af .sn"), q(".acry.ab .sn")], ra: [q(".acry.af .ra"), q(".acry.ab .ra")], rb: [q(".acry.af .rb"), q(".acry.ab .rb")], gz: [q(".acry.af .gz"), q(".acry.ab .gz")], lab: q(".label"), fp: card && card.querySelector(":scope > .footplate"), edges: [...sl.querySelectorAll(".edge")].map((n) => { const p = +n.dataset.phi * D; return [n, Math.cos(p), Math.sin(p)]; }),
         band: card && !card.matches(".photo") ? card.querySelector(".foil-band") : null, foil: card && card.querySelector(".foil"), spk: card && card.querySelector(".spk"),
         stk: q(".stk-band"), shadow: bob && bob.querySelector(":scope > .shadow"), btnT: btn && btn.querySelector("span"), names: node._names || null };
       all.add(s); of.set(node, s); node._slab = s;
       if (s.lab) { s.lab._lbS = s; lbSet(s); if (lbRO) lbRO.observe(s.lab); }
+      if (s.fp && s.lab && lbRO) { s.fp._lbS = s; lbRO.observe(s.fp); }
       stage.addEventListener("pointerdown", (e) => grab(s, e));
       stage.addEventListener("pointermove", (e) => move(s, e));
       ["pointerup", "pointercancel", "lostpointercapture"].forEach((t) => stage.addEventListener(t, (e) => end(s, e, t !== "pointerup")));
       stage.addEventListener("pointerleave", () => leave(s));
+      // a finger turning the slab sideways is never also a browser fling: under pan-y Chromium filters out the horizontal scroll but
+      // still flings it, and then swallows the next tap within ~1.5 s as "stop the fling" (the first tap on See the back did nothing).
+      // Only a locked sideways turn is cancelled: a vertical swipe never locks (it ends the turn and scrolls), and a second finger ends it
+      stage.addEventListener("touchmove", (e) => { if (s.ptr && s.ptr.lock && !s.ptr.mouse && e.cancelable) e.preventDefault(); }, { passive: false });
       node.addEventListener("keydown", (e) => key(s, e));
       node.addEventListener("keyup", (e) => keyUp(s, e));
       node.addEventListener("blur", () => keyEnd(s));
@@ -1968,9 +1990,11 @@ Reply with ONLY one JSON object in this shape:
     const art = el("div", { class: "art fallback" });
     const card = el("div", { class: "card" + (photoUrl ? " photo" : "") + ((done && fakeFail) || fault ? " dead" : "") }, art, el("div", { class: photoUrl ? "frame plain" : "frame" }));
     const box = el("div", { class: "cardbox" }, card);   // the stamp sits here, beside the card: the card clips, the stamp's wind-up must not
-    if (!photoUrl) card.append(el("div", { class: "nameplate" }, "Emberkit"));
-    if (!photoUrl && done) card.append(el("span", { class: "standin", text: "Stand-in art · no photo" }));   // never read as the checked card (the example's neither)
+    // no photo: the drawn art's own plates say what it is (as the share image does). Every slab built here has a label about the checked
+    // listing, so a named card under it would be the swapped-slab tell this page teaches; Emberkit's name stays on the hero, whose label names no card
+    if (!photoUrl) card.append(el("div", { class: "nameplate" }, "Stand-in art"));
     card.append(el("div", { class: "win" }, el("div", { class: "foil" }, el("i", { class: "foil-band" }), el("i", { class: "spk" }))));   // foil prints in the art window only
+    if (!photoUrl) card.append(el("div", { class: "footplate fp-standin" }, el("b", { text: "No photo was shared" }), el("br"), "Drawn art, not the checked card."));
     if (fault) card.append(el("i", { class: "foil-dead" }));
     if (done) {   // verdict marks, all at their final pose at rest (motion only decorates)
       if (fakeFail) card.append(el("i", { class: "foil-dead" }));
@@ -2056,7 +2080,28 @@ Reply with ONLY one JSON object in this shape:
     if (o.hold) { panel.classList.add("rv-hold"); return { play }; }
     play();
   }
-  // hand-written particles: one stage-sized canvas, one rAF loop, removed when done. motes (cyan/white foil glints) drift UP (safe); shards (scam) are acrylic slivers thrown from the crack ends, then FALL
+  // safe-beat sparks: the ambient's hard speck (a white core in a soft warm-white halo, never a verdict colour), thrown off the case's
+  // rim; a canvas sprite per tint, made once
+  const SPECKS = {};
+  const speck = (c) => SPECKS[c] || (SPECKS[c] = (() => {
+    const s = el("canvas", { width: 48, height: 48 }), g = s.getContext("2d"); if (!g) return null;
+    const r = g.createRadialGradient(24, 24, 0, 24, 24, 24); r.addColorStop(0, "#fff"); r.addColorStop(.17, "#fff"); r.addColorStop(.3, c + "cc"); r.addColorStop(.6, c + "33"); r.addColorStop(1, c + "00");
+    g.fillStyle = r; g.beginPath(); g.arc(24, 24, 24, 0, 6.3); g.fill(); return s;
+  })());
+  const SPECK_C = ["#ffffff", "#fff6e8", "#ffe2b8"];
+  // where a spark starts (the case's box x, y, w, h in canvas px): on the top edge or the upper two thirds of a side, a few px outside it,
+  // thrown outward and up (steep: the sides' sparks rise more than they spread, where text sits beside the slab)
+  function rimSpark(x, y, w, h, R, v0, v1, steep) {
+    const side = h * .67, at = R(0, w + 2 * side);
+    let px, py, a;
+    if (at < w) { px = x + at; py = y - R(2, 8); a = R(-125, -55); }
+    else { const left = at < w + side; px = left ? x - R(2, 8) : x + w + R(2, 8); py = y + at - w - (left ? 0 : side); a = left ? (steep ? R(-150, -112) : R(-175, -115)) : (steep ? R(-68, -30) : R(-65, -5)); }
+    const v = R(v0, v1); a *= Math.PI / 180;
+    return { x: px, y: py, vx: Math.cos(a) * v, vy: Math.sin(a) * v };
+  }
+  // hand-written particles: one stage-sized canvas, one rAF loop, removed when done. motes (safe): warm-white specks thrown off the case's
+  // rim drift UP, and none is drawn over the case (the light plays around the object, never across the card); shards (scam) are acrylic
+  // slivers thrown from the crack ends, then FALL
   function burst(host, kind, n) {
     if (!host || calm() || n < 1) return;
     const motes = kind === "motes", pad = 80, W = host.offsetWidth + pad * 2, H = host.offsetHeight + pad * 2, dpr = Math.min(devicePixelRatio || 1, innerWidth < 640 ? 1.5 : 2);
@@ -2064,16 +2109,14 @@ Reply with ONLY one JSON object in this shape:
     const x = c.getContext("2d");
     if (!x) return;
     host.append(c);
-    const R = (a, b) => a + Math.random() * (b - a), GLINT = ["#ffffff", "#c4efff", "#6fd8ff", "#eaf8ff"];   // foil glints: cyan and white only, never a verdict colour
+    const R = (a, b) => a + Math.random() * (b - a);
     const bob = host.querySelector(".bob"), cardN = host.querySelector(".card"), bb = boxIn(bob || host, host), cb = cardN ? boxIn(cardN, host) : bb;
+    const caseN = host.querySelector(".slab"), kb = caseN ? boxIn(caseN, host) : bb, k0 = pad + kb.x - 3, k1 = pad + kb.x + kb.w + 3, j0 = pad + kb.y - 3, j1 = pad + kb.y + kb.h + 3;
     // crack vertices in the card's 100 x 140 viewBox (the shared origin 50,87 left out)
     const ends = [...host.querySelectorAll(".cracks .ck")].flatMap((p) => p.getAttribute("points").split(" ").slice(1).map((xy) => xy.split(",").map(Number)));
     if (!ends.length) ends.push([50, 87]);
     const ps = Array.from({ length: n }, (_, i) => {
-      if (motes) {
-        const a = R(-110, -70) * Math.PI / 180, v = R(80, 200);
-        return { x: pad + bb.x + R(.1, .9) * bb.w, y: pad + bb.y + R(.25, .85) * bb.h, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: R(3, 6), r: R(0, 6.3), vr: R(-6, 6), c: GLINT[i % 4], life: R(.9, 1.1) };
-      }
+      if (motes) return { ...rimSpark(pad + kb.x, pad + kb.y, kb.w, kb.h, R, 80, 200, true), s: R(11, 16), r: 0, vr: 0, c: speck(SPECK_C[i % 3]), life: R(.9, 1.1) };
       const [ex, ey] = ends[i % ends.length], a = Math.atan2(ey - 87, ex - 50) + R(-.5, .5), v = R(120, 260);
       return { x: pad + cb.x + ex / 100 * cb.w, y: pad + cb.y + ey / 140 * cb.h, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, s: R(8, 18), w: R(2, 4), r: a, vr: R(-3.1, 3.1), c: i % 4 ? "rgba(230,240,255,.8)" : "#ff4a55", life: R(.7, .9) };
     });
@@ -2088,8 +2131,12 @@ Reply with ONLY one JSON object in this shape:
         const k = age / p.life; if (k >= 1) continue; alive++;
         p.vy += g * dt; if (!motes) p.vx *= .99;
         p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
-        x.setTransform(dpr, 0, 0, dpr, p.x * dpr, p.y * dpr); x.rotate(p.r); x.globalAlpha = motes ? 1 - k * k : k < .6 ? 1 : 1 - (k - .6) / .4; x.fillStyle = p.c; x.beginPath();
-        if (motes) { x.moveTo(0, -p.s); x.lineTo(p.s * .4, 0); x.lineTo(0, p.s); x.lineTo(-p.s * .4, 0); } else { x.moveTo(-p.s / 2, -p.w / 2); x.lineTo(p.s / 2, 0); x.lineTo(-p.s / 2, p.w / 2); }
+        if (motes) {   // a spark over the case is not drawn
+          if (!p.c || (p.x > k0 && p.x < k1 && p.y > j0 && p.y < j1)) continue;
+          x.setTransform(dpr, 0, 0, dpr, 0, 0); x.globalAlpha = 1 - k * k; x.drawImage(p.c, p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); continue;
+        }
+        x.setTransform(dpr, 0, 0, dpr, p.x * dpr, p.y * dpr); x.rotate(p.r); x.globalAlpha = k < .6 ? 1 : 1 - (k - .6) / .4; x.fillStyle = p.c; x.beginPath();
+        x.moveTo(-p.s / 2, -p.w / 2); x.lineTo(p.s / 2, 0); x.lineTo(-p.s / 2, p.w / 2);
         x.fill();
       }
       if (alive) raf = requestAnimationFrame(f); else stop();
@@ -2739,6 +2786,7 @@ Reply with ONLY one JSON object in this shape:
     const gl = x.createLinearGradient(LX, CY, LX + CW, CY + CH); gl.addColorStop(.28, "rgba(255,255,255,0)"); gl.addColorStop(.4, "rgba(255,255,255,.13)"); gl.addColorStop(.52, "rgba(255,255,255,0)");
     x.fillStyle = gl; x.fillRect(LX, CY, CW, CH);   // acrylic glare, soft: a photo stays evidence
     if (v === "scam") cracksOn(x, LX, CY, CW, CH, topFlags(r).filter((f) => f.severity === "high").length, 1);
+    if (!opt.img) standinPlate(x, LX, CY, CW, CH, A, B);
     x.restore();
     // one crisp specular streak across the case, from the lamp at the upper left (as on the page), about 40 px wide
     x.save(); roundRect(x, SX, SY, SW, SH, 34); x.clip();
@@ -2886,6 +2934,10 @@ Reply with ONLY one JSON object in this shape:
     x.fillStyle = np; x.fillRect(ax, ay, aw, 56);
     x.fillStyle = "#2a1c08"; x.font = `900 30px ${A}`; x.fontStretch = "normal"; x.letterSpacing = "3px"; x.fillText("STAND-IN ART", ax + 18, ay + 40, aw - 36);
     x.letterSpacing = "0px";
+  }
+  // the stand-in's footplate, drawn after the glare and any cracks so the disclosure is never cut (the page lifts it above them too)
+  function standinPlate(x, cx, cy, cw, ch, A, B) {
+    const f = 14, ax = cx + f, ay = cy + f, aw = cw - 2 * f, ah = ch - 2 * f;
     x.fillStyle = "rgba(255,244,214,.94)"; x.fillRect(ax, ay + ah - 92, aw, 92);
     x.fillStyle = "#3b2a10"; x.font = `900 28px ${A}`; x.fillText("No photo was shared", ax + 18, ay + ah - 52, aw - 36);
     x.font = `400 22px ${B}`; x.fillText("Drawn art, not the checked card.", ax + 18, ay + ah - 22, aw - 36);
@@ -3095,7 +3147,10 @@ Reply with ONLY one JSON object in this shape:
     // Pool and cone are drawn at 1/8 scale and stretched (the stretch is the blur); the motes at full size, dimmed over the copy column
     // and over the result panel (the verdict is read there).
     const amb = (() => {
-      const cv = el("canvas", { class: "ambient", "aria-hidden": "true" }), x = cv.getContext && cv.getContext("2d", { alpha: false });   // opaque: it IS the page background, so the compositor culls what lies under it
+      // opaque: it IS the page background, so the compositor culls what lies under it. desynchronized: its frames are flushed in their
+      // own task, never stacked on the page's commit (a slow CPU's idle long tasks were a lamp draw plus that commit in one task); a
+      // browser without the low-latency path ignores the flag
+      const cv = el("canvas", { class: "ambient", "aria-hidden": "true" }), x = cv.getContext && cv.getContext("2d", { alpha: false, desynchronized: true });
       if (!x) return { start() {}, stop() {} };
       document.body.prepend(cv); root.classList.add("amb-on");
       const fine = root.classList.contains("m-fine");
@@ -3147,7 +3202,8 @@ Reply with ONLY one JSON object in this shape:
       addEventListener("scroll", () => { lastScroll = performance.now(); }, { passive: true });
       // it also holds still while the frame budget belongs to the page: a check from the scan until its verdict has landed (about 1 s
       // after the reveal), and a slab a reader is pressing or turning. It resumes where it stopped (its clock skips the held time).
-      let busy0 = false, holdTil = 0, fz = 0;
+      // (gate: after a hold, the first draw waits for an idle moment, at most 100 ms, so it never lands in a settling slab's frames)
+      let busy0 = false, holdTil = 0, fz = 0, gate = false;
       const resN = $("result");
       if (resN && "MutationObserver" in window) new MutationObserver(() => {
         const b = resN.hasAttribute("aria-busy"), sh = resN.dataset.shows;
@@ -3313,8 +3369,8 @@ Reply with ONLY one JSON object in this shape:
         fPrev = t;
         // ~30 fps is plenty for drifting light (20 when trimmed); frozen while the page scrolls (the eye is on the content, the frame budget on the scroll)
         if (t - lastScroll < 180 || busy0 || t < holdTil || SLAB.busy()) { if (!fz) fz = t; }
-        else if (fz) { t0 += t - fz; fz = 0; }
-        if (!fz && t - last >= (trim() ? 48 : 31)) {
+        else if (fz) { t0 += t - fz; fz = 0; if (window.requestIdleCallback) { gate = true; requestIdleCallback(() => { gate = false; }, { timeout: 100 }); } }
+        if (!fz && !gate && t - last >= (trim() ? 48 : 31)) {
           const dt = Math.min(.05, (t - last) / 1000); last = t;
           const c0 = dC ? performance.now() : 0;
           draw(t, dt);
@@ -3463,7 +3519,8 @@ Reply with ONLY one JSON object in this shape:
       });
       return { sync };
     })();
-    // hero particles: holo motes rise (safe) or acrylic shards fly and fall (scam), from the card's real on-screen box
+    // hero particles: warm-white sparks thrown off the case's rim rise (safe; none drawn over the case) or acrylic shards fly and fall
+    // (scam), from the card's and the case's real on-screen boxes
     function heroBurst(kind) {
       const stg = $("hero-stage"), card = stg.querySelector(".card");
       if (calm() || !card || document.hidden) return;
@@ -3472,11 +3529,12 @@ Reply with ONLY one JSON object in this shape:
       const c = el("canvas", { class: "fx-burst demo-burst", "aria-hidden": "true", width: Math.round(W * dpr), height: Math.round(H * dpr), style: `left:${-pad}px;top:${-pad}px;width:${W}px;height:${H}px;z-index:4` });
       const x = c.getContext("2d"); if (!x) return;
       stg.append(c);
-      const R = (a, b) => a + Math.random() * (b - a), GLINT = ["#ffffff", "#c4efff", "#6fd8ff", "#eaf8ff"], motes = kind === "motes";   // cyan and white glints only
+      const R = (a, b) => a + Math.random() * (b - a), motes = kind === "motes";
       const cx = cr.left - sr.left + pad, cy = cr.top - sr.top + pad, cw = cr.width, ch = cr.height, sc = cw / 300;
+      const slabN = stg.querySelector(".slab"), kr = slabN ? slabN.getBoundingClientRect() : cr, kx = kr.left - sr.left + pad, ky = kr.top - sr.top + pad, k0 = kx - 3, k1 = kx + kr.width + 3, j0 = ky - 3, j1 = ky + kr.height + 3;
       const n = motes ? (lite() ? 8 : phoneW() ? 12 : 20) : (lite() ? 8 : phoneW() ? 10 : 16);
       const ps = Array.from({ length: n }, (_, i) => {
-        if (motes) { const a = R(-120, -60) * Math.PI / 180, v = R(90, 240) * Math.max(.6, sc); return { x: cx + R(.1, .9) * cw, y: cy + R(.05, .7) * ch, vx: Math.cos(a) * v, vy: Math.sin(a) * v, s: R(4, 8) * Math.max(.7, sc), r: R(0, 6.3), vr: R(-6, 6), c: GLINT[i % 4], life: R(.9, 1.2) }; }
+        if (motes) return { ...rimSpark(kx, ky, kr.width, kr.height, R, 90 * Math.max(.6, sc), 240 * Math.max(.6, sc)), s: R(12, 18) * Math.max(.7, sc), r: 0, vr: 0, c: speck(SPECK_C[i % 3]), life: R(.9, 1.2) };
         const a = R(0, 6.3), v = R(140, 320) * Math.max(.6, sc);
         return { x: cx + cw * .5, y: cy + ch * .62, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 80, s: R(9, 20) * Math.max(.7, sc), w: R(2, 4.5), r: a, vr: R(-4, 4), c: i % 4 ? "rgba(230,240,255,.85)" : "#ff4a55", life: R(.75, 1) };
       });
@@ -3487,8 +3545,12 @@ Reply with ONLY one JSON object in this shape:
         for (const p of ps) {
           const k = age / p.life; if (k >= 1) continue; alive++;
           p.vy += g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt;
-          x.setTransform(dpr, 0, 0, dpr, p.x * dpr, p.y * dpr); x.rotate(p.r); x.globalAlpha = motes ? 1 - k * k : k < .6 ? 1 : 1 - (k - .6) / .4; x.fillStyle = p.c; x.beginPath();
-          if (motes) { x.moveTo(0, -p.s); x.lineTo(p.s * .35, 0); x.lineTo(0, p.s); x.lineTo(-p.s * .35, 0); } else { x.moveTo(-p.s / 2, -p.w / 2); x.lineTo(p.s / 2, 0); x.lineTo(-p.s / 2, p.w / 2); }
+          if (motes) {   // a spark over the case is not drawn
+            if (!p.c || (p.x > k0 && p.x < k1 && p.y > j0 && p.y < j1)) continue;
+            x.setTransform(dpr, 0, 0, dpr, 0, 0); x.globalAlpha = 1 - k * k; x.drawImage(p.c, p.x - p.s / 2, p.y - p.s / 2, p.s, p.s); continue;
+          }
+          x.setTransform(dpr, 0, 0, dpr, p.x * dpr, p.y * dpr); x.rotate(p.r); x.globalAlpha = k < .6 ? 1 : 1 - (k - .6) / .4; x.fillStyle = p.c; x.beginPath();
+          x.moveTo(-p.s / 2, -p.w / 2); x.lineTo(p.s / 2, 0); x.lineTo(-p.s / 2, p.w / 2);
           x.fill();
         }
         if (alive && c.isConnected) requestAnimationFrame(f); else c.remove();
